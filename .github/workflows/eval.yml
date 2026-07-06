@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       # The eval harness has zero dependencies — no install step.
       # Live stage hits MusicBrainz/Wikidata at ~1 req/sec (etiquette-compliant).
       - run: npm run eval
