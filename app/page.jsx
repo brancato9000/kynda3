@@ -109,6 +109,16 @@ function Pulse() {
   );
 }
 
+function Spinner({ size = 15 }) {
+  return (
+    <span style={{
+      width: `${size}px`, height: `${size}px`, borderRadius: "50%", display: "inline-block",
+      border: "2px solid rgba(250,204,21,0.25)", borderTopColor: BASE.gold,
+      animation: "kyndaSpin 0.8s linear infinite",
+    }} />
+  );
+}
+
 // ─── Mix card ─────────────────────────────────────────────────
 function MixCard({ item, verification, index }) {
   const slot = SLOT_BY_ID[item.slotType] || { label: item.slotType, emoji: "◆" };
@@ -331,6 +341,7 @@ export default function Page() {
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
       <style>{`
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
+        @keyframes kyndaSpin { to { transform: rotate(360deg) } }
         @keyframes kyndaRise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
         input::placeholder { color: rgba(148,163,184,0.45) }
       `}</style>
@@ -360,8 +371,9 @@ export default function Page() {
           background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold,
           borderRadius: "8px", padding: "0 26px", fontFamily: FONTS.mono, fontSize: "13px",
           letterSpacing: "0.08em", cursor: "pointer", textTransform: "uppercase",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "88px",
         }}>
-          {phase === "searching" ? "…" : "Map"}
+          {phase === "searching" || (phase === "mixing" && !done) ? <Spinner /> : "Map"}
         </button>
       </form>
 
