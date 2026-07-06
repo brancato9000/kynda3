@@ -5,7 +5,7 @@
 // The visible badge-earning delay is the product working as designed (V3-11):
 // "verified" appears only after the deterministic check passes.
 
-import { generateMix, verifyItem, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
+import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
 
 export const maxDuration = 300;
 
@@ -31,15 +31,25 @@ export async function POST(req) {
           return;
         }
 
-        const mix = await generateMix(subject);
+        // Fetch the subject's Wikipedia article while the mix generates —
+        // every connection check reads it.
+        const [mix, subjectArticle] = await Promise.all([
+          generateMix(subject),
+          loadSubjectArticle(subject),
+        ]);
         send({ type: "intro", intro: mix.intro });
         mix.items.forEach((item, i) => send({ type: "item", index: i, item }));
 
         // Sequential on purpose: MusicBrainz etiquette is ~1 req/sec.
         const entries = [];
         for (let i = 0; i < mix.items.length; i++) {
-          const verification = await verifyItem(mix.items[i]);
-          entries.push({ item: mix.items[i], verification });
+          const item = mix.items[i];
+          const [attribution, connection] = await Promise.all([
+            verifyAttribution(item),
+            verifyConnection(item, subject, subjectArticle),
+          ]);
+          const verification = { attribution, connection };
+          entries.push({ item, verification });
           send({ type: "verification", index: i, verification });
         }
 

@@ -47,6 +47,15 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 ## V3-12: Phase 1 lands in slices
 **Decision:** Slice 1 is the core loop: search → retrieval-first disambiguation → generated + verified mix. Deferred to follow-up slices: influence graph, Connections tab, slot alternatives ("MORE →"), Wikipedia subject images, TMDb/Open Library verifiers for film/TV/books, Postgres-backed cache (in-memory Map interim, keyed on canonical entity IDs). kynda2 stays deployed until parity.
 
+## V3-13: Two provenance layers — attribution vs. connection
+**Decision:** Every card carries two machine-assigned provenance layers. **Attribution** (does this creator actually have this work?) is checked against MusicBrainz (music), Open Library (books), or Wikidata descriptions (film/TV/art). **Connection** (is the influence relationship itself documented?) is checked by deterministic Wikipedia cross-mention: does the subject's article mention the recommended creator, or vice versa? A hit extracts and displays the actual sentence, linked.
+**Award-only rule:** weak verifiers (Wikidata description match) may award "verified" but never convict — a miss maps to "unchecked", not "failed". Only strong verifiers (MusicBrainz, Open Library exact matches) can mark an item red.
+**Rationale:** This answers "isn't this just copying MusicBrainz?" structurally: the databases fact-check the synthesis; they cannot produce it. The Wikipedia excerpt makes the connection's documentary support visible without any model judging whether a source "supports" a claim (V3-03 upheld — mention detection is a string match; the reader judges the evidence).
+
+## V3-14: Badge language separates the notary from the author
+**Decision:** Badges read "✓ facts checked" / "✕ failed fact-check" / "unchecked" (attribution) and "◆ documented" / "synthesis" (connection). Database names are demoted to tooltips and links. The footer states explicitly that the connections are Kynda's synthesis and the databases only fact-check it.
+**Rationale:** The slice-1 badge ("verified · MusicBrainz") accidentally presented the fact-checker as the source, making the product read as a MusicBrainz wrapper. Naming the check, not the checker, keeps the trust signal without misattributing the value.
+
 ## V3-08: Real decoys as disambiguation tests
 **Decision:** Golden subjects record known real-world decoys (e.g., Nirvana the UK 60s band vs. the US grunge band; The Godfather the video game vs. the 1972 film). Disambiguation evals must surface or correctly rank these.
 **Rationale:** Retrieval-first disambiguation (candidates come from DB search APIs, model only ranks) makes invented entities impossible by construction — but choosing the wrong *real* entity is still a failure mode, and it's testable.

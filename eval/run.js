@@ -13,6 +13,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
+import { findMention } from "../src/lib/entities/wikipedia.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -89,6 +90,27 @@ function testQuoteMatch() {
   check(
     "rejects too-short quotes (prove nothing)",
     quoteMatch(page, "the Pixies").reason === "quote_too_short"
+  );
+
+  // findMention — the connection-documentation primitive (V3-13)
+  const article = `Radiohead are an English rock band formed in Abingdon in 1985.
+    Their sound was shaped by the Pixies and by Can I say more unusual sources.
+    The band can play very loud. Critics compared them to The Smiths early on.`;
+  check(
+    "findMention extracts the sentence containing the creator",
+    findMention(article, "Pixies")?.sentence.includes("shaped by the Pixies") === true
+  );
+  check(
+    "findMention handles a leading 'The' variant",
+    findMention(article, "The Smiths")?.sentence.includes("Smiths") === true
+  );
+  check(
+    "findMention is case-sensitive (lowercase 'can' prose does not match the band Can... except when capitalized)",
+    findMention("the band can play loud.", "Can") === null
+  );
+  check(
+    "findMention rejects names absent from the text",
+    findMention(article, "Aphex Twin") === null
   );
 }
 

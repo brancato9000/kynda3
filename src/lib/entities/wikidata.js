@@ -20,6 +20,36 @@ function rateLimited(fn) {
 }
 
 /**
+ * Award-only attribution check for non-music works (film, TV, art):
+ * search Wikidata for the title and look for a candidate whose description
+ * names both the medium and the claimed creator (Wikidata descriptions read
+ * like "1972 film directed by Francis Ford Coppola").
+ *
+ * IMPORTANT: this verifier AWARDS but never CONVICTS (V3-13). Description
+ * matching is too weak for a miss to imply misattribution — a miss returns
+ * {verified:false} and the caller must map it to "unchecked", not "failed".
+ */
+export async function verifyWorkByDescription(title, creator, mediumKeywords) {
+  const { norm } = await import("./musicbrainz.js");
+  const results = await searchEntity(title, 8);
+  const creatorTokens = norm(creator).split(" ").filter((t) => t.length > 2);
+  const surname = creatorTokens[creatorTokens.length - 1];
+  for (const r of results) {
+    const desc = norm(r.description || "");
+    if (!desc) continue;
+    if (!mediumKeywords.some((k) => desc.includes(k))) continue;
+    if (!surname || !desc.includes(surname)) continue;
+    return {
+      verified: true,
+      qid: r.qid,
+      url: `https://www.wikidata.org/wiki/${r.qid}`,
+      description: r.description,
+    };
+  }
+  return { verified: false };
+}
+
+/**
  * Search Wikidata entities by label. Returns real candidates with QIDs and
  * descriptions — the raw material for retrieval-first disambiguation
  * (decoys included by design; see DECISIONS V3-08).

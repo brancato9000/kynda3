@@ -9,6 +9,9 @@
 
 import { callFable } from "../ai/anthropic.js";
 import { verifyReleaseGroup, norm } from "../entities/musicbrainz.js";
+import { verifyWorkByDescription } from "../entities/wikidata.js";
+import { verifyBook } from "../entities/openlibrary.js";
+import { getArticle, findMention } from "../entities/wikipedia.js";
 
 const SLOT_IDS = ["titan", "ghost", "geography", "culture", "peer", "essential", "legacy", "collaborator"];
 
@@ -105,29 +108,123 @@ export async function generateMix(subject) {
   return mix;
 }
 
+// Wikidata-description keywords per medium (award-only checks, V3-13).
+const WIKIDATA_KEYWORDS = {
+  film: ["film", "movie"],
+  television: ["television", "tv series", "series", "sitcom", "miniseries"],
+  art: ["painting", "sculpture", "artwork", "photograph", "mural"],
+  design: ["design", "typeface", "chair", "poster"],
+  architecture: ["building", "architecture", "tower", "museum", "house"],
+  theater: ["play", "musical", "opera", "ballet"],
+};
+
 /**
- * Deterministic verification for one mix item. Machine-assigned status:
- *   verified  — (title, creator) confirmed as a real MusicBrainz release group
- *   not_found — checked and NOT confirmed; likely a wrong attribution
- *   skipped   — no verifier for this medium yet (Phase 1b: TMDb, Open Library)
+ * Deterministic ATTRIBUTION check: does the claimed creator actually have a
+ * work with this title? Machine-assigned status:
+ *   verified  — confirmed in a structured database (strong)
+ *   not_found — checked by a strong verifier and NOT confirmed; likely wrong
+ *   skipped   — no verifier, or an award-only verifier found no match
+ *               (weak evidence either way → "unchecked" in the UI, never red)
  */
-export async function verifyItem(item) {
-  if (item.medium !== "music") {
-    return { status: "skipped", reason: `no ${item.medium} verifier yet` };
-  }
+export async function verifyAttribution(item) {
   try {
-    const result = await verifyReleaseGroup(item.title, item.creator);
-    if (result.verified) {
-      return {
-        status: "verified",
-        mbid: result.mbid,
-        url: `https://musicbrainz.org/release-group/${result.mbid}`,
-        firstReleaseDate: result.firstReleaseDate,
-        method: "musicbrainz_release_group",
-      };
+    if (item.medium === "music") {
+      const result = await verifyReleaseGroup(item.title, item.creator);
+      if (result.verified) {
+        return {
+          status: "verified",
+          source: "MusicBrainz",
+          url: `https://musicbrainz.org/release-group/${result.mbid}`,
+          detail: result.firstReleaseDate ? `first released ${result.firstReleaseDate}` : null,
+          method: "musicbrainz_release_group",
+        };
+      }
+      return { status: "not_found", source: "MusicBrainz", candidates: result.candidates };
     }
-    return { status: "not_found", candidates: result.candidates };
+
+    if (item.medium === "literature") {
+      const result = await verifyBook(item.title, item.creator);
+      if (result.verified) {
+        return {
+          status: "verified",
+          source: "Open Library",
+          url: result.url,
+          detail: result.firstPublishYear ? `first published ${result.firstPublishYear}` : null,
+          method: "openlibrary_search",
+        };
+      }
+      return { status: "not_found", source: "Open Library" };
+    }
+
+    const keywords = WIKIDATA_KEYWORDS[item.medium];
+    if (keywords) {
+      const result = await verifyWorkByDescription(item.title, item.creator, keywords);
+      if (result.verified) {
+        return {
+          status: "verified",
+          source: "Wikidata",
+          url: result.url,
+          detail: result.description,
+          method: "wikidata_description",
+        };
+      }
+      // Award-only: a Wikidata description miss is weak evidence — unchecked, not red.
+      return { status: "skipped", reason: "no confident Wikidata match; this check awards but never convicts" };
+    }
+
+    return { status: "skipped", reason: `no ${item.medium} verifier yet` };
   } catch (err) {
     return { status: "skipped", reason: `verifier error: ${err.message}` };
+  }
+}
+
+/**
+ * Load the subject's Wikipedia article once per mix (used by every
+ * connection check). Null when no article exists — checks degrade gracefully.
+ */
+export async function loadSubjectArticle(subject) {
+  try {
+    return await getArticle({ name: subject.name, qid: subject.wikidata_qid });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Deterministic CONNECTION documentation (V3-13): does the subject's
+ * Wikipedia article mention the recommended creator — or the creator's
+ * article mention the subject? If yes, extract the actual sentence and link
+ * it. A cross-mention is documentary signal, not proof of influence; the UI
+ * presents the evidence and lets the reader judge. No model in this path.
+ */
+export async function verifyConnection(item, subject, subjectArticle) {
+  if (item.slotType === "essential") return { status: "not_applicable" };
+  try {
+    if (subjectArticle) {
+      const mention = findMention(subjectArticle.text, item.creator);
+      if (mention) {
+        return {
+          status: "documented",
+          articleTitle: subjectArticle.title,
+          url: subjectArticle.url,
+          excerpt: mention.sentence,
+        };
+      }
+    }
+    const creatorArticle = await getArticle({ name: item.creator });
+    if (creatorArticle) {
+      const mention = findMention(creatorArticle.text, subject.name);
+      if (mention) {
+        return {
+          status: "documented",
+          articleTitle: creatorArticle.title,
+          url: creatorArticle.url,
+          excerpt: mention.sentence,
+        };
+      }
+    }
+    return { status: "undocumented" };
+  } catch {
+    return { status: "undocumented" };
   }
 }

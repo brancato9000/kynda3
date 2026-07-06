@@ -32,41 +32,73 @@ function RevealText({ text, msPerWord = 45, delayMs = 400, style }) {
   );
 }
 
-// ─── Provenance badge — machine-earned, never model-asserted ──
-function Badge({ verification }) {
-  const base = {
-    fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.06em",
-    padding: "3px 8px", borderRadius: "3px", textTransform: "uppercase",
-    display: "inline-flex", alignItems: "center", gap: "5px", textDecoration: "none",
-  };
-  if (!verification) {
+// ─── Provenance chips — machine-earned, never model-asserted ──
+// Two layers, deliberately distinct (V3-14):
+//   FactChip     — was the attribution (title/creator/year) confirmed in a database?
+//   ConnectionChip — is the CONNECTION itself documented (Wikipedia cross-mention)?
+// The databases fact-check the model; they are not the source of the recommendations.
+
+const chipBase = {
+  fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.06em",
+  padding: "3px 8px", borderRadius: "3px", textTransform: "uppercase",
+  display: "inline-flex", alignItems: "center", gap: "5px", textDecoration: "none",
+};
+
+function FactChip({ attribution }) {
+  if (!attribution) {
     return (
-      <span style={{ ...base, color: "rgba(148,163,184,0.55)", border: "1px solid rgba(148,163,184,0.2)" }}>
-        <Pulse /> verifying
+      <span style={{ ...chipBase, color: "rgba(148,163,184,0.55)", border: "1px solid rgba(148,163,184,0.2)" }}>
+        <Pulse /> checking facts
       </span>
     );
   }
-  if (verification.status === "verified") {
+  if (attribution.status === "verified") {
     return (
-      <a href={verification.url} target="_blank" rel="noreferrer"
-        title={`Confirmed in MusicBrainz${verification.firstReleaseDate ? ` — first released ${verification.firstReleaseDate}` : ""}`}
-        style={{ ...base, color: CONFIDENCE_COLORS.verified, border: "1px solid rgba(52,211,153,0.35)" }}>
-        ✓ verified · MusicBrainz ↗
+      <a href={attribution.url} target="_blank" rel="noreferrer"
+        title={`Title, creator & year confirmed in ${attribution.source}${attribution.detail ? ` — ${attribution.detail}` : ""}`}
+        style={{ ...chipBase, color: CONFIDENCE_COLORS.verified, border: "1px solid rgba(52,211,153,0.35)" }}>
+        ✓ facts checked
       </a>
     );
   }
-  if (verification.status === "not_found") {
+  if (attribution.status === "not_found") {
     return (
-      <span title="This attribution could not be confirmed in MusicBrainz — treat with skepticism"
-        style={{ ...base, color: "rgba(248,113,113,0.85)", border: "1px solid rgba(248,113,113,0.35)" }}>
-        ✕ unverified
+      <span title={`Not found in ${attribution.source} — this work may be misattributed`}
+        style={{ ...chipBase, color: "rgba(248,113,113,0.85)", border: "1px solid rgba(248,113,113,0.35)" }}>
+        ✕ failed fact-check
       </span>
     );
   }
   return (
-    <span title={verification.reason || "No database verifier for this medium yet"}
-      style={{ ...base, color: CONFIDENCE_COLORS.inferred, border: "1px solid rgba(148,163,184,0.2)" }}>
-      inferred
+    <span title={attribution.reason || "No database check available for this medium yet"}
+      style={{ ...chipBase, color: CONFIDENCE_COLORS.inferred, border: "1px solid rgba(148,163,184,0.2)" }}>
+      unchecked
+    </span>
+  );
+}
+
+function ConnectionChip({ connection }) {
+  if (!connection) {
+    return (
+      <span style={{ ...chipBase, color: "rgba(148,163,184,0.55)", border: "1px solid rgba(148,163,184,0.2)" }}>
+        <Pulse /> tracing
+      </span>
+    );
+  }
+  if (connection.status === "not_applicable") return null;
+  if (connection.status === "documented") {
+    return (
+      <a href={connection.url} target="_blank" rel="noreferrer"
+        title={`This connection appears in Wikipedia: ${connection.articleTitle} — excerpt below`}
+        style={{ ...chipBase, color: BASE.gold, border: "1px solid rgba(250,204,21,0.3)" }}>
+        ◆ documented
+      </a>
+    );
+  }
+  return (
+    <span title="This connection is Kynda's synthesis from the model's knowledge — interview-grade citations arrive with the research corpus"
+      style={{ ...chipBase, color: "rgba(148,163,184,0.6)", border: "1px solid rgba(148,163,184,0.2)" }}>
+      synthesis
     </span>
   );
 }
@@ -81,18 +113,23 @@ function Pulse() {
 function MixCard({ item, verification, index }) {
   const slot = SLOT_BY_ID[item.slotType] || { label: item.slotType, emoji: "◆" };
   const colors = SLOT_COLORS[item.slotType] || SLOT_COLORS.titan;
-  const failed = verification?.status === "not_found";
+  const attribution = verification?.attribution;
+  const connection = verification?.connection;
+  const failed = attribution?.status === "not_found";
   return (
     <div style={{
       background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: "8px",
       padding: "22px 24px", opacity: failed ? 0.65 : 1, animation: "kyndaRise 0.5s ease both",
       animationDelay: `${index * 60}ms`,
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", gap: "8px", flexWrap: "wrap" }}>
         <span style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
           {slot.emoji} {slot.label}
         </span>
-        <Badge verification={verification} />
+        <span style={{ display: "inline-flex", gap: "6px" }}>
+          <ConnectionChip connection={connection} />
+          <FactChip attribution={attribution} />
+        </span>
       </div>
       <div style={{ fontFamily: FONTS.display, fontSize: "26px", lineHeight: 1.15, marginBottom: "2px" }}>
         {item.title}
@@ -102,9 +139,20 @@ function MixCard({ item, verification, index }) {
       </div>
       <RevealText text={item.reason} msPerWord={12} delayMs={200}
         style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(226,232,240,0.82)" }} />
+      {connection?.status === "documented" && connection.excerpt && (
+        <div style={{ marginTop: "14px", paddingLeft: "14px", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
+          <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.75)" }}>
+            “{connection.excerpt}”
+          </div>
+          <a href={connection.url} target="_blank" rel="noreferrer"
+            style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
+            Wikipedia: {connection.articleTitle} ↗
+          </a>
+        </div>
+      )}
       {failed && (
         <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.7)", lineHeight: 1.5 }}>
-          This attribution was checked against MusicBrainz and could not be confirmed. It may be wrong.
+          This attribution was checked against {attribution.source} and could not be confirmed. It may be wrong.
         </div>
       )}
     </div>
@@ -238,7 +286,9 @@ export default function Page() {
     }
   }
 
-  const verifiedCount = Object.values(verifications).filter((v) => v?.status === "verified").length;
+  const verifs = Object.values(verifications);
+  const factCheckedCount = verifs.filter((v) => v?.attribution?.status === "verified").length;
+  const documentedCount = verifs.filter((v) => v?.connection?.status === "documented").length;
 
   return (
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
@@ -330,9 +380,12 @@ export default function Page() {
 
           {done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
-              {verifiedCount} of {items.length} attributions machine-verified against MusicBrainz.
-              Badges are earned by database checks, never self-assigned by the model.
-              Items marked “inferred” are in mediums without a verifier yet.
+              The connections are Kynda’s synthesis — no database can produce them.
+              The databases fact-check the synthesis: {factCheckedCount} of {items.length} attributions
+              confirmed against open catalogs (MusicBrainz, Open Library, Wikidata),
+              and {documentedCount} connection{documentedCount === 1 ? "" : "s"} independently documented
+              in Wikipedia, with the actual excerpt shown. All badges are machine-earned —
+              the model cannot assign them to itself.
             </div>
           )}
         </>
