@@ -21,18 +21,23 @@ function rateLimited(fn) {
   return run;
 }
 
-async function mbFetch(resource, params, retried = false) {
+async function mbFetch(resource, params) {
+  // Retry loops INSIDE the rate-limited task. Re-entering rateLimited() from
+  // in here deadlocks: the retry waits on the queue, the queue waits on us
+  // (caught live by CI as a Node exit-13 unsettled top-level await).
   return rateLimited(async () => {
     const url = new URL(`${MB_ROOT}/${resource}`);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
     url.searchParams.set("fmt", "json");
-    const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-    if (res.status === 503 && !retried) {
-      await new Promise((r) => setTimeout(r, 3000));
-      return mbFetch(resource, params, true);
+    for (let attempt = 0; ; attempt++) {
+      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      if (res.status === 503 && attempt < 2) {
+        await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+        continue;
+      }
+      if (!res.ok) throw new Error(`MusicBrainz ${res.status} for ${resource}`);
+      return res.json();
     }
-    if (!res.ok) throw new Error(`MusicBrainz ${res.status} for ${resource}`);
-    return res.json();
   });
 }
 
