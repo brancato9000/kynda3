@@ -15,7 +15,7 @@ import path from "node:path";
 import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
 import { findMention } from "../src/lib/entities/wikipedia.js";
 import { scoreMixResult } from "./scoring.js";
-import { searchArtist, verifyReleaseGroup, getArtistMembers } from "../src/lib/entities/musicbrainz.js";
+import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -171,11 +171,13 @@ async function testLive(subjects) {
       }
       if (g.members_include?.length) {
         const members = await getArtistMembers(g.canonical.mbid);
-        const names = members.map((m) => m.name);
+        // norm() comparison, same as the runtime's hop-1 member matching —
+        // MusicBrainz uses curly apostrophes (Ed O’Brien).
+        const names = members.map((m) => norm(m.name));
         check(
           `${g.subject}: membership relations include ${g.members_include.join(", ")}`,
-          g.members_include.every((n) => names.includes(n)),
-          `got: ${names.join(", ")}`
+          g.members_include.every((n) => names.includes(norm(n))),
+          `got: ${members.map((m) => m.name).join(", ")}`
         );
       }
     } else if (g.canonical.wikidata_qid) {
