@@ -81,6 +81,31 @@ export async function searchArtist(name, limit = 5) {
 }
 
 /**
+ * Canonical band-membership relationships (V3-16). For a group, returns its
+ * members; for a person, the groups they belong(ed) to. This is hop 1 of
+ * two-hop connection verification — a database fact, not a model claim.
+ */
+export async function getArtistMembers(mbid) {
+  const data = await mbFetch(`artist/${mbid}`, { inc: "artist-rels" });
+  const members = [];
+  const seen = new Set();
+  for (const rel of data.relations || []) {
+    if (rel.type !== "member of band") continue;
+    const other = rel.artist;
+    if (!other || seen.has(other.id)) continue;
+    seen.add(other.id);
+    members.push({
+      name: other.name,
+      mbid: other.id,
+      url: `https://musicbrainz.org/artist/${other.id}`,
+      begin: rel.begin || null,
+      end: rel.end || null,
+    });
+  }
+  return members;
+}
+
+/**
  * Deterministically verify an attribution tuple: does `creator` actually
  * have a release group titled `title`? This is the check that catches the
  * CORRECTIONS.md failure class (a Radiohead album attributed to Blur).

@@ -95,6 +95,15 @@ function ConnectionChip({ connection }) {
       </a>
     );
   }
+  if (connection.status === "documented_via") {
+    return (
+      <a href={connection.hop2.url} target="_blank" rel="noreferrer"
+        title={`Indirect connection through ${connection.via} — both links machine-checked; evidence below`}
+        style={{ ...chipBase, color: BASE.gold, border: "1px dashed rgba(250,204,21,0.35)" }}>
+        ◆ documented via {connection.via}
+      </a>
+    );
+  }
   return (
     <span title="This connection rests on the model's knowledge — no independent citation found yet. Interview-grade citations arrive with the research corpus."
       style={{ ...chipBase, color: "rgba(148,163,184,0.6)", border: "1px solid rgba(148,163,184,0.2)" }}>
@@ -163,6 +172,36 @@ function MixCard({ item, verification, index }) {
               <a href={connection.url} target="_blank" rel="noreferrer"
                 style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
                 Wikipedia: {connection.articleTitle} ↗
+              </a>
+            </div>
+          ) : connection?.status === "documented_via" ? (
+            <div style={{ paddingLeft: "14px", borderLeft: "2px dashed rgba(250,204,21,0.3)" }}>
+              <div style={{ marginBottom: "6px" }}>
+                <ConnectionChip connection={connection} />
+              </div>
+              {connection.hop1.kind === "membership" ? (
+                <div style={{ fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(226,232,240,0.65)", marginBottom: "6px" }}>
+                  {connection.via} — {connection.hop1.label}{" "}
+                  <a href={connection.hop1.url} target="_blank" rel="noreferrer"
+                    style={{ color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
+                    · {connection.hop1.source} ↗
+                  </a>
+                </div>
+              ) : (
+                <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13px", lineHeight: 1.6, color: "rgba(226,232,240,0.7)", marginBottom: "6px" }}>
+                  “{connection.hop1.excerpt}”{" "}
+                  <a href={connection.hop1.url} target="_blank" rel="noreferrer"
+                    style={{ fontFamily: FONTS.mono, fontStyle: "normal", fontSize: "10px", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
+                    — Wikipedia: {connection.hop1.articleTitle} ↗
+                  </a>
+                </div>
+              )}
+              <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.75)" }}>
+                “{connection.hop2.excerpt}”
+              </div>
+              <a href={connection.hop2.url} target="_blank" rel="noreferrer"
+                style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
+                Wikipedia: {connection.hop2.articleTitle} ↗
               </a>
             </div>
           ) : (
@@ -239,12 +278,14 @@ const DEMO = {
     { slotType: "ghost", title: "Selected Ambient Works 85-92", creator: "Aphex Twin", year: "1992", medium: "music", reason: "The Warp Records catalog — Aphex Twin above all — is the documented hinge of the Kid A era. Yorke described retreating from guitar music entirely and listening to little else, and the imprint is structural: rhythm displacing riff, texture displacing chorus. This is the connection casual listeners miss most, because its fingerprints are on the band's least guitar-shaped records." },
     { slotType: "culture", title: "1984", creator: "George Orwell", year: "1949", medium: "literature", reason: "The surveillance dread that saturates OK Computer draws on Orwell's template of institutional watching and language control. 'Karma Police' and '2 + 2 = 5' reach for Orwellian vocabulary directly, the latter naming the novel's most famous formula of coerced belief. The band's era-defining anxiety about technology owes as much to fiction as to any musical source." },
     { slotType: "essential", title: "Kid A", creator: "Radiohead", year: "2000", medium: "music", reason: "The band's most consequential act of self-reinvention: a No. 1 record with no single, no video, and barely a guitar, assembled from ondes Martenot, processed vocals, and Warp-schooled electronics. Its gravity bends everything before and after it in the catalog, and it remains the cleanest single entry point into what makes this band structurally different from their peers." },
+    { slotType: "legacy", title: "There Will Be Blood", creator: "Paul Thomas Anderson", year: "2007", medium: "film", via: "Jonny Greenwood", reason: "Radiohead's legacy extends into film scoring through Jonny Greenwood, whose dissonant string writing for Paul Thomas Anderson's oil-boom epic announced a rock musician operating at the level of contemporary classical composition. The partnership continued across Phantom Thread and The Power of the Dog, carrying the band's textural vocabulary into cinema." },
   ],
   verifications: {
     0: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." } },
     1: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1992" }, connection: { status: "undocumented" } },
     2: { attribution: { status: "not_found", source: "Open Library" }, connection: { status: "undocumented" } },
     3: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 2000-10-02" }, connection: { status: "not_applicable" } },
+    4: { attribution: { status: "verified", source: "Wikidata", url: "https://www.wikidata.org/wiki/Q261191", detail: "2007 film directed by Paul Thomas Anderson" }, connection: { status: "documented_via", via: "Jonny Greenwood", hop1: { kind: "membership", label: "member of Radiohead", source: "MusicBrainz", url: "https://musicbrainz.org" }, hop2: { articleTitle: "Jonny Greenwood", url: "https://en.wikipedia.org/wiki/Jonny_Greenwood", excerpt: "Greenwood composed the score for Paul Thomas Anderson's film There Will Be Blood (2007), which won him critical acclaim." } } },
   },
 };
 

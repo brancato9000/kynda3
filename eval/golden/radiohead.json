@@ -4,6 +4,7 @@
   "kind": "group",
   "canonical": { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "wikidata_qid": null },
   "decoys": [],
+  "members_include": ["Thom Yorke", "Jonny Greenwood", "Colin Greenwood", "Ed O'Brien", "Philip Selway"],
   "attribution_true": [
     { "title": "OK Computer", "creator": "Radiohead", "year": "1997" },
     { "title": "Surfer Rosa", "creator": "Pixies", "year": "1988" }

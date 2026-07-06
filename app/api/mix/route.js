@@ -5,7 +5,7 @@
 // The visible badge-earning delay is the product working as designed (V3-11):
 // "verified" appears only after the deterministic check passes.
 
-import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
+import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
 
 export const maxDuration = 300;
 
@@ -31,10 +31,13 @@ export async function POST(req) {
           return;
         }
 
+        // Members feed the mix prompt (member-level connections become
+        // deliberate) and serve as hop 1 of two-hop verification (V3-16).
+        const members = await loadSubjectMembers(subject);
         // Fetch the subject's Wikipedia article while the mix generates —
         // every connection check reads it.
         const [mix, subjectArticle] = await Promise.all([
-          generateMix(subject),
+          generateMix(subject, members),
           loadSubjectArticle(subject),
         ]);
         send({ type: "intro", intro: mix.intro });
@@ -46,7 +49,7 @@ export async function POST(req) {
           const item = mix.items[i];
           const [attribution, connection] = await Promise.all([
             verifyAttribution(item),
-            verifyConnection(item, subject, subjectArticle),
+            verifyConnection(item, subject, subjectArticle, members),
           ]);
           const verification = { attribution, connection };
           entries.push({ item, verification });

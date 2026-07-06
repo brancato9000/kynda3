@@ -8,7 +8,7 @@
 // arrive in Phase 1b; until then those items are honestly labeled inferred.
 
 import { callFable } from "../ai/anthropic.js";
-import { verifyReleaseGroup, norm } from "../entities/musicbrainz.js";
+import { verifyReleaseGroup, getArtistMembers, norm } from "../entities/musicbrainz.js";
 import { verifyWorkByDescription } from "../entities/wikidata.js";
 import { verifyBook } from "../entities/openlibrary.js";
 import { getArticle, findMention } from "../entities/wikipedia.js";
@@ -26,12 +26,13 @@ const MIX_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["slotType", "title", "creator", "year", "medium", "reason"],
+        required: ["slotType", "title", "creator", "year", "medium", "reason", "via"],
         properties: {
           slotType: { type: "string", enum: SLOT_IDS },
           title: { type: "string" },
           creator: { type: "string" },
           year: { type: "string" },
+          via: { anyOf: [{ type: "string" }, { type: "null" }] },
           medium: {
             type: "string",
             enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"],
@@ -61,6 +62,7 @@ Rules:
 - Never place the subject's own work anywhere except the essential slot.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
+- via: when the connection runs through an intermediate person — most often a band member's work outside the band, or a collaborator's other projects — put that person's name in via. Otherwise null. Only name a via when the intermediate link is real: both hops (subject↔via and via↔work) are machine-checked against databases and encyclopedias.
 - intro: 2-3 sentences contextualizing the mix.
 - If a connection is rumored or vibes-based, choose something better documented.`;
 
@@ -81,13 +83,30 @@ export function cacheMix(subject, payload) {
   if (mixCache.size > 300) mixCache.delete(mixCache.keys().next().value);
 }
 
-export async function generateMix(subject) {
+/**
+ * Canonical member / associated-act list for the subject (MusicBrainz).
+ * Feeds the mix prompt so member-level connections are deliberate, and
+ * serves as hop 1 of two-hop connection verification (V3-16).
+ */
+export async function loadSubjectMembers(subject) {
+  if (!subject.mbid) return [];
+  try {
+    return await getArtistMembers(subject.mbid);
+  } catch {
+    return [];
+  }
+}
+
+export async function generateMix(subject, members = []) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
   if (subject.yearsActive) context.push(`Years: ${subject.yearsActive}`);
   if (subject.description) context.push(`Identified as: ${subject.description}`);
   if (subject.bio?.text) context.push(`Bio (from Wikipedia): ${subject.bio.text}`);
+  if (members.length) {
+    context.push(`Members / associated acts (from MusicBrainz): ${members.slice(0, 15).map((m) => m.name).join(", ")}`);
+  }
   if (context.length) parts.push(`This specifically refers to:\n${context.join("\n")}`);
 
   const mix = await callFable({
@@ -197,7 +216,7 @@ export async function loadSubjectArticle(subject) {
  * it. A cross-mention is documentary signal, not proof of influence; the UI
  * presents the evidence and lets the reader judge. No model in this path.
  */
-export async function verifyConnection(item, subject, subjectArticle) {
+export async function verifyConnection(item, subject, subjectArticle, members = []) {
   if (item.slotType === "essential") return { status: "not_applicable" };
   try {
     if (subjectArticle) {
@@ -223,8 +242,46 @@ export async function verifyConnection(item, subject, subjectArticle) {
         };
       }
     }
+    // Two-hop path (V3-16): the model proposed an intermediate person; both
+    // hops are machine-checked. ONE intermediate hop maximum, by design —
+    // longer chains connect everyone to everything and the signal dies.
+    if (item.via && norm(item.via) !== norm(subject.name)) {
+      const viaHop = await verifyViaChain(item, subject, subjectArticle, members);
+      if (viaHop) return viaHop;
+    }
     return { status: "undocumented" };
   } catch {
     return { status: "undocumented" };
   }
+}
+
+async function verifyViaChain(item, subject, subjectArticle, members) {
+  // Hop 1: is `via` really connected to the subject?
+  // Strongest: a MusicBrainz membership relation. Fallback: subject's
+  // Wikipedia article mentions them.
+  let hop1 = null;
+  const member = members.find((m) => norm(m.name) === norm(item.via));
+  if (member) {
+    hop1 = { kind: "membership", label: `member of ${subject.name}`, source: "MusicBrainz", url: member.url };
+  } else if (subjectArticle) {
+    const mention = findMention(subjectArticle.text, item.via);
+    if (mention) {
+      hop1 = { kind: "mention", articleTitle: subjectArticle.title, url: subjectArticle.url, excerpt: mention.sentence };
+    }
+  }
+  if (!hop1) return null;
+
+  // Hop 2: does the via person's article mention the recommended work
+  // (by title, or failing that by its credited creator)?
+  const viaArticle = await getArticle({ name: item.via });
+  if (!viaArticle) return null;
+  const mention = findMention(viaArticle.text, item.title) || findMention(viaArticle.text, item.creator);
+  if (!mention) return null;
+
+  return {
+    status: "documented_via",
+    via: item.via,
+    hop1,
+    hop2: { articleTitle: viaArticle.title, url: viaArticle.url, excerpt: mention.sentence },
+  };
 }
