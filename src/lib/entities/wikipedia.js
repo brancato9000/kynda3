@@ -90,6 +90,34 @@ export async function getArticle({ name, qid = null }) {
 }
 
 /**
+ * Fetch just the article's opening section (fast, small). Used verbatim as
+ * the subject bio (V3-15: don't generate what you can quote) — trimmed to a
+ * sentence boundary, never model-rewritten.
+ * Returns { title, text, url } or null.
+ */
+export async function getIntroExtract({ name, qid = null, maxChars = 600 }) {
+  const title = await findArticleTitle({ name, qid });
+  if (!title) return null;
+  const data = await apiFetch(API, {
+    action: "query",
+    prop: "extracts",
+    exintro: "1",
+    explaintext: "1",
+    redirects: "1",
+    titles: title,
+  });
+  const page = Object.values(data.query?.pages || {})[0];
+  if (!page?.extract) return null;
+  let text = page.extract.replace(/\s+/g, " ").trim();
+  if (text.length > maxChars) {
+    const cut = text.slice(0, maxChars);
+    const lastSentenceEnd = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(".”"), cut.lastIndexOf(".)"));
+    text = lastSentenceEnd > 150 ? cut.slice(0, lastSentenceEnd + 1) : cut.trimEnd() + "…";
+  }
+  return { title: page.title, text, url: articleUrl(page.title) };
+}
+
+/**
  * Pure: find the first sentence in `text` that mentions `name`.
  * Case-sensitive word-boundary match — proper nouns are capitalized, which
  * keeps common-word names ("Can", "Low", "Blur") from matching prose.

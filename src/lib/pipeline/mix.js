@@ -87,7 +87,7 @@ export async function generateMix(subject) {
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
   if (subject.yearsActive) context.push(`Years: ${subject.yearsActive}`);
   if (subject.description) context.push(`Identified as: ${subject.description}`);
-  if (subject.bio) context.push(`Bio: ${subject.bio}`);
+  if (subject.bio?.text) context.push(`Bio (from Wikipedia): ${subject.bio.text}`);
   if (context.length) parts.push(`This specifically refers to:\n${context.join("\n")}`);
 
   const mix = await callFable({

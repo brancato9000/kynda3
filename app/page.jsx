@@ -180,16 +180,30 @@ function MixCard({ item, verification, index }) {
 }
 
 // ─── Subject / disambiguation UI ──────────────────────────────
+// Bio is QUOTED from Wikipedia, never generated (V3-15). The metadata line
+// only shows database fields (MusicBrainz life-span, catalog descriptions).
 function SubjectCard({ subject }) {
   return (
     <div style={{ padding: "26px 28px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", marginBottom: "24px" }}>
       <div style={{ fontFamily: FONTS.display, fontSize: "38px", lineHeight: 1.05, marginBottom: "6px" }}>{subject.name}</div>
       <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: BASE.gold, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>
-        {[subject.domain !== "unknown" ? subject.domain : null, subject.yearsActive, ...(subject.genres || []).slice(0, 3)].filter(Boolean).join(" · ")}
+        {[subject.domain !== "unknown" ? subject.domain : null, subject.yearsActive, subject.description].filter(Boolean).join(" · ")}
       </div>
-      {subject.bio && (
-        <RevealText text={subject.bio} msPerWord={REVEAL_TIMING.bio.msPerWord} delayMs={REVEAL_TIMING.bio.delayMs}
-          style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.8)" }} />
+      {subject.bio?.text ? (
+        <>
+          <RevealText text={subject.bio.text} msPerWord={REVEAL_TIMING.bio.msPerWord} delayMs={REVEAL_TIMING.bio.delayMs}
+            style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.8)" }} />
+          <div style={{ marginTop: "10px" }}>
+            <a href={subject.bio.url} target="_blank" rel="noreferrer"
+              style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
+              — Wikipedia: {subject.bio.articleTitle} ↗
+            </a>
+          </div>
+        </>
+      ) : (
+        <div style={{ fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.6 }}>
+          No encyclopedia entry found — showing catalog metadata only. Kynda quotes bios rather than generating them.
+        </div>
       )}
     </div>
   );
@@ -215,7 +229,10 @@ function CandidateButton({ candidate, onPick, compact }) {
 
 // ─── Demo fixture (?demo=1) — offline design iteration, no API calls ──
 const DEMO = {
-  subject: { name: "Radiohead", domain: "music", bio: "English rock band formed in Abingdon in 1985, whose restless reinvention across OK Computer and Kid A reshaped what a rock band could be.", genres: ["art rock", "electronic"], yearsActive: "1985–Present", mbid: "demo" },
+  subject: {
+    name: "Radiohead", domain: "music", yearsActive: "1985–Present", description: "GB", mbid: "demo",
+    bio: { text: "Radiohead are an English rock band formed in Abingdon, Oxfordshire, in 1985. Their experimental approach is credited with advancing the sound of alternative rock.", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", source: "Wikipedia" },
+  },
   intro: "Radiohead's story is one of absorbing the American underground, Bristol's electronics, and Warp Records' abstractions — then transmitting all of it forward.",
   items: [
     { slotType: "titan", title: "Surfer Rosa", creator: "Pixies", year: "1988", medium: "music", reason: "Thom Yorke has repeatedly pointed to the Pixies' quiet-loud dynamics as foundational to the band's early songwriting, an architecture audible from Pablo Honey through The Bends. Producer Paul Kolderie, who engineered for the Pixies, was enlisted for Radiohead's debut — a direct personnel link between the two catalogs that shaped how the band tracked guitars and staged dynamics for a decade." },

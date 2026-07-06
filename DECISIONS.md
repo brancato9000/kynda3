@@ -56,6 +56,10 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 **Decision:** Badges read "✓ facts checked" / "✕ failed fact-check" / "unchecked" (attribution) and "◆ documented" / "synthesis" (connection). Database names are demoted to tooltips and links. The footer states explicitly that the connections are Kynda's synthesis and the databases only fact-check it.
 **Rationale:** The slice-1 badge ("verified · MusicBrainz") accidentally presented the fact-checker as the source, making the product read as a MusicBrainz wrapper. Naming the check, not the checker, keeps the trust signal without misattributing the value.
 
+## V3-15: Bios are quoted, never generated
+**Decision:** The subject bio is the opening of the subject's Wikipedia article, displayed verbatim with attribution ("— Wikipedia ↗"). Years-active comes from MusicBrainz life-span data; the descriptor line from the database that supplied the candidate. Haiku's disambiguation schema no longer contains bio/genres/yearsActive — its only outputs are candidate indices and the ambiguity tier, fields that cannot carry hallucinated facts. No Wikipedia article → no prose bio, with an explicit note.
+**Rationale:** First user-caught hallucination in v3 (2026-07-06): Haiku invented a "hit single 'Almost Here'" for Lazlo Bane — retrieval locked the entity but the bio prose was ungrounded, and it read as reference material. Principle: don't generate what you can quote; honest absence beats confident invention. Side benefit: the grounded bio feeds the mix prompt, giving Fable true context instead of model-guessed context.
+
 ## V3-08: Real decoys as disambiguation tests
 **Decision:** Golden subjects record known real-world decoys (e.g., Nirvana the UK 60s band vs. the US grunge band; The Godfather the video game vs. the 1972 film). Disambiguation evals must surface or correctly rank these.
 **Rationale:** Retrieval-first disambiguation (candidates come from DB search APIs, model only ranks) makes invented entities impossible by construction — but choosing the wrong *real* entity is still a failure mode, and it's testable.
