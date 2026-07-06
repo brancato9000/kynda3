@@ -96,9 +96,9 @@ function ConnectionChip({ connection }) {
     );
   }
   return (
-    <span title="This connection is Kynda's synthesis from the model's knowledge — interview-grade citations arrive with the research corpus"
+    <span title="This connection rests on the model's knowledge — no independent citation found yet. Interview-grade citations arrive with the research corpus."
       style={{ ...chipBase, color: "rgba(148,163,184,0.6)", border: "1px solid rgba(148,163,184,0.2)" }}>
-      synthesis
+      Kynda’s synthesis
     </span>
   );
 }
@@ -122,32 +122,42 @@ function MixCard({ item, verification, index }) {
       padding: "22px 24px", opacity: failed ? 0.65 : 1, animation: "kyndaRise 0.5s ease both",
       animationDelay: `${index * 60}ms`,
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", gap: "8px", flexWrap: "wrap" }}>
+      <div style={{ marginBottom: "12px" }}>
         <span style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
           {slot.emoji} {slot.label}
-        </span>
-        <span style={{ display: "inline-flex", gap: "6px" }}>
-          <ConnectionChip connection={connection} />
-          <FactChip attribution={attribution} />
         </span>
       </div>
       <div style={{ fontFamily: FONTS.display, fontSize: "26px", lineHeight: 1.15, marginBottom: "2px" }}>
         {item.title}
       </div>
-      <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.75)", marginBottom: "14px" }}>
-        {item.creator}{item.year ? ` · ${item.year}` : ""}{item.medium && item.medium !== "music" ? ` · ${item.medium}` : ""}
+      {/* The fact chip sits with the facts it checks: title, creator, year */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
+        <span style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.75)" }}>
+          {item.creator}{item.year ? ` · ${item.year}` : ""}{item.medium && item.medium !== "music" ? ` · ${item.medium}` : ""}
+        </span>
+        <FactChip attribution={attribution} />
       </div>
       <RevealText text={item.reason} msPerWord={12} delayMs={200}
         style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(226,232,240,0.82)" }} />
-      {connection?.status === "documented" && connection.excerpt && (
-        <div style={{ marginTop: "14px", paddingLeft: "14px", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
-          <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.75)" }}>
-            “{connection.excerpt}”
-          </div>
-          <a href={connection.url} target="_blank" rel="noreferrer"
-            style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
-            Wikipedia: {connection.articleTitle} ↗
-          </a>
+      {/* The connection chip sits with the claim it describes: the reason prose */}
+      {connection?.status !== "not_applicable" && (
+        <div style={{ marginTop: "12px" }}>
+          {connection?.status === "documented" && connection.excerpt ? (
+            <div style={{ paddingLeft: "14px", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
+              <div style={{ marginBottom: "6px" }}>
+                <ConnectionChip connection={connection} />
+              </div>
+              <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.75)" }}>
+                “{connection.excerpt}”
+              </div>
+              <a href={connection.url} target="_blank" rel="noreferrer"
+                style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.7)", textDecoration: "none" }}>
+                Wikipedia: {connection.articleTitle} ↗
+              </a>
+            </div>
+          ) : (
+            <ConnectionChip connection={connection} />
+          )}
         </div>
       )}
       {failed && (
@@ -193,6 +203,24 @@ function CandidateButton({ candidate, onPick, compact }) {
   );
 }
 
+// ─── Demo fixture (?demo=1) — offline design iteration, no API calls ──
+const DEMO = {
+  subject: { name: "Radiohead", domain: "music", bio: "English rock band formed in Abingdon in 1985, whose restless reinvention across OK Computer and Kid A reshaped what a rock band could be.", genres: ["art rock", "electronic"], yearsActive: "1985–Present", mbid: "demo" },
+  intro: "Radiohead's story is one of absorbing the American underground, Bristol's electronics, and Warp Records' abstractions — then transmitting all of it forward.",
+  items: [
+    { slotType: "titan", title: "Surfer Rosa", creator: "Pixies", year: "1988", medium: "music", reason: "Thom Yorke has repeatedly pointed to the Pixies' quiet-loud dynamics as foundational to the band's early songwriting, an architecture audible from Pablo Honey through The Bends. Producer Paul Kolderie, who engineered for the Pixies, was enlisted for Radiohead's debut — a direct personnel link between the two catalogs that shaped how the band tracked guitars and staged dynamics for a decade." },
+    { slotType: "ghost", title: "Selected Ambient Works 85-92", creator: "Aphex Twin", year: "1992", medium: "music", reason: "The Warp Records catalog — Aphex Twin above all — is the documented hinge of the Kid A era. Yorke described retreating from guitar music entirely and listening to little else, and the imprint is structural: rhythm displacing riff, texture displacing chorus. This is the connection casual listeners miss most, because its fingerprints are on the band's least guitar-shaped records." },
+    { slotType: "culture", title: "1984", creator: "George Orwell", year: "1949", medium: "literature", reason: "The surveillance dread that saturates OK Computer draws on Orwell's template of institutional watching and language control. 'Karma Police' and '2 + 2 = 5' reach for Orwellian vocabulary directly, the latter naming the novel's most famous formula of coerced belief. The band's era-defining anxiety about technology owes as much to fiction as to any musical source." },
+    { slotType: "essential", title: "Kid A", creator: "Radiohead", year: "2000", medium: "music", reason: "The band's most consequential act of self-reinvention: a No. 1 record with no single, no video, and barely a guitar, assembled from ondes Martenot, processed vocals, and Warp-schooled electronics. Its gravity bends everything before and after it in the catalog, and it remains the cleanest single entry point into what makes this band structurally different from their peers." },
+  ],
+  verifications: {
+    0: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." } },
+    1: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1992" }, connection: { status: "undocumented" } },
+    2: { attribution: { status: "not_found", source: "Open Library" }, connection: { status: "undocumented" } },
+    3: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 2000-10-02" }, connection: { status: "not_applicable" } },
+  },
+};
+
 // ─── Page ─────────────────────────────────────────────────────
 export default function Page() {
   const [query, setQuery] = useState("");
@@ -206,6 +234,15 @@ export default function Page() {
   const [verifications, setVerifications] = useState({});
   const [done, setDone] = useState(false);
   const runRef = useRef(0);
+
+  // ?demo=1 seeds fixture data for offline design iteration — no API calls.
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo")) {
+      setSubject(DEMO.subject); setTier("certain"); setIntro(DEMO.intro);
+      setItems(DEMO.items); setVerifications(DEMO.verifications);
+      setPhase("mixing"); setDone(true);
+    }
+  }, []);
 
   const fireMix = useCallback(async (subj, run) => {
     try {
