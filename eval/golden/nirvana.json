@@ -1,0 +1,21 @@
+{
+  "subject": "Nirvana",
+  "domain": "music",
+  "kind": "group",
+  "canonical": { "mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da", "wikidata_qid": null },
+  "decoys": [
+    { "name": "Nirvana (UK)", "note": "1960s UK psychedelic band — same name, real entity. Disambiguation must not pick this one for the unqualified query.", "mbid": "9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6" }
+  ],
+  "attribution_true": [
+    { "title": "Nevermind", "creator": "Nirvana", "year": "1991" },
+    { "title": "In Utero", "creator": "Nirvana", "year": "1993" }
+  ],
+  "attribution_traps": [
+    { "title": "Superunknown", "creator": "Nirvana", "actual_creator": "Soundgarden", "origin": "Plausible confusion: Seattle grunge peers conflated" }
+  ],
+  "self_reference_traps": ["Bleach", "Nevermind", "In Utero", "MTV Unplugged in New York"],
+  "influence_facts": [
+    { "type": "cited_as_influence", "object": "Pixies", "note": "Kurt Cobain explicitly said Smells Like Teen Spirit was an attempt to write a Pixies song (Rolling Stone, 1994).", "human_confirmed": false },
+    { "type": "collaborated_with", "object": "Steve Albini", "note": "Recorded In Utero.", "human_confirmed": false }
+  ]
+}

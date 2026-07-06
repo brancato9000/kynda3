@@ -1,0 +1,19 @@
+{
+  "subject": "Kendrick Lamar",
+  "domain": "music",
+  "kind": "person",
+  "canonical": { "mbid": "381086ea-f511-4aba-bdf9-71c753dc5077", "wikidata_qid": null },
+  "decoys": [],
+  "attribution_true": [
+    { "title": "good kid, m.A.A.d city", "creator": "Kendrick Lamar", "year": "2012" },
+    { "title": "To Pimp a Butterfly", "creator": "Kendrick Lamar", "year": "2015" }
+  ],
+  "attribution_traps": [
+    { "title": "My Beautiful Dark Twisted Fantasy", "creator": "Kendrick Lamar", "actual_creator": "Kanye West", "origin": "Plausible confusion: canonical hip-hop albums of adjacent eras" }
+  ],
+  "self_reference_traps": ["Section.80", "good kid, m.A.A.d city", "To Pimp a Butterfly", "DAMN.", "Mr. Morale & The Big Steppers"],
+  "influence_facts": [
+    { "type": "cited_as_influence", "object": "Tupac Shakur", "note": "Repeatedly cited by Lamar; the closing conversation on To Pimp a Butterfly uses archival Tupac interview audio.", "human_confirmed": false },
+    { "type": "collaborated_with", "object": "Sounwave", "note": "Long-time producer across his catalog.", "human_confirmed": false }
+  ]
+}

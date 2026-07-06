@@ -1,0 +1,20 @@
+{
+  "subject": "Radiohead",
+  "domain": "music",
+  "kind": "group",
+  "canonical": { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "wikidata_qid": null },
+  "decoys": [],
+  "attribution_true": [
+    { "title": "OK Computer", "creator": "Radiohead", "year": "1997" },
+    { "title": "Surfer Rosa", "creator": "Pixies", "year": "1988" }
+  ],
+  "attribution_traps": [
+    { "title": "Parklife", "creator": "Radiohead", "actual_creator": "Blur", "origin": "kynda2 CORRECTIONS.md 2026-02-14 — observed failure, stamped 'verified' by the model" }
+  ],
+  "self_reference_traps": ["Pablo Honey", "The Bends", "OK Computer", "Kid A", "Amnesiac", "In Rainbows"],
+  "influence_facts": [
+    { "type": "cited_as_influence", "object": "Pixies", "note": "Thom Yorke has repeatedly cited the Pixies' quiet-loud dynamics as foundational.", "human_confirmed": false },
+    { "type": "collaborated_with", "object": "Nigel Godrich", "note": "Producer on every album from OK Computer onward.", "human_confirmed": false },
+    { "type": "influenced_by", "object": "Miles Davis", "note": "Bitches Brew is documented as an influence on the OK Computer / Kid A era.", "human_confirmed": false }
+  ]
+}

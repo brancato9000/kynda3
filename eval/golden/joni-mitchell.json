@@ -1,0 +1,18 @@
+{
+  "subject": "Joni Mitchell",
+  "domain": "music",
+  "kind": "person",
+  "canonical": { "mbid": "a6de8ef9-b1a1-4756-97aa-481bbb8a4069", "wikidata_qid": null },
+  "decoys": [],
+  "attribution_true": [
+    { "title": "Blue", "creator": "Joni Mitchell", "year": "1971" },
+    { "title": "Hejira", "creator": "Joni Mitchell", "year": "1976" }
+  ],
+  "attribution_traps": [
+    { "title": "Tapestry", "creator": "Joni Mitchell", "actual_creator": "Carole King", "origin": "Plausible confusion: landmark early-70s singer-songwriter albums conflated" }
+  ],
+  "self_reference_traps": ["Blue", "Court and Spark", "Hejira", "Ladies of the Canyon", "The Hissing of Summer Lawns"],
+  "influence_facts": [
+    { "type": "collaborated_with", "object": "Jaco Pastorius", "note": "Bassist on Hejira and Mingus-era work.", "human_confirmed": false }
+  ]
+}

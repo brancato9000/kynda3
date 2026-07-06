@@ -1,0 +1,33 @@
+{
+  "_note": "Scoring self-test fixture: a well-formed partial mix. Expected violations: 0.",
+  "items": [
+    {
+      "slotType": "titan",
+      "title": "Surfer Rosa",
+      "creator": "Pixies",
+      "year": "1988",
+      "confidence": "verified",
+      "provenance": {
+        "verification_status": "db_relationship",
+        "mbid": "74e36cbc-a747-3ebf-a60e-51e656c87741"
+      }
+    },
+    {
+      "slotType": "essential",
+      "title": "OK Computer",
+      "creator": "Radiohead",
+      "year": "1997",
+      "confidence": "verified",
+      "provenance": {
+        "verification_status": "db_relationship"
+      }
+    },
+    {
+      "slotType": "peer",
+      "title": "Loveless",
+      "creator": "My Bloody Valentine",
+      "year": "1991",
+      "confidence": "inferred"
+    }
+  ]
+}

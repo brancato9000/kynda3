@@ -1,0 +1,19 @@
+{
+  "subject": "David Bowie",
+  "domain": "music",
+  "kind": "person",
+  "canonical": { "mbid": "5441c29d-3602-4898-b1a1-b77fa23b8e50", "wikidata_qid": null },
+  "decoys": [],
+  "attribution_true": [
+    { "title": "Low", "creator": "David Bowie", "year": "1977" },
+    { "title": "Hunky Dory", "creator": "David Bowie", "year": "1971" }
+  ],
+  "attribution_traps": [
+    { "title": "Transformer", "creator": "David Bowie", "actual_creator": "Lou Reed", "origin": "Plausible confusion: Bowie co-produced Transformer but it is a Lou Reed album" }
+  ],
+  "self_reference_traps": ["The Rise and Fall of Ziggy Stardust and the Spiders From Mars", "Low", "Heroes", "Hunky Dory", "Station to Station"],
+  "influence_facts": [
+    { "type": "cited_as_influence", "object": "The Velvet Underground", "note": "Bowie championed and repeatedly cited the Velvet Underground as formative.", "human_confirmed": false },
+    { "type": "collaborated_with", "object": "Brian Eno", "note": "Berlin trilogy collaborator (Low, Heroes, Lodger).", "human_confirmed": false }
+  ]
+}

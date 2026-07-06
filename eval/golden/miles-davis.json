@@ -1,0 +1,20 @@
+{
+  "subject": "Miles Davis",
+  "domain": "music",
+  "kind": "person",
+  "canonical": { "mbid": "561d854a-6a28-4aa7-8c99-323e6ce46c2a", "wikidata_qid": null },
+  "decoys": [
+    { "name": "Miles Davis Quintet", "note": "His own group — related but distinct entity", "mbid": "fe7245e7-d734-4ca1-8e26-691883f58201" }
+  ],
+  "attribution_true": [
+    { "title": "Kind of Blue", "creator": "Miles Davis", "year": "1959" },
+    { "title": "Bitches Brew", "creator": "Miles Davis", "year": "1970" }
+  ],
+  "attribution_traps": [
+    { "title": "A Love Supreme", "creator": "Miles Davis", "actual_creator": "John Coltrane", "origin": "Plausible confusion: Coltrane played in Davis's quintet; canonical jazz albums conflated" }
+  ],
+  "self_reference_traps": ["Kind of Blue", "Bitches Brew", "In a Silent Way", "Sketches of Spain", "On the Corner"],
+  "influence_facts": [
+    { "type": "collaborated_with", "object": "Gil Evans", "note": "Arranger on Sketches of Spain, Miles Ahead, Porgy and Bess.", "human_confirmed": false }
+  ]
+}

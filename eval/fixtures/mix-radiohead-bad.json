@@ -1,0 +1,26 @@
+{
+  "_note": "Scoring self-test fixture reproducing kynda2's observed failure modes. Expected violations: 6 — item 0: self_reference + self_reference_title; item 1: self_reference + trap_attribution + unearned_verified_badge; item 2: essential_not_subject.",
+  "items": [
+    {
+      "slotType": "titan",
+      "title": "The Bends",
+      "creator": "Radiohead",
+      "year": "1995",
+      "confidence": "likely"
+    },
+    {
+      "slotType": "peer",
+      "title": "Parklife",
+      "creator": "Radiohead",
+      "year": "1994",
+      "confidence": "verified"
+    },
+    {
+      "slotType": "essential",
+      "title": "Blue Lines",
+      "creator": "Massive Attack",
+      "year": "1991",
+      "confidence": "inferred"
+    }
+  ]
+}

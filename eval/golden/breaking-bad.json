@@ -1,0 +1,16 @@
+{
+  "subject": "Breaking Bad",
+  "domain": "television",
+  "kind": "tv_show",
+  "canonical": { "mbid": null, "wikidata_qid": "Q1079" },
+  "decoys": [
+    { "name": "Breaking Bad (Better Call Saul S6E11)", "note": "Episode of the spin-off with the same title — real entity", "wikidata_qid": "Q113390660" }
+  ],
+  "attribution_true": [],
+  "attribution_traps": [],
+  "_note": "Tuple verification for TV awaits the TMDb client (Phase 1, V3-07). This subject currently exercises Wikidata resolution and decoy handling only.",
+  "self_reference_traps": ["El Camino: A Breaking Bad Movie"],
+  "influence_facts": [
+    { "type": "covered_by", "object": "Better Call Saul", "note": "Spin-off prequel by Vince Gilligan and Peter Gould — legacy relationship, claim_type pending a better fit.", "human_confirmed": false }
+  ]
+}

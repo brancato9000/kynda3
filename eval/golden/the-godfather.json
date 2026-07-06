@@ -1,0 +1,18 @@
+{
+  "subject": "The Godfather",
+  "domain": "film",
+  "kind": "film",
+  "canonical": { "mbid": null, "wikidata_qid": "Q47703" },
+  "decoys": [
+    { "name": "The Godfather (2006 video game)", "note": "Open-world action game — same name, real entity", "wikidata_qid": "Q1139696" },
+    { "name": "The Godfather (novel, Mario Puzo)", "note": "The 1969 source novel — a related but distinct entity; also a valid subject in its own right", "wikidata_qid": null }
+  ],
+  "attribution_true": [],
+  "attribution_traps": [],
+  "_note": "Tuple verification for film awaits the TMDb client (Phase 1, V3-07). This subject currently exercises Wikidata resolution and decoy handling only.",
+  "self_reference_traps": ["The Godfather Part II", "The Godfather Part III"],
+  "influence_facts": [
+    { "type": "collaborated_with", "object": "Gordon Willis", "note": "Cinematographer; the film's underexposed look is his signature.", "human_confirmed": false },
+    { "type": "influenced_by", "object": "The Godfather (novel)", "note": "Adapted from Mario Puzo's 1969 novel; Puzo co-wrote the screenplay.", "human_confirmed": false }
+  ]
+}

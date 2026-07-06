@@ -1,0 +1,21 @@
+{
+  "subject": "Björk",
+  "domain": "music",
+  "kind": "person",
+  "canonical": { "mbid": "87c5dedd-371d-4a53-9f7f-80522fb7f3cb", "wikidata_qid": null },
+  "decoys": [
+    { "name": "Brant Bjork", "note": "US stoner-rock musician; name-similarity decoy", "mbid": "9c17713b-14f7-47ee-b0ba-87802d186aab" }
+  ],
+  "attribution_true": [
+    { "title": "Debut", "creator": "Björk", "year": "1993" },
+    { "title": "Homogenic", "creator": "Björk", "year": "1997" }
+  ],
+  "attribution_traps": [
+    { "title": "Ágætis byrjun", "creator": "Björk", "actual_creator": "Sigur Rós", "origin": "Plausible confusion: flagship Icelandic artists conflated" }
+  ],
+  "self_reference_traps": ["Debut", "Post", "Homogenic", "Vespertine", "Medúlla"],
+  "influence_facts": [
+    { "type": "collaborated_with", "object": "Nellee Hooper", "note": "Producer on Debut.", "human_confirmed": false },
+    { "type": "member_of", "object": "The Sugarcubes", "note": "Björk fronted the Sugarcubes before her solo career.", "human_confirmed": false }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "subject": "Talking Heads",
+  "domain": "music",
+  "kind": "group",
+  "canonical": { "mbid": "a94a7155-c79d-4409-9fcf-220cb0e4dc3a", "wikidata_qid": null },
+  "decoys": [],
+  "attribution_true": [
+    { "title": "Remain in Light", "creator": "Talking Heads", "year": "1980" },
+    { "title": "Fear of Music", "creator": "Talking Heads", "year": "1979" }
+  ],
+  "attribution_traps": [
+    { "title": "My Life in the Bush of Ghosts", "creator": "Talking Heads", "actual_creator": "Brian Eno & David Byrne", "origin": "Subtle trap: Byrne side project with Eno, routinely misattributed to the band" }
+  ],
+  "self_reference_traps": ["Talking Heads: 77", "Fear of Music", "Remain in Light", "Speaking in Tongues", "Stop Making Sense"],
+  "influence_facts": [
+    { "type": "collaborated_with", "object": "Brian Eno", "note": "Producer on More Songs About Buildings and Food, Fear of Music, Remain in Light.", "human_confirmed": false },
+    { "type": "influenced_by", "object": "Fela Kuti", "note": "Afrobeat's influence on Remain in Light is widely documented.", "human_confirmed": false }
+  ]
+}
