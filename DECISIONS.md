@@ -32,6 +32,21 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 **Decision:** MusicBrainz (CC0, no key) is the music ground truth; Wikidata (CC0) is the cross-domain spine; TMDb (needs API key) and Open Library are deferred to Phase 1.
 **Rationale:** Start where verification is free, keyless, and richest. Music-first matches kynda2's AD-15. Film/TV golden subjects are included now with Wikidata resolution only, so the schema and eval format are cross-domain from day one.
 
+## V3-09: Phase 1 model strategy — Fable 5 + Haiku, structured outputs everywhere
+**Decision:** `claude-fable-5` generates the KyndaMix (effort `low` for interactive latency — Fable at low effort still exceeds prior models at max; revisit with eval data). `claude-haiku-4-5` ranks disambiguation candidates. All calls use `output_config.format` (structured outputs) — schema-valid JSON is guaranteed, deleting kynda2's hand-rolled streaming JSON parser and its "respond ONLY with valid JSON" prompt scaffolding. Fable calls include the server-side refusal fallback to Opus 4.8 (`server-side-fallback-2026-06-01`) so a classifier false-positive degrades gracefully instead of failing the request.
+**Note:** The model no longer outputs confidence or sources at all — those fields are machine-assigned by the verifier (V3-02). Fable 5 requires 30-day data retention; a ZDR org gets 400s on every request.
+
+## V3-10: Retrieval-first disambiguation
+**Decision:** Candidates come from MusicBrainz artist search + Wikidata entity search; Haiku only ranks them by index and assigns the certain/likely/ambiguous tier (kynda2 AD-02 UX unchanged). An entity absent from both databases cannot be selected, by construction.
+**Trade-off:** Very obscure or brand-new works missing from both databases return "no match" instead of a hallucinated guess. That is the correct failure mode for a truth-first product.
+
+## V3-11: Verification streams as badge events
+**Decision:** The mix API streams NDJSON: intro → items (badge: "verifying…") → per-item verification events as each MusicBrainz check completes (~1.1s apart, per API etiquette) → done. Cards appear immediately; badges are visibly earned.
+**Rationale:** Inline verification adds ~9s for 8 items. Rather than hiding that behind a spinner, the UI shows verification happening — the latency is the trust story. Failed checks render the card dimmed with an explicit "could not be confirmed" warning; no silent dropping.
+
+## V3-12: Phase 1 lands in slices
+**Decision:** Slice 1 is the core loop: search → retrieval-first disambiguation → generated + verified mix. Deferred to follow-up slices: influence graph, Connections tab, slot alternatives ("MORE →"), Wikipedia subject images, TMDb/Open Library verifiers for film/TV/books, Postgres-backed cache (in-memory Map interim, keyed on canonical entity IDs). kynda2 stays deployed until parity.
+
 ## V3-08: Real decoys as disambiguation tests
 **Decision:** Golden subjects record known real-world decoys (e.g., Nirvana the UK 60s band vs. the US grunge band; The Godfather the video game vs. the 1972 film). Disambiguation evals must surface or correctly rank these.
 **Rationale:** Retrieval-first disambiguation (candidates come from DB search APIs, model only ranks) makes invented entities impossible by construction — but choosing the wrong *real* entity is still a failure mode, and it's testable.
