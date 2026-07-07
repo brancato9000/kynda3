@@ -22,6 +22,13 @@ export function getPool() {
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 8_000,
       ssl: /localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false },
+      allowExitOnIdle: true,
+    });
+    // Idle pooled clients killed by the pooler (long model calls between
+    // queries) emit pool-level errors; unhandled, they crash the process.
+    // Benign — the pool replaces dead clients on the next query.
+    pool.on("error", (err) => {
+      console.error("pg pool idle-client error (recovering):", err.code || err.message);
     });
   }
   return pool;
