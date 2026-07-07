@@ -47,6 +47,8 @@ try {
   const subjectName = flag("--subject");
   const enqueueTop = flag("--enqueue-top");
   const batch = flag("--batch");
+  const modelFlag = flag("--model");
+  const model = modelFlag === "sonnet" ? "claude-sonnet-5" : modelFlag === "fable" ? "claude-fable-5" : modelFlag || undefined;
 
   if (enqueueTop) {
     const n = await enqueueTopSearched(parseInt(enqueueTop, 10) || 20);
@@ -59,12 +61,12 @@ try {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set (add it to .env.local)");
     const id = await enqueueSubjectByName(subjectName);
     if (!id) throw new Error(`"${subjectName}" not found in entities — search for it in the app first so it enters the graph`);
-    const totals = await runResearchBatch(1);
+    const totals = await runResearchBatch(1, { model });
     console.log(`\ndone: ${totals.confirmed} T2 citation(s) confirmed, ${totals.rejected} rejected by the evidence check`);
     printCosts();
   } else if (batch) {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set (add it to .env.local)");
-    const totals = await runResearchBatch(parseInt(batch, 10) || 3);
+    const totals = await runResearchBatch(parseInt(batch, 10) || 3, { model });
     console.log(`\ndone: ${totals.subjects} subject(s), ${totals.confirmed} T2 citation(s) confirmed, ${totals.rejected} rejected`);
     printCosts();
   }

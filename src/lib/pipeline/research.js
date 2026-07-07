@@ -7,15 +7,16 @@ import { verifyEvidence } from "../verify/evidence.js";
 import { getIntroExtract } from "../entities/wikipedia.js";
 import { nextQueuedSubjects, markResearch, getClaimTargets, recordFinding } from "../store.js";
 
-export async function researchOne(entity, { log = console.log } = {}) {
+export async function researchOne(entity, { log = console.log, model } = {}) {
   const runId = `run_${Date.now().toString(36)}`;
   const targets = await getClaimTargets(entity.id);
   const bio = await getIntroExtract({ name: entity.name, qid: entity.wikidata_qid }).catch(() => null);
-  log(`  researching "${entity.name}" (${targets.length} known connections)…`);
+  log(`  researching "${entity.name}" (${targets.length} known connections${model ? `, model ${model}` : ""})…`);
 
   const { findings = [] } = await researchSubject(
     { name: entity.name, domain: entity.domain, bio: bio ? { text: bio.text } : null },
-    targets
+    targets,
+    model ? { model } : {}
   );
   log(`  agent returned ${findings.length} finding(s); verifying evidence…`);
 
@@ -31,7 +32,7 @@ export async function researchOne(entity, { log = console.log } = {}) {
   return results;
 }
 
-export async function runResearchBatch(limit = 3, { log = console.log } = {}) {
+export async function runResearchBatch(limit = 3, { log = console.log, model } = {}) {
   const queue = await nextQueuedSubjects(limit);
   if (!queue.length) {
     log("research queue is empty");
@@ -41,7 +42,7 @@ export async function runResearchBatch(limit = 3, { log = console.log } = {}) {
   for (const entity of queue) {
     await markResearch(entity.queue_id, "running");
     try {
-      const r = await researchOne(entity, { log });
+      const r = await researchOne(entity, { log, model });
       totals.subjects += 1;
       totals.confirmed += r.confirmed;
       totals.rejected += r.rejected;

@@ -51,13 +51,17 @@ Method:
 - publishedDate: YYYY-MM-DD or YYYY if known, else "".
 - note: one sentence on what the source establishes.`;
 
+// Cost levers (measured 2026-07-07): uncapped fetches pushed 1.36M input
+// tokens through the context (~$14/subject on Fable). max_content_tokens
+// caps each fetched page — plenty to locate a quote — and 10 fetches
+// suffice for a subject's targets.
 const WEB_TOOLS_CURRENT = [
-  { type: "web_search_20260209", name: "web_search", max_uses: 20 },
-  { type: "web_fetch_20260209", name: "web_fetch", max_uses: 20 },
+  { type: "web_search_20260209", name: "web_search", max_uses: 10 },
+  { type: "web_fetch_20260209", name: "web_fetch", max_uses: 10, max_content_tokens: 6000 },
 ];
 const WEB_TOOLS_BASIC = [
-  { type: "web_search_20250305", name: "web_search", max_uses: 20 },
-  { type: "web_fetch_20250910", name: "web_fetch", max_uses: 20 },
+  { type: "web_search_20250305", name: "web_search", max_uses: 10 },
+  { type: "web_fetch_20250910", name: "web_fetch", max_uses: 10, max_content_tokens: 6000 },
 ];
 
 function findingsFromText(text) {
@@ -67,14 +71,17 @@ function findingsFromText(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
-async function runLoop(client, tools, user, useFormat) {
+async function runLoop(client, tools, user, useFormat, model) {
   const messages = [{ role: "user", content: user }];
+  // Refusal fallback applies to Fable only (its allowed fallback is Opus 4.8).
+  const fallbackOpts = model === FABLE
+    ? { betas: ["server-side-fallback-2026-06-01"], fallbacks: [{ model: "claude-opus-4-8" }] }
+    : {};
   for (let turn = 0; turn < 10; turn++) {
     const stream = client.beta.messages.stream({
-      model: FABLE,
+      model,
       max_tokens: 16_000,
-      betas: ["server-side-fallback-2026-06-01"],
-      fallbacks: [{ model: "claude-opus-4-8" }],
+      ...fallbackOpts,
       system: RESEARCH_SYSTEM,
       tools,
       output_config: useFormat
@@ -100,7 +107,7 @@ async function runLoop(client, tools, user, useFormat) {
  * @param {Array} targets - [{ title, creator, claimType, slotType? }] known connections to source
  * @returns {{findings: Array}}
  */
-export async function researchSubject(subject, targets = []) {
+export async function researchSubject(subject, targets = [], { model = FABLE } = {}) {
   const client = anthropicClient();
   const lines = [
     `Subject: "${subject.name}"${subject.domain ? ` (${subject.domain})` : ""}`,
@@ -126,7 +133,7 @@ export async function researchSubject(subject, targets = []) {
   let lastErr;
   for (const { tools, useFormat } of attempts) {
     try {
-      return await runLoop(client, tools, user, useFormat);
+      return await runLoop(client, tools, user, useFormat, model);
     } catch (err) {
       lastErr = err;
       if (err?.status !== 400) throw err; // only param-shape errors trigger degradation

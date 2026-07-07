@@ -40,9 +40,10 @@ export function anthropicClient() {
 // Per-call usage capture so sprint economics are measured, not guessed.
 
 const PRICES = {
-  // USD per million tokens: [input, output]
+  // USD per million tokens: [input, output] (sticker prices)
   "claude-fable-5": [10, 50],
   "claude-opus-4-8": [5, 25],
+  "claude-sonnet-5": [3, 15],
   "claude-haiku-4-5": [1, 5],
 };
 const WEB_SEARCH_PER_CALL = 0.01; // $10 per 1,000 searches
