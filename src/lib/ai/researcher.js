@@ -7,7 +7,7 @@
 // deterministic evidence worker confirms the quote on the fetched page
 // (V3-03: never trust the claim, trust the verified artifact).
 
-import { anthropicClient, FABLE } from "./anthropic.js";
+import { anthropicClient, FABLE, recordUsage } from "./anthropic.js";
 
 export const FINDINGS_SCHEMA = {
   type: "object",
@@ -83,6 +83,7 @@ async function runLoop(client, tools, user, useFormat) {
       messages,
     });
     const response = await stream.finalMessage();
+    recordUsage("research", response.model, response.usage);
     if (response.stop_reason === "pause_turn") {
       messages.push({ role: "assistant", content: response.content });
       continue;

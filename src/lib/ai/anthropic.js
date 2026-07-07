@@ -36,6 +36,47 @@ export function anthropicClient() {
   return client();
 }
 
+// ─── Usage metering ───────────────────────────────────────────
+// Per-call usage capture so sprint economics are measured, not guessed.
+
+const PRICES = {
+  // USD per million tokens: [input, output]
+  "claude-fable-5": [10, 50],
+  "claude-opus-4-8": [5, 25],
+  "claude-haiku-4-5": [1, 5],
+};
+const WEB_SEARCH_PER_CALL = 0.01; // $10 per 1,000 searches
+
+export const usageEvents = [];
+
+export function recordUsage(label, model, usage) {
+  if (!usage) return;
+  usageEvents.push({ label, model, usage });
+}
+
+export function usageSummary() {
+  let cost = 0;
+  const byLabel = {};
+  for (const { label, model, usage } of usageEvents) {
+    const key = Object.keys(PRICES).find((k) => model?.startsWith(k.replace(/-\d+$/, ""))) || model;
+    const [inP, outP] = PRICES[model] || PRICES[key] || [10, 50];
+    const c =
+      ((usage.input_tokens || 0) / 1e6) * inP +
+      ((usage.cache_read_input_tokens || 0) / 1e6) * inP * 0.1 +
+      ((usage.cache_creation_input_tokens || 0) / 1e6) * inP * 1.25 +
+      ((usage.output_tokens || 0) / 1e6) * outP +
+      (usage.server_tool_use?.web_search_requests || 0) * WEB_SEARCH_PER_CALL;
+    cost += c;
+    byLabel[label] = byLabel[label] || { calls: 0, in: 0, out: 0, searches: 0, usd: 0 };
+    byLabel[label].calls += 1;
+    byLabel[label].in += (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0);
+    byLabel[label].out += usage.output_tokens || 0;
+    byLabel[label].searches += usage.server_tool_use?.web_search_requests || 0;
+    byLabel[label].usd += c;
+  }
+  return { totalUsd: cost, byLabel };
+}
+
 function extractJson(response) {
   if (response.stop_reason === "refusal") {
     // Whole fallback chain refused — should not happen for cultural queries.
@@ -64,6 +105,7 @@ export async function callFable({ system, user, schema, maxTokens = 8000, effort
     },
     messages: [{ role: "user", content: user }],
   });
+  recordUsage("fable", response.model, response.usage);
   return extractJson(response);
 }
 
@@ -80,5 +122,6 @@ export async function callHaiku({ system, user, schema, maxTokens = 2000 }) {
     },
     messages: [{ role: "user", content: user }],
   });
+  recordUsage("haiku", response.model, response.usage);
   return extractJson(response);
 }

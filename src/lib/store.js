@@ -311,7 +311,7 @@ export async function getCitationsForItem(subject, item) {
     archivedUrl: row.archived_url,
     quote: row.quote,
     publication: row.publication || "source",
-    date: row.published_date ? String(row.published_date).slice(0, 4) : null,
+    date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
 }
 

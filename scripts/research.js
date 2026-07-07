@@ -23,6 +23,17 @@ try {
 const { enqueueTopSearched, enqueueSubjectByName, nextQueuedSubjects } = await import("../src/lib/store.js");
 const { runResearchBatch } = await import("../src/lib/pipeline/research.js");
 const { getPool } = await import("../src/lib/db.js");
+const { usageSummary } = await import("../src/lib/ai/anthropic.js");
+
+function printCosts() {
+  const { totalUsd, byLabel } = usageSummary();
+  if (!totalUsd) return;
+  console.log("\n— costs —");
+  for (const [label, s] of Object.entries(byLabel)) {
+    console.log(`  ${label}: ${s.calls} call(s), ${(s.in / 1000).toFixed(1)}k in / ${(s.out / 1000).toFixed(1)}k out${s.searches ? `, ${s.searches} web searches` : ""} → $${s.usd.toFixed(3)}`);
+  }
+  console.log(`  TOTAL: $${totalUsd.toFixed(3)}`);
+}
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -50,10 +61,12 @@ try {
     if (!id) throw new Error(`"${subjectName}" not found in entities — search for it in the app first so it enters the graph`);
     const totals = await runResearchBatch(1);
     console.log(`\ndone: ${totals.confirmed} T2 citation(s) confirmed, ${totals.rejected} rejected by the evidence check`);
+    printCosts();
   } else if (batch) {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set (add it to .env.local)");
     const totals = await runResearchBatch(parseInt(batch, 10) || 3);
     console.log(`\ndone: ${totals.subjects} subject(s), ${totals.confirmed} T2 citation(s) confirmed, ${totals.rejected} rejected`);
+    printCosts();
   }
 
   if (!subjectName && !batch && !enqueueTop) {
