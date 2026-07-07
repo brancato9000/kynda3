@@ -33,10 +33,15 @@ export async function POST(req) {
         }
         if (cached?.entries) {
           send({ type: "intro", intro: cached.intro, cached: true });
-          cached.entries.forEach((entry, i) => {
+          // Citations are re-read on every serve: the research corpus keeps
+          // growing after a mix is cached, and cached mixes must show new
+          // primary sources the moment agents confirm them.
+          for (let i = 0; i < cached.entries.length; i++) {
+            const entry = cached.entries[i];
+            const citations = await getCitationsForItem(subject, entry.item).catch(() => entry.verification?.citations || []);
             send({ type: "item", index: i, item: entry.item });
-            send({ type: "verification", index: i, verification: entry.verification });
-          });
+            send({ type: "verification", index: i, verification: { ...entry.verification, citations } });
+          }
           send({ type: "done", cached: true });
           return;
         }

@@ -42,22 +42,22 @@ const RESEARCH_SYSTEM = `You are Kynda's research agent. Given a cultural subjec
 
 Method:
 - Use web search to locate sources, then FETCH the page and read it. Only cite pages you actually fetched in this session.
-- quote: an EXACT excerpt copied verbatim from the fetched page (40-300 characters) that documents the connection. It will be machine-checked character-for-character against the page (after whitespace/quote-mark normalization). A paraphrase, a reconstruction from memory, or a quote from a page you did not fetch WILL FAIL the check and waste the finding.
-- Strongest evidence first: the artist's own words (interviews, memoirs) > named journalists/critics > general reporting.
-- Prefer stable, fetchable pages (publications, archives) over social media or video-only sources.
-- Work through the provided target connections first; then add up to 3 additional connections only if you found strong primary sources for them while researching.
-- If you cannot find a fetchable primary source for a target, omit it — an empty findings list is an acceptable result. Never manufacture a plausible-looking source.
+- quote: an EXACT excerpt copied verbatim from the fetched page content (40-300 characters) that documents the connection. Copy-paste from the fetched text — never reconstruct from memory or paraphrase.
+- Return EVERY finding where you fetched a page and copied a quote from its content. Do not withhold findings out of caution — a deterministic machine check downstream is the filter, not you. Your job is recall; the machine's job is precision. Only omit findings you could not fetch a page for.
+- Strongest evidence first: the artist's own words (interviews, memoirs) > named journalists/critics > general reporting. But a good secondary source beats no finding.
+- Prefer stable, fetchable pages (publications, archives, fan-maintained interview archives) over social media or video-only sources.
+- Cover as many of the provided targets as the tool budget allows — a finding for each of 5 targets beats 5 findings for one. Then add up to 3 additional well-sourced connections you encountered.
 - claimType: from the target when given; for new findings choose the best fit. "cited_as_influence" means the subject explicitly named the influence themselves.
 - publishedDate: YYYY-MM-DD or YYYY if known, else "".
 - note: one sentence on what the source establishes.`;
 
 const WEB_TOOLS_CURRENT = [
-  { type: "web_search_20260209", name: "web_search", max_uses: 12 },
-  { type: "web_fetch_20260209", name: "web_fetch", max_uses: 12 },
+  { type: "web_search_20260209", name: "web_search", max_uses: 20 },
+  { type: "web_fetch_20260209", name: "web_fetch", max_uses: 20 },
 ];
 const WEB_TOOLS_BASIC = [
-  { type: "web_search_20250305", name: "web_search", max_uses: 12 },
-  { type: "web_fetch_20250910", name: "web_fetch", max_uses: 12 },
+  { type: "web_search_20250305", name: "web_search", max_uses: 20 },
+  { type: "web_fetch_20250910", name: "web_fetch", max_uses: 20 },
 ];
 
 function findingsFromText(text) {
