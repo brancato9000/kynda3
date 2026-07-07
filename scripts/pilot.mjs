@@ -25,46 +25,32 @@ const { runResearchBatch } = await import("../src/lib/pipeline/research.js");
 const { usageSummary } = await import("../src/lib/ai/anthropic.js");
 const { getPool } = await import("../src/lib/db.js");
 
-const BUDGET_USD = 200;
+const BUDGET_USD = 100;
 
+// Halved roster (budget pilot). Cut subjects can be added back any time —
+// each runs independently for ~$3.
 const ROSTER = [
   // Eval anchors — golden-set subjects with known-true facts
   { q: "David Bowie", stratum: "anchor" },
-  { q: "Miles Davis", stratum: "anchor" },
-  { q: "Joni Mitchell", stratum: "anchor" },
   { q: "Kendrick Lamar", stratum: "anchor" },
-  { q: "Nirvana", stratum: "anchor" },
   // Music breadth — genres, eras, documentation cultures
-  { q: "The Beatles", stratum: "breadth" },
   { q: "Prince", stratum: "breadth" },
   { q: "Kraftwerk", stratum: "breadth" },
-  { q: "Aphex Twin", stratum: "breadth" },
-  { q: "A Tribe Called Quest", stratum: "breadth" },
   { q: "Dolly Parton", stratum: "breadth" },
   { q: "Fela Kuti", stratum: "breadth" },
-  { q: "Massive Attack", stratum: "breadth" },
   // Cross-domain stress tests
   { q: "The Godfather", stratum: "cross-domain" },
-  { q: "Stanley Kubrick", stratum: "cross-domain" },
   { q: "Toni Morrison", stratum: "cross-domain" },
-  { q: "Breaking Bad", stratum: "cross-domain" },
-  { q: "Frida Kahlo", stratum: "cross-domain" },
   { q: "Zaha Hadid", stratum: "cross-domain" },
   { q: "Richard Pryor", stratum: "cross-domain" },
   // The August Factor
   { q: "Neutral Milk Hotel", stratum: "august" },
-  { q: "The Shins", stratum: "august" },
-  { q: "Vampire Weekend", stratum: "august" },
   { q: "Frank Sinatra", stratum: "august" },
-  { q: "Buzzcocks", stratum: "august" },
   { q: "Flight of the Conchords", stratum: "august" },
   // Newness — young-cohort artists, shallow documentation pools
   { q: "Mitski", stratum: "newness" },
-  { q: "Sabrina Carpenter", stratum: "newness" },
   { q: "Doechii", stratum: "newness" },
   { q: "Alex Warren", stratum: "newness" },
-  { q: "Chappell Roan", stratum: "newness" },
-  { q: "beabadoobee", stratum: "newness" },
 ];
 
 let lastUsd = 0;
