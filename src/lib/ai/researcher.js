@@ -82,6 +82,10 @@ async function runLoop(client, tools, user, useFormat, model) {
       model,
       max_tokens: 16_000,
       ...fallbackOpts,
+      // Auto-cache the growing prefix: pause_turn continuations otherwise
+      // re-pay the whole conversation at full input price every turn —
+      // measured at $23.69/subject before this line existed.
+      cache_control: { type: "ephemeral" },
       system: RESEARCH_SYSTEM,
       tools,
       output_config: useFormat
