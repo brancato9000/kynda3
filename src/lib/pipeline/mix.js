@@ -46,7 +46,7 @@ const MIX_SCHEMA = {
 
 const MIX_SYSTEM = `You are Kynda, a contextual recommendation engine mapping the influences, connections, and legacy of works of culture.
 
-Create a "KyndaMix": 8 connected works illuminating the influences, peers, and legacy of a given subject — one item per slot, in this order:
+Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a given subject. For EACH slot provide 2 or 3 ranked candidates (strongest first) — influence is never singular, and the interface presents a carousel per slot. Every candidate is a distinct work; no work may appear twice anywhere in the mix. Slots, in this order:
 
 1. titan — The KEY influence: a foundational work or artist the subject is documented to have drawn on.
 2. ghost — The HIDDEN thread: an obscure, avant-garde, or under-documented influence most people wouldn't know. The most important slot for discovery.
@@ -58,7 +58,8 @@ Create a "KyndaMix": 8 connected works illuminating the influences, peers, and l
 8. collaborator — A key creative partner (producer, co-writer, cinematographer, bandmate); recommend a work that showcases the collaboration or the partner's own craft.
 
 Rules:
-- The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every item you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
+- Emit candidates as a flat items list: all candidates for a slot consecutively, strongest first, in the slot order above.
+- The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every candidate you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
 - Never place the subject's own work anywhere except the essential slot.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
@@ -113,18 +114,55 @@ export async function generateMix(subject, members = []) {
     system: MIX_SYSTEM,
     user: parts.join("\n\n"),
     schema: MIX_SCHEMA,
-    maxTokens: 8000,
+    maxTokens: 16_000,
   });
 
   // Deterministic slot-rule enforcement (AD-10) — never trust prompt compliance.
   const subjectNorm = norm(subject.name);
-  mix.items = (mix.items || []).filter((item) => {
+  const seen = new Set();
+  const valid = (mix.items || []).filter((item) => {
     if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) return false;
     if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
+    const key = `${norm(item.title)}|${norm(item.creator)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
 
-  return mix;
+  // Group into slots (V3-19): [{ slotType, candidates: [item, ...] }], max 3
+  // per slot, generation order preserved (model ranks strongest first; the
+  // provenance re-rank happens after verification).
+  const slots = [];
+  for (const slotType of SLOT_IDS) {
+    const candidates = valid.filter((i) => i.slotType === slotType).slice(0, 3);
+    if (candidates.length) slots.push({ slotType, candidates });
+  }
+  return { intro: mix.intro, slots };
+}
+
+/**
+ * Deterministic provenance score for carousel ranking (V3-19). The default
+ * candidate is the best-EVIDENCED one, not the model's first pick:
+ * T2 citations dominate, then documented connections, then fact-checks;
+ * failed fact-checks sink to the bottom.
+ */
+export function provenanceScore(verification) {
+  const v = verification || {};
+  let score = 0;
+  score += (v.citations?.length || 0) * 100;
+  if (v.connection?.status === "documented") score += 50;
+  else if (v.connection?.status === "documented_via") score += 40;
+  if (v.attribution?.status === "verified") score += 30;
+  else if (v.attribution?.status === "not_found") score -= 100;
+  return score;
+}
+
+/** Stable candidate ordering for one slot: best evidence first. */
+export function rankCandidates(verifications) {
+  return verifications
+    .map((v, i) => ({ i, score: provenanceScore(v) }))
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((x) => x.i);
 }
 
 // Wikidata-description keywords per medium (award-only checks, V3-13).

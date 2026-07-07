@@ -91,11 +91,12 @@ async function addProvenance(claimId, { status, method, url = null, quote = null
 }
 
 /**
- * Persist a completed mix run: subject + one claim per non-essential item,
- * with provenance rows mirroring the machine verifications, plus the mix
- * payload itself (the durable L2 cache).
+ * Persist a completed mix run: subject + one claim per non-essential
+ * candidate (every carousel candidate is a claim, V3-19), with provenance
+ * rows mirroring the machine verifications, plus the mix payload itself
+ * (the durable L2 cache). Accepts {slots} (v2) or legacy {entries}.
  */
-export async function persistMixRun({ subject, rawQuery = null, intro, entries }) {
+export async function persistMixRun({ subject, rawQuery = null, intro, slots = null, entries = null }) {
   if (!dbConfigured()) return;
 
   const subjectId = await upsertEntity({
@@ -107,7 +108,8 @@ export async function persistMixRun({ subject, rawQuery = null, intro, entries }
   });
   if (!subjectId) return;
 
-  for (const { item, verification } of entries) {
+  const allEntries = slots ? slots.flatMap((slot) => slot.candidates) : entries || [];
+  for (const { item, verification } of allEntries) {
     const mapping = SLOT_CLAIMS[item.slotType];
     if (!mapping) continue;
 
@@ -173,7 +175,7 @@ export async function persistMixRun({ subject, rawQuery = null, intro, entries }
 
   await q(
     "INSERT INTO mixes (subject_entity_id, payload, source, model_version) VALUES ($1, $2, 'generated', $3)",
-    [subjectId, JSON.stringify({ intro, entries }), process.env.KYNDA_MODEL_VERSION || "claude-fable-5"]
+    [subjectId, JSON.stringify(slots ? { intro, slots } : { intro, entries }), process.env.KYNDA_MODEL_VERSION || "claude-fable-5"]
   );
 
   if (rawQuery) {

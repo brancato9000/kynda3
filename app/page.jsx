@@ -160,9 +160,17 @@ function CitationBlock({ citations }) {
   );
 }
 
-function MixCard({ item, verification, index }) {
-  const slot = SLOT_BY_ID[item.slotType] || { label: item.slotType, emoji: "◆" };
-  const colors = SLOT_COLORS[item.slotType] || SLOT_COLORS.titan;
+// One slot = a provenance-ranked carousel of candidates (V3-19). The default
+// shown is the best-evidenced candidate, not the model's first pick.
+function SlotCard({ slot, index }) {
+  const slotMeta = SLOT_BY_ID[slot.slotType] || { label: slot.slotType, emoji: "◆" };
+  const colors = SLOT_COLORS[slot.slotType] || SLOT_COLORS.titan;
+  const order = slot.order?.length === slot.candidates.length ? slot.order : slot.candidates.map((_, i) => i);
+  const [pos, setPos] = useState(0);
+  useEffect(() => { setPos(0); }, [slot.order?.join?.(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+  const current = slot.candidates[order[Math.min(pos, order.length - 1)]];
+  if (!current?.item) return null;
+  const { item, verification } = current;
   const attribution = verification?.attribution;
   const connection = verification?.connection;
   const citations = verification?.citations || [];
@@ -173,10 +181,20 @@ function MixCard({ item, verification, index }) {
       padding: "22px 24px", opacity: failed ? 0.65 : 1, animation: "kyndaRise 0.5s ease both",
       animationDelay: `${index * 60}ms`,
     }}>
-      <div style={{ marginBottom: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <span style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
-          {slot.emoji} {slot.label}
+          {slotMeta.emoji} {slotMeta.label}
         </span>
+        {slot.candidates.length > 1 && (
+          <span title="Multiple candidates for this slot, ordered by evidence strength"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.7)" }}>
+            <button onClick={() => setPos((p) => (p - 1 + order.length) % order.length)} aria-label="previous candidate"
+              style={{ background: "none", border: "1px solid rgba(148,163,184,0.25)", color: "inherit", borderRadius: "4px", cursor: "pointer", padding: "1px 7px" }}>‹</button>
+            {Math.min(pos, order.length - 1) + 1} / {order.length}
+            <button onClick={() => setPos((p) => (p + 1) % order.length)} aria-label="next candidate"
+              style={{ background: "none", border: "1px solid rgba(148,163,184,0.25)", color: "inherit", borderRadius: "4px", cursor: "pointer", padding: "1px 7px" }}>›</button>
+          </span>
+        )}
       </div>
       <div style={{ fontFamily: FONTS.display, fontSize: "26px", lineHeight: 1.15, marginBottom: "2px" }}>
         {item.title}
@@ -307,20 +325,34 @@ const DEMO = {
     bio: { text: "Radiohead are an English rock band formed in Abingdon, Oxfordshire, in 1985. Their experimental approach is credited with advancing the sound of alternative rock.", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", source: "Wikipedia" },
   },
   intro: "Radiohead's story is one of absorbing the American underground, Bristol's electronics, and Warp Records' abstractions — then transmitting all of it forward.",
-  items: [
-    { slotType: "titan", title: "Surfer Rosa", creator: "Pixies", year: "1988", medium: "music", reason: "Thom Yorke has repeatedly pointed to the Pixies' quiet-loud dynamics as foundational to the band's early songwriting, an architecture audible from Pablo Honey through The Bends. Producer Paul Kolderie, who engineered for the Pixies, was enlisted for Radiohead's debut — a direct personnel link between the two catalogs that shaped how the band tracked guitars and staged dynamics for a decade." },
-    { slotType: "ghost", title: "Selected Ambient Works 85-92", creator: "Aphex Twin", year: "1992", medium: "music", reason: "The Warp Records catalog — Aphex Twin above all — is the documented hinge of the Kid A era. Yorke described retreating from guitar music entirely and listening to little else, and the imprint is structural: rhythm displacing riff, texture displacing chorus. This is the connection casual listeners miss most, because its fingerprints are on the band's least guitar-shaped records." },
-    { slotType: "culture", title: "1984", creator: "George Orwell", year: "1949", medium: "literature", reason: "The surveillance dread that saturates OK Computer draws on Orwell's template of institutional watching and language control. 'Karma Police' and '2 + 2 = 5' reach for Orwellian vocabulary directly, the latter naming the novel's most famous formula of coerced belief. The band's era-defining anxiety about technology owes as much to fiction as to any musical source." },
-    { slotType: "essential", title: "Kid A", creator: "Radiohead", year: "2000", medium: "music", reason: "The band's most consequential act of self-reinvention: a No. 1 record with no single, no video, and barely a guitar, assembled from ondes Martenot, processed vocals, and Warp-schooled electronics. Its gravity bends everything before and after it in the catalog, and it remains the cleanest single entry point into what makes this band structurally different from their peers." },
-    { slotType: "legacy", title: "There Will Be Blood", creator: "Paul Thomas Anderson", year: "2007", medium: "film", via: "Jonny Greenwood", reason: "Radiohead's legacy extends into film scoring through Jonny Greenwood, whose dissonant string writing for Paul Thomas Anderson's oil-boom epic announced a rock musician operating at the level of contemporary classical composition. The partnership continued across Phantom Thread and The Power of the Dog, carrying the band's textural vocabulary into cinema." },
+  slots: [
+    {
+      slotType: "titan",
+      order: [0, 1],
+      candidates: [
+        { item: { slotType: "titan", title: "Surfer Rosa", creator: "Pixies", year: "1988", medium: "music", reason: "Thom Yorke has repeatedly pointed to the Pixies' quiet-loud dynamics as foundational to the band's early songwriting, an architecture audible from Pablo Honey through The Bends. Producer Paul Kolderie, who engineered for the Pixies, was enlisted for Radiohead's debut — a direct personnel link between the two catalogs that shaped how the band tracked guitars and staged dynamics for a decade." },
+          verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." }, citations: [{ quote: "I was trying to write the ultimate pop song… I was basically trying to rip off the Pixies. I have to admit it.", url: "https://example.com/interview", publication: "Rolling Stone", date: "1994", archivedUrl: "https://web.archive.org/web/example" }] } },
+        { item: { slotType: "titan", title: "Remain in Light", creator: "Talking Heads", year: "1980", medium: "music", reason: "Radiohead took their name from the Talking Heads song 'Radio Head', and Remain in Light's method — songs built from layered grooves, studio collage, and Brian Eno's production interventions rather than conventional band performance — became a template the band openly invoked around Kid A. Thom Yorke's fragmented, chanted vocal delivery and the shift toward rhythm-first composition echo David Byrne's approach here directly." },
+          verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1980" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "At EMI's request, they changed their name; \"Radiohead\" was taken from the song \"Radio Head\" on the Talking Heads album True Stories (1986)." } } },
+      ],
+    },
+    {
+      slotType: "ghost",
+      order: [0],
+      candidates: [
+        { item: { slotType: "ghost", title: "Selected Ambient Works 85-92", creator: "Aphex Twin", year: "1992", medium: "music", reason: "The Warp Records catalog — Aphex Twin above all — is the documented hinge of the Kid A era. Yorke described retreating from guitar music entirely and listening to little else, and the imprint is structural: rhythm displacing riff, texture displacing chorus. This is the connection casual listeners miss most, because its fingerprints are on the band's least guitar-shaped records." },
+          verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1992" }, connection: { status: "undocumented" } } },
+      ],
+    },
+    {
+      slotType: "legacy",
+      order: [0],
+      candidates: [
+        { item: { slotType: "legacy", title: "There Will Be Blood", creator: "Paul Thomas Anderson", year: "2007", medium: "film", via: "Jonny Greenwood", reason: "Radiohead's legacy extends into film scoring through Jonny Greenwood, whose dissonant string writing for Paul Thomas Anderson's oil-boom epic announced a rock musician operating at the level of contemporary classical composition. The partnership continued across Phantom Thread and The Power of the Dog, carrying the band's textural vocabulary into cinema." },
+          verification: { attribution: { status: "verified", source: "Wikidata", url: "https://www.wikidata.org/wiki/Q261191", detail: "2007 film directed by Paul Thomas Anderson" }, connection: { status: "documented_via", via: "Jonny Greenwood", hop1: { kind: "membership", label: "member of Radiohead", source: "MusicBrainz", url: "https://musicbrainz.org" }, hop2: { articleTitle: "Jonny Greenwood", url: "https://en.wikipedia.org/wiki/Jonny_Greenwood", excerpt: "Greenwood composed the score for Paul Thomas Anderson's film There Will Be Blood (2007), which won him critical acclaim." } } } },
+      ],
+    },
   ],
-  verifications: {
-    0: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." }, citations: [{ quote: "I was trying to write the ultimate pop song… I was basically trying to rip off the Pixies. I have to admit it.", url: "https://example.com/interview", publication: "Rolling Stone", date: "1994", archivedUrl: "https://web.archive.org/web/example" }] },
-    1: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1992" }, connection: { status: "undocumented" } },
-    2: { attribution: { status: "not_found", source: "Open Library" }, connection: { status: "undocumented" } },
-    3: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 2000-10-02" }, connection: { status: "not_applicable" } },
-    4: { attribution: { status: "verified", source: "Wikidata", url: "https://www.wikidata.org/wiki/Q261191", detail: "2007 film directed by Paul Thomas Anderson" }, connection: { status: "documented_via", via: "Jonny Greenwood", hop1: { kind: "membership", label: "member of Radiohead", source: "MusicBrainz", url: "https://musicbrainz.org" }, hop2: { articleTitle: "Jonny Greenwood", url: "https://en.wikipedia.org/wiki/Jonny_Greenwood", excerpt: "Greenwood composed the score for Paul Thomas Anderson's film There Will Be Blood (2007), which won him critical acclaim." } } },
-  },
 };
 
 // ─── Page ─────────────────────────────────────────────────────
@@ -332,8 +364,7 @@ export default function Page() {
   const [alternatives, setAlternatives] = useState([]);
   const [tier, setTier] = useState(null);
   const [intro, setIntro] = useState(null);
-  const [items, setItems] = useState([]);
-  const [verifications, setVerifications] = useState({});
+  const [slots, setSlots] = useState([]);
   const [done, setDone] = useState(false);
   const runRef = useRef(0);
 
@@ -341,7 +372,7 @@ export default function Page() {
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo")) {
       setSubject(DEMO.subject); setTier("certain"); setIntro(DEMO.intro);
-      setItems(DEMO.items); setVerifications(DEMO.verifications);
+      setSlots(DEMO.slots);
       setPhase("mixing"); setDone(true);
     }
   }, []);
@@ -367,8 +398,28 @@ export default function Page() {
           if (!line.trim() || runRef.current !== run) continue;
           const evt = JSON.parse(line);
           if (evt.type === "intro") setIntro(evt.intro);
-          else if (evt.type === "item") setItems((prev) => { const next = [...prev]; next[evt.index] = evt.item; return next; });
-          else if (evt.type === "verification") setVerifications((prev) => ({ ...prev, [evt.index]: evt.verification }));
+          else if (evt.type === "item") setSlots((prev) => {
+            const next = [...prev];
+            next[evt.s] = next[evt.s] || { slotType: evt.slotType, candidates: [], order: null };
+            const candidates = [...next[evt.s].candidates];
+            candidates[evt.c] = { ...(candidates[evt.c] || {}), item: evt.item };
+            next[evt.s] = { ...next[evt.s], candidates };
+            return next;
+          });
+          else if (evt.type === "verification") setSlots((prev) => {
+            const next = [...prev];
+            if (!next[evt.s]) return prev;
+            const candidates = [...next[evt.s].candidates];
+            candidates[evt.c] = { ...(candidates[evt.c] || {}), verification: evt.verification };
+            next[evt.s] = { ...next[evt.s], candidates };
+            return next;
+          });
+          else if (evt.type === "rank") setSlots((prev) => {
+            const next = [...prev];
+            if (!next[evt.s]) return prev;
+            next[evt.s] = { ...next[evt.s], order: evt.order };
+            return next;
+          });
           else if (evt.type === "done") setDone(true);
           else if (evt.type === "error") setError(evt.message);
         }
@@ -384,7 +435,7 @@ export default function Page() {
     setAlternatives([]);
     setTier("certain");
     setPhase("mixing");
-    setIntro(null); setItems([]); setVerifications({}); setDone(false); setError(null);
+    setIntro(null); setSlots([]); setDone(false); setError(null);
     fireMix(subj, run);
   }, [fireMix]);
 
@@ -394,7 +445,7 @@ export default function Page() {
     const run = ++runRef.current;
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
-    setIntro(null); setItems([]); setVerifications({}); setDone(false);
+    setIntro(null); setSlots([]); setDone(false);
     try {
       const res = await fetch("/api/disambiguate", {
         method: "POST",
@@ -425,9 +476,11 @@ export default function Page() {
     }
   }
 
-  const verifs = Object.values(verifications);
-  const factCheckedCount = verifs.filter((v) => v?.attribution?.status === "verified").length;
-  const documentedCount = verifs.filter((v) => v?.connection?.status === "documented").length;
+  const allVerifs = slots.flatMap((s) => (s?.candidates || []).map((c) => c?.verification)).filter(Boolean);
+  const candidateCount = slots.reduce((n, s) => n + (s?.candidates?.length || 0), 0);
+  const factCheckedCount = allVerifs.filter((v) => v?.attribution?.status === "verified").length;
+  const documentedCount = allVerifs.filter((v) => v?.connection?.status === "documented" || v?.connection?.status === "documented_via").length;
+  const citedCount = allVerifs.filter((v) => v?.citations?.length > 0).length;
 
   return (
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
@@ -514,19 +567,20 @@ export default function Page() {
           )}
 
           <div style={{ display: "grid", gap: "16px" }}>
-            {items.map((item, i) => item && (
-              <MixCard key={i} item={item} verification={verifications[i]} index={i} />
+            {slots.map((slot, i) => slot?.candidates?.length > 0 && (
+              <SlotCard key={i} slot={slot} index={i} />
             ))}
           </div>
 
           {done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
               The connections are Kynda’s synthesis — no database can produce them.
-              The databases fact-check the synthesis: {factCheckedCount} of {items.length} attributions
-              confirmed against open catalogs (MusicBrainz, Open Library, Wikidata),
-              and {documentedCount} connection{documentedCount === 1 ? "" : "s"} independently documented
-              in Wikipedia, with the actual excerpt shown. All badges are machine-earned —
-              the model cannot assign them to itself.
+              The databases fact-check the synthesis: across {candidateCount} candidates
+              in {slots.length} slots, {factCheckedCount} attributions confirmed against open
+              catalogs (MusicBrainz, Open Library, Wikidata), {documentedCount} connection{documentedCount === 1 ? "" : "s"} independently
+              documented{citedCount > 0 ? `, and ${citedCount} backed by primary-source citations from the research corpus` : ""}.
+              Each slot’s carousel is ordered by evidence strength, not by the model’s preference.
+              All badges are machine-earned — the model cannot assign them to itself.
             </div>
           )}
         </>

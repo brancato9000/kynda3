@@ -1,14 +1,29 @@
-// Streams the mix as NDJSON events:
-//   {type:"intro"} → {type:"item"}×N (badge: verifying) →
-//   {type:"verification"}×N (badges resolve as each MusicBrainz check lands,
-//   ~1.1s apart per API etiquette) → {type:"done"}
-// The visible badge-earning delay is the product working as designed (V3-11):
-// "verified" appears only after the deterministic check passes.
+// Streams the mix as NDJSON events (protocol v2, V3-19 — multi-candidate slots):
+//   {type:"intro"}
+//   {type:"item", s, c, slotType, item}          one per candidate
+//   {type:"verification", s, c, verification}    badges resolve as checks land
+//   {type:"rank", s, order}                      provenance ranking per slot —
+//                                                the default card is the best-
+//                                                EVIDENCED candidate, recomputed
+//                                                on every serve as the corpus grows
+//   {type:"done"}
 
-import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
+import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
 
 export const maxDuration = 300;
+
+// Old cached payloads ({entries}) normalize to single-candidate slots.
+function normalizePayload(payload) {
+  if (payload?.slots) return payload;
+  if (payload?.entries) {
+    return {
+      intro: payload.intro,
+      slots: payload.entries.map((e) => ({ slotType: e.item.slotType, candidates: [e] })),
+    };
+  }
+  return null;
+}
 
 export async function POST(req) {
   const { subject } = await req.json().catch(() => ({}));
@@ -21,66 +36,81 @@ export async function POST(req) {
     async start(controller) {
       const send = (obj) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
       try {
-        // L1: per-instance memory. L2: the claims store (survives deploys and
-        // cold starts — V3-17). Both serve the full verified payload instantly.
+        // L1: per-instance memory. L2: the claims store (survives deploys).
         let cached = getCachedMix(subject);
         if (!cached) {
-          cached = await getStoredMix(subject).catch((err) => {
+          const stored = await getStoredMix(subject).catch((err) => {
             console.error("getStoredMix failed:", err.message);
             return null;
           });
+          cached = normalizePayload(stored);
           if (cached) cacheMix(subject, cached);
         }
-        if (cached?.entries) {
+        if (cached?.slots) {
           send({ type: "intro", intro: cached.intro, cached: true });
-          // Citations are re-read on every serve: the research corpus keeps
-          // growing after a mix is cached, and cached mixes must show new
-          // primary sources the moment agents confirm them.
-          for (let i = 0; i < cached.entries.length; i++) {
-            const entry = cached.entries[i];
-            const citations = await getCitationsForItem(subject, entry.item).catch(() => entry.verification?.citations || []);
-            send({ type: "item", index: i, item: entry.item });
-            send({ type: "verification", index: i, verification: { ...entry.verification, citations } });
+          for (let s = 0; s < cached.slots.length; s++) {
+            const slot = cached.slots[s];
+            const verifications = [];
+            for (let c = 0; c < slot.candidates.length; c++) {
+              const entry = slot.candidates[c];
+              // Citations re-read on every serve: the corpus keeps growing
+              // after a mix is cached, and new primary sources must surface
+              // (and can re-rank the carousel).
+              const citations = await getCitationsForItem(subject, entry.item).catch(() => entry.verification?.citations || []);
+              const verification = { ...entry.verification, citations };
+              verifications.push(verification);
+              send({ type: "item", s, c, slotType: slot.slotType, item: entry.item });
+              send({ type: "verification", s, c, verification });
+            }
+            send({ type: "rank", s, order: rankCandidates(verifications) });
           }
           send({ type: "done", cached: true });
           return;
         }
 
-        // Members feed the mix prompt (member-level connections become
-        // deliberate) and serve as hop 1 of two-hop verification (V3-16).
+        // Members feed the mix prompt and hop 1 of via-verification (V3-16).
         const members = await loadSubjectMembers(subject);
-        // Fetch the subject's Wikipedia article while the mix generates —
-        // every connection check reads it.
         const [mix, subjectArticle] = await Promise.all([
           generateMix(subject, members),
           loadSubjectArticle(subject),
         ]);
         send({ type: "intro", intro: mix.intro });
-        mix.items.forEach((item, i) => send({ type: "item", index: i, item }));
+        mix.slots.forEach((slot, s) =>
+          slot.candidates.forEach((item, c) => send({ type: "item", s, c, slotType: slot.slotType, item }))
+        );
 
-        // Sequential on purpose: MusicBrainz etiquette is ~1 req/sec.
-        const entries = [];
-        for (let i = 0; i < mix.items.length; i++) {
-          const item = mix.items[i];
-          const [attribution, connection, citations] = await Promise.all([
-            verifyAttribution(item),
-            verifyConnection(item, subject, subjectArticle, members),
-            // T2 primary-source citations from the agent-researched corpus
-            getCitationsForItem(subject, item).catch(() => []),
-          ]);
-          const verification = { attribution, connection, citations };
-          entries.push({ item, verification });
-          send({ type: "verification", index: i, verification });
+        // Verify defaults (c=0) across all slots first so lead badges resolve
+        // quickly, then the alternates. Sequential per MusicBrainz etiquette.
+        const verifs = mix.slots.map((slot) => new Array(slot.candidates.length).fill(null));
+        const maxCandidates = Math.max(...mix.slots.map((slot) => slot.candidates.length));
+        for (let c = 0; c < maxCandidates; c++) {
+          for (let s = 0; s < mix.slots.length; s++) {
+            const item = mix.slots[s].candidates[c];
+            if (!item) continue;
+            const [attribution, connection, citations] = await Promise.all([
+              verifyAttribution(item),
+              verifyConnection(item, subject, subjectArticle, members),
+              getCitationsForItem(subject, item).catch(() => []),
+            ]);
+            verifs[s][c] = { attribution, connection, citations };
+            send({ type: "verification", s, c, verification: verifs[s][c] });
+          }
         }
 
-        cacheMix(subject, { intro: mix.intro, entries });
+        const slotsWithVerifs = mix.slots.map((slot, s) => ({
+          slotType: slot.slotType,
+          candidates: slot.candidates.map((item, c) => ({ item, verification: verifs[s][c] })),
+        }));
+        slotsWithVerifs.forEach((slot, s) =>
+          send({ type: "rank", s, order: rankCandidates(slot.candidates.map((x) => x.verification)) })
+        );
+
+        cacheMix(subject, { intro: mix.intro, slots: slotsWithVerifs });
         send({ type: "done" });
 
-        // Persist the run to the claims store (V3-17) — every search
-        // permanently enriches the graph. Best-effort: never break the
-        // response, which has already been fully delivered.
+        // Persist (V3-17) — every candidate becomes a claim in the graph.
         try {
-          await persistMixRun({ subject, intro: mix.intro, entries });
+          await persistMixRun({ subject, intro: mix.intro, slots: slotsWithVerifs });
         } catch (err) {
           console.error("persistMixRun failed:", err.message);
         }
