@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
 import { findMention } from "../src/lib/entities/wikipedia.js";
+import { htmlToText } from "../src/lib/verify/evidence.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -112,6 +113,15 @@ function testQuoteMatch() {
     "findMention rejects names absent from the text",
     findMention(article, "Aphex Twin") === null
   );
+
+  // htmlToText + quoteMatch — the T2 evidence gate operates on stripped HTML
+  const html = `<html><head><style>.x{color:red}</style><script>var a=1;</script></head>
+    <body><article><p>Cobain said: &ldquo;I was trying to rip off the <b>Pixies</b> &mdash; I have to admit it.&rdquo;</p></article></body></html>`;
+  const stripped = htmlToText(html);
+  check("htmlToText strips tags/scripts and decodes entities",
+    stripped.includes('"I was trying to rip off the Pixies - I have to admit it."') && !stripped.includes("var a=1"));
+  check("quote survives the strip→match pipeline",
+    quoteMatch(stripped, "I was trying to rip off the Pixies — I have to admit it").matched);
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────

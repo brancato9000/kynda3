@@ -6,7 +6,7 @@
 // "verified" appears only after the deterministic check passes.
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
-import { persistMixRun, getStoredMix } from "../../../src/lib/store.js";
+import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
 
 export const maxDuration = 300;
 
@@ -57,11 +57,13 @@ export async function POST(req) {
         const entries = [];
         for (let i = 0; i < mix.items.length; i++) {
           const item = mix.items[i];
-          const [attribution, connection] = await Promise.all([
+          const [attribution, connection, citations] = await Promise.all([
             verifyAttribution(item),
             verifyConnection(item, subject, subjectArticle, members),
+            // T2 primary-source citations from the agent-researched corpus
+            getCitationsForItem(subject, item).catch(() => []),
           ]);
-          const verification = { attribution, connection };
+          const verification = { attribution, connection, citations };
           entries.push({ item, verification });
           send({ type: "verification", index: i, verification });
         }

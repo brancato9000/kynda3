@@ -31,6 +31,11 @@ function client() {
   return _client;
 }
 
+/** Raw client access for pipelines with bespoke loops (research agents). */
+export function anthropicClient() {
+  return client();
+}
+
 function extractJson(response) {
   if (response.stop_reason === "refusal") {
     // Whole fallback chain refused — should not happen for cultural queries.

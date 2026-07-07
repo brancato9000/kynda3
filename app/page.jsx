@@ -129,11 +129,43 @@ function Spinner({ size = 15 }) {
 }
 
 // ─── Mix card ─────────────────────────────────────────────────
+// T2 primary-source citations from the research corpus — the strongest
+// connection evidence: the artist's/press's own words, quote-confirmed.
+function CitationBlock({ citations }) {
+  return (
+    <div style={{ marginTop: "12px", paddingLeft: "14px", borderLeft: "2px solid rgba(52,211,153,0.4)" }}>
+      <div style={{ marginBottom: "6px" }}>
+        <span style={{ ...chipBase, color: CONFIDENCE_COLORS.verified, border: "1px solid rgba(52,211,153,0.35)" }}>
+          ◆ cited · primary source
+        </span>
+      </div>
+      {citations.map((c, i) => (
+        <div key={i} style={{ marginBottom: i < citations.length - 1 ? "10px" : 0 }}>
+          <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.8)" }}>
+            “{c.quote}”
+          </div>
+          <a href={c.url} target="_blank" rel="noreferrer"
+            style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>
+            — {c.publication}{c.date ? `, ${c.date}` : ""} ↗
+          </a>
+          {c.archivedUrl && (
+            <a href={c.archivedUrl} target="_blank" rel="noreferrer"
+              style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.5)", textDecoration: "none", marginLeft: "10px" }}>
+              archive ↗
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MixCard({ item, verification, index }) {
   const slot = SLOT_BY_ID[item.slotType] || { label: item.slotType, emoji: "◆" };
   const colors = SLOT_COLORS[item.slotType] || SLOT_COLORS.titan;
   const attribution = verification?.attribution;
   const connection = verification?.connection;
+  const citations = verification?.citations || [];
   const failed = attribution?.status === "not_found";
   return (
     <div style={{
@@ -158,8 +190,10 @@ function MixCard({ item, verification, index }) {
       </div>
       <RevealText text={item.reason} msPerWord={12} delayMs={200}
         style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(226,232,240,0.82)" }} />
+      {/* T2 citations outrank everything below — show them first when present */}
+      {citations.length > 0 && <CitationBlock citations={citations} />}
       {/* The connection chip sits with the claim it describes: the reason prose */}
-      {connection?.status !== "not_applicable" && (
+      {citations.length === 0 && connection?.status !== "not_applicable" && (
         <div style={{ marginTop: "12px" }}>
           {connection?.status === "documented" && connection.excerpt ? (
             <div style={{ paddingLeft: "14px", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
@@ -281,7 +315,7 @@ const DEMO = {
     { slotType: "legacy", title: "There Will Be Blood", creator: "Paul Thomas Anderson", year: "2007", medium: "film", via: "Jonny Greenwood", reason: "Radiohead's legacy extends into film scoring through Jonny Greenwood, whose dissonant string writing for Paul Thomas Anderson's oil-boom epic announced a rock musician operating at the level of contemporary classical composition. The partnership continued across Phantom Thread and The Power of the Dog, carrying the band's textural vocabulary into cinema." },
   ],
   verifications: {
-    0: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." } },
+    0: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." }, citations: [{ quote: "I was trying to write the ultimate pop song… I was basically trying to rip off the Pixies. I have to admit it.", url: "https://example.com/interview", publication: "Rolling Stone", date: "1994", archivedUrl: "https://web.archive.org/web/example" }] },
     1: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1992" }, connection: { status: "undocumented" } },
     2: { attribution: { status: "not_found", source: "Open Library" }, connection: { status: "undocumented" } },
     3: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 2000-10-02" }, connection: { status: "not_applicable" } },

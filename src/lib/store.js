@@ -82,11 +82,11 @@ async function findOrCreateClaim({ subjectId, objectId, claimType, slotType, sum
   return { id: r.rows[0].id, created: true };
 }
 
-async function addProvenance(claimId, { status, method, url = null, quote = null, notes = null }) {
+async function addProvenance(claimId, { status, method, url = null, quote = null, notes = null, publication = null, publishedDate = null, archivedUrl = null }) {
   await q(
-    `INSERT INTO provenance (claim_id, source_url, quote, verification_status, verification_method, verified_at, retrieved_at, notes)
-     VALUES ($1, $2, $3, $4, $5, now(), now(), $6)`,
-    [claimId, url, quote, status, method, notes]
+    `INSERT INTO provenance (claim_id, source_url, archived_url, quote, publication, published_date, verification_status, verification_method, verified_at, retrieved_at, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9)`,
+    [claimId, url, archivedUrl, quote, publication, publishedDate || null, status, method, notes]
   );
 }
 
@@ -182,6 +182,137 @@ export async function persistMixRun({ subject, rawQuery = null, intro, entries }
       [rawQuery, subjectId]
     ).catch(() => {});
   }
+}
+
+// ─── Research pipeline (MASTERPLAN Phase B) ─────────────────────────────
+
+/** Seed the research queue from the most-searched entities (Zipf). */
+export async function enqueueTopSearched(limit = 20) {
+  if (!dbConfigured()) return 0;
+  const r = await q(
+    `INSERT INTO research_queue (entity_id, priority, enqueued_by)
+     SELECT resolved_entity_id, count(*)::int, 'query_log'
+     FROM query_log
+     WHERE resolved_entity_id IS NOT NULL
+     GROUP BY resolved_entity_id
+     ORDER BY count(*) DESC
+     LIMIT $1
+     ON CONFLICT (entity_id) DO UPDATE SET priority = EXCLUDED.priority, updated_at = now()`,
+    [limit]
+  );
+  return r.rowCount;
+}
+
+export async function enqueueSubjectByName(name) {
+  if (!dbConfigured()) return null;
+  const e = await q("SELECT id FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [name]);
+  if (!e.rows[0]) return null;
+  await q(
+    `INSERT INTO research_queue (entity_id, priority, enqueued_by) VALUES ($1, 100, 'manual')
+     ON CONFLICT (entity_id) DO UPDATE SET status = 'queued', priority = 100, updated_at = now()`,
+    [e.rows[0].id]
+  );
+  return e.rows[0].id;
+}
+
+export async function nextQueuedSubjects(limit = 5) {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT rq.id AS queue_id, e.id, e.name, e.domain, e.kind, e.mbid, e.wikidata_qid
+     FROM research_queue rq JOIN entities e ON e.id = rq.entity_id
+     WHERE rq.status = 'queued'
+     ORDER BY rq.priority DESC, rq.created_at
+     LIMIT $1`,
+    [limit]
+  );
+  return r.rows;
+}
+
+export async function markResearch(queueId, status, error = null) {
+  await q(
+    "UPDATE research_queue SET status = $2, last_error = $3, attempts = attempts + 1, updated_at = now() WHERE id = $1",
+    [queueId, status, error]
+  );
+}
+
+/** Known connections for a subject (both directions) — the researcher's targets. */
+export async function getClaimTargets(subjectEntityId, limit = 12) {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT c.id AS claim_id, c.claim_type,
+            o.name AS title, o.metadata->>'creator' AS creator
+     FROM claims c JOIN entities o ON o.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
+     WHERE c.subject_id = $1 OR c.object_id = $1
+     ORDER BY c.created_at DESC LIMIT $2`,
+    [subjectEntityId, limit]
+  );
+  return r.rows.map((row) => ({ claimId: row.claim_id, claimType: row.claim_type, title: row.title, creator: row.creator || "" }));
+}
+
+/**
+ * Store one verified research finding: entity + claim (origin agent_research)
+ * + T2 provenance. Unverified evidence is stored too (audit trail) but as
+ * 'unverifiable'/'dead_link' — it earns nothing.
+ */
+export async function recordFinding({ subjectEntityId, finding, verification, runId }) {
+  const workId = await upsertEntity({
+    name: finding.targetTitle,
+    kind: "work",
+    domain: "other",
+    metadata: { creator: finding.targetCreator },
+  });
+  if (!workId || workId === subjectEntityId) return null;
+
+  const existing = await q(
+    "SELECT id FROM claims WHERE ((subject_id = $1 AND object_id = $2) OR (subject_id = $2 AND object_id = $1)) AND claim_type = $3 LIMIT 1",
+    [subjectEntityId, workId, finding.claimType]
+  );
+  let claimId = existing.rows[0]?.id;
+  if (!claimId) {
+    const r = await q(
+      `INSERT INTO claims (subject_id, object_id, claim_type, slot_affinity, summary, origin, model_version, agent_run_id)
+       VALUES ($1, $2, $3, '{}', $4, 'agent_research', $5, $6) RETURNING id`,
+      [subjectEntityId, workId, finding.claimType, finding.note || null, process.env.KYNDA_MODEL_VERSION || "claude-fable-5", runId]
+    );
+    claimId = r.rows[0].id;
+  }
+
+  await addProvenance(claimId, {
+    status: verification.status,
+    method: "primary_source_quote_match",
+    url: finding.sourceUrl,
+    quote: finding.quote,
+    publication: finding.publication || null,
+    publishedDate: /^\d{4}(-\d{2}-\d{2})?$/.test(finding.publishedDate) ? (finding.publishedDate.length === 4 ? `${finding.publishedDate}-01-01` : finding.publishedDate) : null,
+    archivedUrl: verification.archivedUrl || null,
+    notes: verification.status === "quote_confirmed" ? finding.note || null : `evidence check failed: ${verification.reason || verification.detail || verification.status}`,
+  });
+  return { claimId, confirmed: verification.status === "quote_confirmed" };
+}
+
+/** Confirmed primary-source citations for a subject↔work pair (serve-time). */
+export async function getCitationsForItem(subject, item) {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date
+     FROM provenance p
+     JOIN claims c ON c.id = p.claim_id
+     JOIN entities s ON s.id IN (c.subject_id, c.object_id)
+     JOIN entities o ON o.id IN (c.subject_id, c.object_id) AND o.id <> s.id
+     WHERE p.verification_status = 'quote_confirmed'
+       AND p.verification_method = 'primary_source_quote_match'
+       AND (s.mbid = $1 OR s.wikidata_qid = $2 OR lower(s.name) = lower($3))
+       AND lower(o.name) = lower($4)
+     ORDER BY p.created_at DESC LIMIT 3`,
+    [subject.mbid || null, subject.wikidata_qid || null, subject.name, item.title]
+  );
+  return r.rows.map((row) => ({
+    url: row.source_url,
+    archivedUrl: row.archived_url,
+    quote: row.quote,
+    publication: row.publication || "source",
+    date: row.published_date ? String(row.published_date).slice(0, 4) : null,
+  }));
 }
 
 /** Durable L2 mix cache: most recent stored mix for this subject (6-month TTL). */

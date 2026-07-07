@@ -16,6 +16,10 @@ export function normalizeText(s) {
     .replace(/…/g, "...")
     .replace(/ /g, " ")
     .replace(/\s+/g, " ")
+    // HTML stripping leaves stray spaces around punctuation ("<a>X</a>, Y" →
+    // "X , Y"); normalize haystack and needle identically.
+    .replace(/\s+([.,;:!?%)\]])/g, "$1")
+    .replace(/([([])\s+/g, "$1")
     .toLowerCase()
     .trim();
 }
