@@ -101,6 +101,7 @@ export async function disambiguate(query) {
     if (!c) return null;
     return {
       name: c.name,
+      kind: c.kind,
       domain: c.domain !== "unknown" ? c.domain : ranked.domain,
       description: c.description,
       yearsActive: c.yearsActive,

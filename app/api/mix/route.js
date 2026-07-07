@@ -6,6 +6,7 @@
 // "verified" appears only after the deterministic check passes.
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix } from "../../../src/lib/pipeline/mix.js";
+import { persistMixRun, getStoredMix } from "../../../src/lib/store.js";
 
 export const maxDuration = 300;
 
@@ -20,10 +21,19 @@ export async function POST(req) {
     async start(controller) {
       const send = (obj) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
       try {
-        const cached = getCachedMix(subject);
-        if (cached) {
+        // L1: per-instance memory. L2: the claims store (survives deploys and
+        // cold starts — V3-17). Both serve the full verified payload instantly.
+        let cached = getCachedMix(subject);
+        if (!cached) {
+          cached = await getStoredMix(subject).catch((err) => {
+            console.error("getStoredMix failed:", err.message);
+            return null;
+          });
+          if (cached) cacheMix(subject, cached);
+        }
+        if (cached?.entries) {
           send({ type: "intro", intro: cached.intro, cached: true });
-          cached.items.forEach((entry, i) => {
+          cached.entries.forEach((entry, i) => {
             send({ type: "item", index: i, item: entry.item });
             send({ type: "verification", index: i, verification: entry.verification });
           });
@@ -56,8 +66,17 @@ export async function POST(req) {
           send({ type: "verification", index: i, verification });
         }
 
-        cacheMix(subject, { intro: mix.intro, items: entries });
+        cacheMix(subject, { intro: mix.intro, entries });
         send({ type: "done" });
+
+        // Persist the run to the claims store (V3-17) — every search
+        // permanently enriches the graph. Best-effort: never break the
+        // response, which has already been fully delivered.
+        try {
+          await persistMixRun({ subject, intro: mix.intro, entries });
+        } catch (err) {
+          console.error("persistMixRun failed:", err.message);
+        }
       } catch (err) {
         console.error("mix error:", err);
         send({ type: "error", message: err.message || "mix generation failed" });
