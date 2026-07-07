@@ -34,9 +34,25 @@ export function getPool() {
   return pool;
 }
 
-/** Query helper; returns null when no database is configured. */
+const TRANSIENT = new Set(["ENOTFOUND", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "57P01"]);
+
+/**
+ * Query helper; returns null when no database is configured.
+ * Transient network/pooler errors (DNS blips mid-run, killed connections)
+ * retry twice with backoff — long agent runs must survive them.
+ */
 export async function q(text, params = []) {
   const p = getPool();
   if (!p) return null;
-  return p.query(text, params);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await p.query(text, params);
+    } catch (err) {
+      if (attempt < 2 && TRANSIENT.has(err.code)) {
+        await new Promise((r) => setTimeout(r, 2_000 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
 }

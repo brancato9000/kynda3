@@ -40,16 +40,17 @@ export async function runResearchBatch(limit = 3, { log = console.log, model } =
   }
   const totals = { subjects: 0, confirmed: 0, rejected: 0 };
   for (const entity of queue) {
-    await markResearch(entity.queue_id, "running");
+    await markResearch(entity.queue_id, "running").catch(() => {});
     try {
       const r = await researchOne(entity, { log, model });
       totals.subjects += 1;
       totals.confirmed += r.confirmed;
       totals.rejected += r.rejected;
-      await markResearch(entity.queue_id, "done");
+      await markResearch(entity.queue_id, "done").catch(() => {});
     } catch (err) {
       log(`  ✗ research failed for "${entity.name}": ${err.message}`);
-      await markResearch(entity.queue_id, "failed", err.message.slice(0, 500));
+      // Best-effort: the queue-status write must never mask the real error.
+      await markResearch(entity.queue_id, "failed", err.message.slice(0, 500)).catch(() => {});
     }
   }
   return totals;
