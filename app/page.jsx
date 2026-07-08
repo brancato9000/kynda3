@@ -129,14 +129,19 @@ function Spinner({ size = 15 }) {
 }
 
 // ─── Mix card ─────────────────────────────────────────────────
-// T2 primary-source citations from the research corpus — the strongest
-// connection evidence: the artist's/press's own words, quote-confirmed.
+// T2 quote-confirmed citations from the research corpus. Degree attaches to
+// the SPEAKER, not the publication (V3-21): "Sidney Lumet, via CinemaTyler".
+const DEGREE_LABELS = { first: "artist’s own words", second: "critical source", third: "fan source" };
+
 function CitationBlock({ citations }) {
+  const strongest = citations.some((c) => c.degree === "first") ? "first"
+    : citations.some((c) => c.degree === "second") ? "second"
+    : citations.some((c) => c.degree === "third") ? "third" : null;
   return (
     <div style={{ marginTop: "12px", paddingLeft: "14px", borderLeft: "2px solid rgba(52,211,153,0.4)" }}>
       <div style={{ marginBottom: "6px" }}>
         <span style={{ ...chipBase, color: CONFIDENCE_COLORS.verified, border: "1px solid rgba(52,211,153,0.35)" }}>
-          ◆ cited · primary source
+          ◆ cited · {strongest ? DEGREE_LABELS[strongest] : "primary source"}
         </span>
       </div>
       {citations.map((c, i) => (
@@ -145,8 +150,9 @@ function CitationBlock({ citations }) {
             “{c.quote}”
           </div>
           <a href={c.url} target="_blank" rel="noreferrer"
+            title={c.degree ? `${DEGREE_LABELS[c.degree]} — degree classified by the research agent` : undefined}
             style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>
-            — {c.publication}{c.date ? `, ${c.date}` : ""} ↗
+            — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""} ↗
           </a>
           {c.archivedUrl && (
             <a href={c.archivedUrl} target="_blank" rel="noreferrer"
@@ -331,7 +337,7 @@ const DEMO = {
       order: [0, 1],
       candidates: [
         { item: { slotType: "titan", title: "Surfer Rosa", creator: "Pixies", year: "1988", medium: "music", reason: "Thom Yorke has repeatedly pointed to the Pixies' quiet-loud dynamics as foundational to the band's early songwriting, an architecture audible from Pablo Honey through The Bends. Producer Paul Kolderie, who engineered for the Pixies, was enlisted for Radiohead's debut — a direct personnel link between the two catalogs that shaped how the band tracked guitars and staged dynamics for a decade." },
-          verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." }, citations: [{ quote: "I was trying to write the ultimate pop song… I was basically trying to rip off the Pixies. I have to admit it.", url: "https://example.com/interview", publication: "Rolling Stone", date: "1994", archivedUrl: "https://web.archive.org/web/example" }] } },
+          verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org/release-group/74e36cbc-a747-3ebf-a60e-51e656c87741", detail: "first released 1988-03-21" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "Paul Kolderie and Sean Slade, who had worked with the US bands the Pixies and Dinosaur Jr., were enlisted to produce Radiohead's debut album, Pablo Honey." }, citations: [{ quote: "I was trying to write the ultimate pop song… I was basically trying to rip off the Pixies. I have to admit it.", speaker: "Kurt Cobain", degree: "first", url: "https://example.com/interview", publication: "Rolling Stone", date: "1994", archivedUrl: "https://web.archive.org/web/example" }] } },
         { item: { slotType: "titan", title: "Remain in Light", creator: "Talking Heads", year: "1980", medium: "music", reason: "Radiohead took their name from the Talking Heads song 'Radio Head', and Remain in Light's method — songs built from layered grooves, studio collage, and Brian Eno's production interventions rather than conventional band performance — became a template the band openly invoked around Kid A. Thom Yorke's fragmented, chanted vocal delivery and the shift toward rhythm-first composition echo David Byrne's approach here directly." },
           verification: { attribution: { status: "verified", source: "MusicBrainz", url: "https://musicbrainz.org", detail: "first released 1980" }, connection: { status: "documented", articleTitle: "Radiohead", url: "https://en.wikipedia.org/wiki/Radiohead", excerpt: "At EMI's request, they changed their name; \"Radiohead\" was taken from the song \"Radio Head\" on the Talking Heads album True Stories (1986)." } } },
       ],

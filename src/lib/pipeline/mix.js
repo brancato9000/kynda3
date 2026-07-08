@@ -149,7 +149,11 @@ export async function generateMix(subject, members = []) {
 export function provenanceScore(verification) {
   const v = verification || {};
   let score = 0;
-  score += (v.citations?.length || 0) * 100;
+  // Degree-weighted citations (V3-21): the artist's own words outrank
+  // critics; critics outrank fan sources; all outrank a bare cross-mention.
+  for (const c of v.citations || []) {
+    score += c.degree === "first" ? 120 : c.degree === "third" ? 60 : 100;
+  }
   if (v.connection?.status === "documented") score += 50;
   else if (v.connection?.status === "documented_via") score += 40;
   if (v.attribution?.status === "verified") score += 30;

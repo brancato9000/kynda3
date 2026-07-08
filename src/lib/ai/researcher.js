@@ -19,7 +19,7 @@ export const FINDINGS_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["targetTitle", "targetCreator", "claimType", "sourceUrl", "quote", "publication", "publishedDate", "note"],
+        required: ["targetTitle", "targetCreator", "claimType", "sourceUrl", "quote", "speaker", "sourceDegree", "publication", "publishedDate", "note"],
         properties: {
           targetTitle: { type: "string" },
           targetCreator: { type: "string" },
@@ -29,6 +29,8 @@ export const FINDINGS_SCHEMA = {
           },
           sourceUrl: { type: "string" },
           quote: { type: "string" },
+          speaker: { type: "string" },
+          sourceDegree: { type: "string", enum: ["first", "second", "third"] },
           publication: { type: "string" },
           publishedDate: { type: "string" },
           note: { type: "string" },
@@ -44,7 +46,9 @@ Method:
 - Use web search to locate sources, then FETCH the page and read it. Only cite pages you actually fetched in this session.
 - quote: an EXACT excerpt copied verbatim from the fetched page content (40-300 characters) that documents the connection. Copy-paste from the fetched text — never reconstruct from memory or paraphrase.
 - Return EVERY finding where you fetched a page and copied a quote from its content. Do not withhold findings out of caution — a deterministic machine check downstream is the filter, not you. Your job is recall; the machine's job is precision. Only omit findings you could not fetch a page for.
-- Strongest evidence first: the artist's own words (interviews, memoirs) > named journalists/critics > general reporting. But a good secondary source beats no finding.
+- speaker: WHO is speaking in the quote — the person whose words they are, never the outlet. A Lumet quote inside a blog post has speaker "Sidney Lumet". If the quote is the writer's own prose, the speaker is that writer's name (or "" if unnamed).
+- sourceDegree: attaches to the speaker, not the publication. "first" = the subject or its creators/direct collaborators speaking. "second" = a named critic, journalist, or scholar making the connection themselves. "third" = fan analysis, wikis, crowd sources.
+- Strongest evidence first: the artist's own words (interviews, memoirs) > named journalists/critics > general reporting. But a good secondary source beats no finding — for connections that live in criticism rather than in artist statements (thematic echoes, structural homage), deliberately seek the named critics who have made the comparison.
 - Prefer stable, fetchable pages (publications, archives, fan-maintained interview archives) over social media or video-only sources.
 - Cover as many of the provided targets as the tool budget allows — a finding for each of 5 targets beats 5 findings for one. Then add up to 3 additional well-sourced connections you encountered.
 - claimType: from the target when given; for new findings choose the best fit. "cited_as_influence" means the subject explicitly named the influence themselves.
