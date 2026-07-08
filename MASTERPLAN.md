@@ -70,7 +70,13 @@ Economics: Batch API for the fleets, effort-tiered models (Fable for extraction 
 
 ## 6. Pillar III — The Human Layer
 
-**Fans.** Anyone can submit a claim — but a submission *is* a claim + evidence (URL + quote, or episode + timestamp). The deterministic verifier is the moderation front line: submissions whose evidence doesn't check out never surface. Votes rank visibility and flag review priority. This kills most abuse structurally — you can't brigade a string match.
+**Fans.** Two contribution lanes, deliberately different in trust required:
+
+*Lane 1 — Evidence patching (low friction, ships first).* Any card labeled "Kynda's synthesis" carries an affordance: **know a source? add it.** The claim already exists; the contributor supplies what the research agent supplies — URL + exact quote (or episode + timestamp) — and the SAME deterministic fetch-and-match gate judges it. No moderator opinion decides whether the fan is right; the page contains the quote or it doesn't. This lane crowdsources exactly what agents reach worst: print magazines, liner notes on the shelf, podcast moments, paywalled archives. Three orthogonal axes keep it honest: **degree** = whose words the quote is (a fan-submitted Lumet quote is still first-degree voice), **origin** = who found it (`user_submission` alongside `agent_research`), **vetting tier** = how reviewed. Confirmed patches display immediately with a "fan-contributed, pending review" marker; curator review clears the marker or pulls the source.
+
+*Lane 2 — New cards (higher trust, human+AI vetting before publish).* Anyone can propose a new candidate for a slot — a claim + evidence, never a bare opinion. The pipeline before anything goes public: (1) **AI gate, deterministic first** — attribution tuple check, evidence quote-match, dedupe against existing claims, slot-rule enforcement; (2) **AI critique** — an adversarial model pass on slot fit and reason quality (advisory, never sufficient alone); (3) **curator approval** — a human vets and publishes. Until approved, submissions are visible only to the contributor and the review queue. Published cards enter the carousel ranked by their earned evidence like any other candidate — contribution buys entry, not position.
+
+Votes rank visibility and flag review priority in both lanes — never truth. This kills most abuse structurally: you can't brigade a string match.
 
 **Trusted curators.** Critics, journalists, scene historians, proven superfans. Earned role (track record of surviving submissions) or invited. They vet T2 evidence to T3, resolve contradictions, and own domain queues. Every action attributed and logged — curation history is public record.
 
@@ -115,7 +121,7 @@ Stand up Postgres (the Phase-0 schema is written and waiting). Persist every run
 Source harvesters + subject researchers over the top ~1,000 subjects and the highest-yield open archives. Interview citations start appearing under mix reasons ("Thom Yorke, Melody Maker 1993 ↗" with a quote-confirmed excerpt). Success metric: majority of mix connections for top subjects at T2+.
 
 **Phase C — Contribution alpha.**
-Evidence-required fan submissions; vote + vetting queues; first cohort of trusted curators (recruit from music journalism and scene-historian communities). Wave-A domains (film/TV, literature) get their spines and eval golden sets.
+Lane 1 (evidence patching) ships first — and its curator-mode form can be pulled forward into Phase B: the founding household are users #1 and #2, and reviewing pilot output while holding a "add the source you know" form is the contribution loop in miniature, before accounts exist. Then Lane 2 (new cards) with the human+AI vetting pipeline, votes + review queues, and the first cohort of trusted curators (recruit from music journalism and scene-historian communities). Wave-A domains (film/TV, literature) get their spines and eval golden sets.
 
 **Phase D — Creators & perspectives.**
 Verified-creator attestation and dispute; creator-curated maps; the four-way perspective toggle. Wave-B domains.
