@@ -126,6 +126,7 @@ export async function generateMix(subject, members = []) {
     const key = `${norm(item.title)}|${norm(item.creator)}`;
     if (seen.has(key)) return false;
     seen.add(key);
+    item.reason = sanitizeReason(item.reason);
     return true;
   });
 
@@ -138,6 +139,30 @@ export async function generateMix(subject, members = []) {
     if (candidates.length) slots.push({ slotType, candidates });
   }
   return { intro: mix.intro, slots };
+}
+
+/**
+ * Deterministic degeneration gate for reason prose (V3-23). Models under a
+ * character-count constraint occasionally pad with token loops
+ * ("done.yes.end.stop.done…") — one unbreakable run that also wrecks layout.
+ * Pure string logic: cut at the first pathological token, trim to the last
+ * complete sentence, hard-cap length.
+ */
+export function sanitizeReason(reason) {
+  let text = String(reason || "").replace(/\s+/g, " ").trim();
+  // A "word" over 45 chars with 3+ internal periods is a degeneration loop,
+  // not language — cut everything from the first one onward.
+  const match = text.match(/\S{46,}/);
+  if (match && (match[0].match(/\./g) || []).length >= 3) {
+    text = text.slice(0, match.index).trim();
+  }
+  if (text.length > 700) text = text.slice(0, 700);
+  // Trim to the last complete sentence when we cut anything.
+  if (text.length < String(reason || "").trim().length) {
+    const lastEnd = Math.max(text.lastIndexOf(". "), text.lastIndexOf(".”"), text.endsWith(".") ? text.length - 1 : -1);
+    if (lastEnd > 100) text = text.slice(0, lastEnd + 1);
+  }
+  return text;
 }
 
 /**

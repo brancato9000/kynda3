@@ -16,6 +16,7 @@ import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
 import { findMention } from "../src/lib/entities/wikipedia.js";
 import { htmlToText } from "../src/lib/verify/evidence.js";
 import { rateLimit } from "../src/lib/guard.js";
+import { sanitizeReason } from "../src/lib/pipeline/mix.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -129,6 +130,15 @@ function testQuoteMatch() {
   check("rateLimit allows up to the limit then blocks",
     rateLimit("test:ip", opts) && rateLimit("test:ip", opts) && !rateLimit("test:ip", opts));
   check("rateLimit keys are independent", rateLimit("test:other", opts));
+
+  // sanitizeReason — the degeneration gate (V3-23, from the live Conchords card)
+  const degenerate = "Their whole method depends on the theatrical self-invention this album codified, from costume changes to alien-rock-star myth. " +
+    "phrase.re.markable.detail.here.now.ok.fine.done.yes.right.good.end.stop.close.final.last.word.period.full.stop.now.done.ok.yes.end";
+  const cleaned = sanitizeReason(degenerate);
+  check("sanitizeReason cuts degeneration loops at a sentence boundary",
+    cleaned.endsWith("alien-rock-star myth.") && !cleaned.includes("done.yes"));
+  check("sanitizeReason passes healthy prose through untouched",
+    sanitizeReason("A normal reason with several sentences. It stays exactly as written.") === "A normal reason with several sentences. It stays exactly as written.");
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────

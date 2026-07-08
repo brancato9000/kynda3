@@ -186,6 +186,9 @@ function SlotCard({ slot, index }) {
       background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: "8px",
       padding: "22px 24px", opacity: failed ? 0.65 : 1, animation: "kyndaRise 0.5s ease both",
       animationDelay: `${index * 60}ms`,
+      // Layout armor: no content — however degenerate — may escape the card
+      // (overflow-wrap inherits to all text inside).
+      overflowWrap: "anywhere", overflow: "hidden",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <span style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
