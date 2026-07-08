@@ -15,6 +15,7 @@ import path from "node:path";
 import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
 import { findMention } from "../src/lib/entities/wikipedia.js";
 import { htmlToText } from "../src/lib/verify/evidence.js";
+import { rateLimit } from "../src/lib/guard.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -122,6 +123,12 @@ function testQuoteMatch() {
     stripped.includes('"I was trying to rip off the Pixies - I have to admit it."') && !stripped.includes("var a=1"));
   check("quote survives the strip→match pipeline",
     quoteMatch(stripped, "I was trying to rip off the Pixies — I have to admit it").matched);
+
+  // rateLimit — the per-IP abuse guard (V3-22)
+  const opts = { limit: 2, windowMs: 60_000 };
+  check("rateLimit allows up to the limit then blocks",
+    rateLimit("test:ip", opts) && rateLimit("test:ip", opts) && !rateLimit("test:ip", opts));
+  check("rateLimit keys are independent", rateLimit("test:other", opts));
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────

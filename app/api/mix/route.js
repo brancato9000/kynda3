@@ -10,6 +10,7 @@
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
+import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
 
 export const maxDuration = 300;
 
@@ -65,6 +66,17 @@ export async function POST(req) {
             send({ type: "rank", s, order: rankCandidates(verifications) });
           }
           send({ type: "done", cached: true });
+          return;
+        }
+
+        // Fresh generation costs real money (~$0.30/subject) — guards apply
+        // here only (V3-22). Cached serves above cost ~nothing and never 429.
+        if (!rateLimit(`mix:${clientIp(req)}`, { limit: 10, windowMs: 3_600_000 })) {
+          send({ type: "error", message: "Too many new maps from this connection — cached subjects still work. Try again in an hour." });
+          return;
+        }
+        if (await generationCapReached()) {
+          send({ type: "error", message: CAPACITY_MESSAGE });
           return;
         }
 
