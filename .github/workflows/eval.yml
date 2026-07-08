@@ -13,6 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      # The eval harness has zero dependencies — no install step.
+      # The eval imports the db layer (guard tests), so deps are needed now.
       # Live stage hits MusicBrainz/Wikidata at ~1 req/sec (etiquette-compliant).
+      - run: npm ci
       - run: npm run eval
