@@ -27,9 +27,13 @@ const { getPool } = await import("../src/lib/db.js");
 
 const BUDGET_USD = 100;
 
+// Ad-hoc mode: `node scripts/pilot.mjs "Subject A" "Subject B"` runs just
+// those subjects (stratum "rerun") — used for retrying pilot casualties.
+const ARGV_SUBJECTS = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+
 // Halved roster (budget pilot). Cut subjects can be added back any time —
 // each runs independently for ~$3.
-const ROSTER = [
+const DEFAULT_ROSTER = [
   // Eval anchors — golden-set subjects with known-true facts
   { q: "David Bowie", stratum: "anchor" },
   { q: "Kendrick Lamar", stratum: "anchor" },
@@ -52,6 +56,10 @@ const ROSTER = [
   { q: "Doechii", stratum: "newness" },
   { q: "Alex Warren", stratum: "newness" },
 ];
+
+const ROSTER = ARGV_SUBJECTS.length
+  ? ARGV_SUBJECTS.map((q) => ({ q, stratum: "rerun" }))
+  : DEFAULT_ROSTER;
 
 let lastUsd = 0;
 function stageCost() {

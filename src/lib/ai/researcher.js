@@ -78,22 +78,39 @@ async function runLoop(client, tools, user, useFormat, model) {
     ? { betas: ["server-side-fallback-2026-06-01"], fallbacks: [{ model: "claude-opus-4-8" }] }
     : {};
   for (let turn = 0; turn < 10; turn++) {
-    const stream = client.beta.messages.stream({
-      model,
-      max_tokens: 16_000,
-      ...fallbackOpts,
-      // Auto-cache the growing prefix: pause_turn continuations otherwise
-      // re-pay the whole conversation at full input price every turn —
-      // measured at $23.69/subject before this line existed.
-      cache_control: { type: "ephemeral" },
-      system: RESEARCH_SYSTEM,
-      tools,
-      output_config: useFormat
-        ? { effort: "high", format: { type: "json_schema", schema: FINDINGS_SCHEMA } }
-        : { effort: "high" },
-      messages,
-    });
-    const response = await stream.finalMessage();
+    let response;
+    // Turn-level retry: long SSE streams die ("terminated") and 529 bursts
+    // outlast the SDK's built-in retries. Losing a whole research run to a
+    // transient mid-stream failure wasted 95 minutes on one pilot subject.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const stream = client.beta.messages.stream({
+          model,
+          max_tokens: 16_000,
+          ...fallbackOpts,
+          // Auto-cache the growing prefix: pause_turn continuations otherwise
+          // re-pay the whole conversation at full input price every turn —
+          // measured at $23.69/subject before this line existed.
+          cache_control: { type: "ephemeral" },
+          system: RESEARCH_SYSTEM,
+          tools,
+          output_config: useFormat
+            ? { effort: "high", format: { type: "json_schema", schema: FINDINGS_SCHEMA } }
+            : { effort: "high" },
+          messages,
+        });
+        response = await stream.finalMessage();
+        break;
+      } catch (err) {
+        const detail = String(err?.message || "") + String(err?.cause?.message || "") + (err?.status === 529 ? " overloaded" : "");
+        const transient = /terminated|Connection error|fetch failed|ENOTFOUND|ETIMEDOUT|ECONNRESET|overloaded|529/i.test(detail);
+        if (attempt < 3 && transient) {
+          await new Promise((r) => setTimeout(r, 45_000 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
     recordUsage("research", response.model, response.usage);
     if (response.stop_reason === "pause_turn") {
       messages.push({ role: "assistant", content: response.content });
