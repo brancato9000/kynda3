@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../src/design/tokens.js";
+import GraphView from "./graph-view.jsx";
 
 const SLOT_BY_ID = Object.fromEntries(MIX_SLOT_TYPES.map((s) => [s.id, s]));
 
@@ -375,7 +376,28 @@ export default function Page() {
   const [intro, setIntro] = useState(null);
   const [slots, setSlots] = useState([]);
   const [done, setDone] = useState(false);
+  const [tab, setTab] = useState("mix");
+  const [graph, setGraph] = useState({ status: "idle", data: null, error: null });
   const runRef = useRef(0);
+
+  // Graph is lazy (kynda2 AD-05) and free — a pure claims-store read.
+  const openGraphTab = useCallback(async (subj) => {
+    setTab("graph");
+    if (graph.status === "loading" || graph.status === "ready") return;
+    setGraph({ status: "loading", data: null, error: null });
+    try {
+      const res = await fetch("/api/graph", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: subj }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "graph failed");
+      setGraph({ status: "ready", data, error: null });
+    } catch (err) {
+      setGraph({ status: "error", data: null, error: err.message });
+    }
+  }, [graph.status]);
 
   // ?demo=1 seeds fixture data for offline design iteration — no API calls.
   useEffect(() => {
@@ -445,16 +467,29 @@ export default function Page() {
     setTier("certain");
     setPhase("mixing");
     setIntro(null); setSlots([]); setDone(false); setError(null);
+    setTab("mix"); setGraph({ status: "idle", data: null, error: null });
     fireMix(subj, run);
   }, [fireMix]);
 
   async function onSearch(e) {
     e.preventDefault();
-    if (!query.trim()) return;
+    runSearch(query);
+  }
+
+  // Graph double-click navigation (AD-07) routes through the full search flow.
+  function navigateTo(name) {
+    setQuery(name);
+    runSearch(name);
+  }
+
+  async function runSearch(text) {
+    if (!text?.trim()) return;
+    const query = text;
     const run = ++runRef.current;
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
     setIntro(null); setSlots([]); setDone(false);
+    setTab("mix"); setGraph({ status: "idle", data: null, error: null });
     try {
       const res = await fetch("/api/disambiguate", {
         method: "POST",
@@ -562,26 +597,61 @@ export default function Page() {
             </div>
           )}
 
-          {intro && (
+          {/* MIX | GRAPH tabs (graph is lazy and token-free) */}
+          <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            {[["mix", "Mix"], ["graph", "Graph"]].map(([id, label]) => (
+              <button key={id}
+                onClick={() => (id === "graph" ? openGraphTab(subject) : setTab("mix"))}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontFamily: FONTS.mono, fontSize: "12px", letterSpacing: "0.1em", textTransform: "uppercase",
+                  padding: "10px 18px", color: tab === id ? BASE.gold : "rgba(148,163,184,0.6)",
+                  borderBottom: tab === id ? `2px solid ${BASE.gold}` : "2px solid transparent",
+                  marginBottom: "-1px",
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {tab === "graph" && (
+            <div>
+              {graph.status === "loading" && (
+                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Pulse /> reading the claims graph…
+                </div>
+              )}
+              {graph.status === "error" && (
+                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.7)" }}>{graph.error}</div>
+              )}
+              {graph.status === "ready" && (
+                <GraphView data={graph.data} subjectName={subject.name} onNavigate={navigateTo} />
+              )}
+            </div>
+          )}
+
+          {tab === "mix" && intro && (
             <div style={{ marginBottom: "28px" }}>
               <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={100}
                 style={{ fontFamily: FONTS.display, fontSize: "19px", fontStyle: "italic", lineHeight: 1.6, color: "rgba(226,232,240,0.9)" }} />
             </div>
           )}
 
-          {!intro && !error && (
+          {tab === "mix" && !intro && !error && (
             <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
               <Pulse /> composing the mix — Fable is thinking…
             </div>
           )}
 
+          {tab === "mix" && (
           <div style={{ display: "grid", gap: "16px" }}>
             {slots.map((slot, i) => slot?.candidates?.length > 0 && (
               <SlotCard key={i} slot={slot} index={i} />
             ))}
           </div>
+          )}
 
-          {done && (
+          {tab === "mix" && done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
               The connections are Kynda’s synthesis — no database can produce them.
               The databases fact-check the synthesis: across {candidateCount} candidates

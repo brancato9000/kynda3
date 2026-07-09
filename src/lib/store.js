@@ -6,6 +6,7 @@
 // failure must never break serving a request.
 
 import { q, dbConfigured } from "./db.js";
+import { norm } from "./entities/musicbrainz.js";
 
 const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"]);
 const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "other"]);
@@ -29,9 +30,16 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
     if (r.rows[0]) return r.rows[0].id;
   }
   if (!mbid && !wikidata_qid) {
+    // Name matching ignores domain (different pipelines guess domains
+    // differently — that split created duplicate entities, V3-25 lesson).
+    // Creator disambiguates same-titled works when both sides know it.
+    const creator = metadata?.creator || null;
     const r = await q(
-      "SELECT id FROM entities WHERE lower(name) = lower($1) AND domain = $2 AND kind = $3 LIMIT 1",
-      [name, domainOf(domain), kindOf(kind)]
+      `SELECT id FROM entities
+       WHERE lower(name) = lower($1) AND kind = $2
+         AND ($3::text IS NULL OR metadata->>'creator' IS NULL OR lower(metadata->>'creator') = lower($3))
+       ORDER BY created_at LIMIT 1`,
+      [name, kindOf(kind), creator]
     );
     if (r.rows[0]) return r.rows[0].id;
   }
@@ -320,6 +328,96 @@ export async function getCitationsForItem(subject, item) {
     publication: row.publication || "source",
     date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
+}
+
+// ─── Influence graph (V3-25) ────────────────────────────────────────────
+// The graph is a pure database read — zero tokens. Node weight is an
+// EVIDENCE measurement (T2 citations ≫ confirmed documentation ≫ bare
+// claim), which finally replaces kynda2's model-vibes "significance" score.
+
+const PREDECESSOR_TYPES = ["influenced_by", "cited_as_influence", "cross_medium_influence"];
+const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at"];
+
+export async function getGraphForSubject(subject) {
+  if (!dbConfigured()) return null;
+
+  // Resolve the subject entity: canonical IDs first, name as fallback.
+  let entity = null;
+  if (subject.mbid || subject.wikidata_qid) {
+    const r = await q(
+      "SELECT id, name, domain FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
+      [subject.mbid || null, subject.wikidata_qid || null]
+    );
+    entity = r.rows[0] || null;
+  }
+  if (!entity) {
+    const r = await q("SELECT id, name, domain FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [subject.name]);
+    entity = r.rows[0] || null;
+  }
+  if (!entity) return null;
+
+  const r = await q(
+    `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS outbound,
+            e.name, e.kind, e.domain, e.year_start, e.metadata->>'creator' AS creator,
+            COALESCE((SELECT json_agg(json_build_object(
+                'quote', p.quote, 'url', p.source_url, 'publication', p.publication,
+                'speaker', p.speaker, 'degree', p.source_degree,
+                'method', p.verification_method, 'status', p.verification_status)
+              ORDER BY (p.verification_method = 'primary_source_quote_match') DESC, p.created_at DESC)
+              FROM provenance p WHERE p.claim_id = c.id
+                AND p.verification_status IN ('quote_confirmed', 'db_relationship')), '[]') AS evidence
+     FROM claims c
+     JOIN entities e ON e.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
+     WHERE c.subject_id = $1 OR c.object_id = $1`,
+    [entity.id]
+  );
+
+  // Same-name rows MERGE their evidence (duplicate entities from earlier
+  // pipeline runs must pool their citations, not shadow each other).
+  const byName = new Map();
+  for (const row of r.rows) {
+    let role = null;
+    if (PREDECESSOR_TYPES.includes(row.claim_type)) role = row.outbound ? "predecessors" : "successors";
+    else if (PEER_TYPES.includes(row.claim_type)) role = "peers";
+    if (!role) continue;
+
+    const evidence = typeof row.evidence === "string" ? JSON.parse(row.evidence) : row.evidence;
+    const key = norm(row.name);
+    const existing = byName.get(key);
+    if (existing) {
+      existing.evidence.push(...evidence);
+      existing.creator = existing.creator || row.creator || null;
+      existing.year = existing.year || (row.year_start ? String(row.year_start) : null);
+    } else {
+      byName.set(key, {
+        name: row.name,
+        creator: row.creator || null,
+        kind: row.kind,
+        domain: row.domain,
+        year: row.year_start ? String(row.year_start) : null,
+        claimType: row.claim_type,
+        summary: row.summary,
+        role,
+        evidence,
+      });
+    }
+  }
+
+  const groups = { predecessors: [], peers: [], successors: [] };
+  for (const node of byName.values()) {
+    const cited = node.evidence.filter((p) => p.method === "primary_source_quote_match" && p.status === "quote_confirmed").length;
+    const documented = node.evidence.length - cited;
+    node.weight = Math.min(10, 1 + cited * 3 + documented * 1.5);
+    node.tier = cited ? "cited" : documented ? "documented" : "claimed";
+    node.evidence = node.evidence
+      .sort((a, b) => (b.method === "primary_source_quote_match") - (a.method === "primary_source_quote_match"))
+      .slice(0, 3);
+    groups[node.role].push(node);
+    delete node.role;
+  }
+
+  if (!groups.predecessors.length && !groups.peers.length && !groups.successors.length) return null;
+  return { subject: entity.name, domain: (entity.domain || "").toUpperCase(), ...groups };
 }
 
 /** Durable L2 mix cache: most recent stored mix for this subject (6-month TTL). */
