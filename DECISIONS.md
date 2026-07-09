@@ -93,6 +93,10 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 **Decision:** User-caught (2026-07-08, Flight of the Conchords card): a generated reason ended in a token-repetition loop ("done.yes.end.stop.done…") — one unbreakable string that also blew the card layout off-page. Three layers: `sanitizeReason()` (pure string logic: cut at the first 46+-char multi-period token, hard-cap 700 chars, trim to sentence boundary) runs on every generated candidate; `overflow-wrap: anywhere` on cards so no content can escape layout regardless of source; the poisoned seed regenerated through the gate. Eval covers the exact live failure string.
 **Rationale:** Character-count pressure in the prompt occasionally makes models pad degenerately; prose quality gets a deterministic gate just like facts do.
 
+## V3-24: The Bootstrap Constraint
+**Decision (2026-07-08):** Until funding or ~100× cheaper research economics, Kynda cannot launch unfettered. Standing rules: no research spend without explicit per-batch approval; the daily generation cap is the launch mechanism (fixed daily budget admits N new subjects/day, query-log-ordered); subsequent build phases selected for zero marginal token cost. See MASTERPLAN §9½ for the cost-collapse roadmap (source-harvesting → fan contributions → cheap-model research + batch → price declines).
+**Context:** measured $2–4.50/subject research capex, $0.30 once-ever per fresh subject, ~$0.001 cached. The distinction between corpus capex and search opex is load-bearing: traffic is already cheap; corpus buildout is what needs funding.
+
 ## V3-08: Real decoys as disambiguation tests
 **Decision:** Golden subjects record known real-world decoys (e.g., Nirvana the UK 60s band vs. the US grunge band; The Godfather the video game vs. the 1972 film). Disambiguation evals must surface or correctly rank these.
 **Rationale:** Retrieval-first disambiguation (candidates come from DB search APIs, model only ranks) makes invented entities impossible by construction — but choosing the wrong *real* entity is still a failure mode, and it's testable.

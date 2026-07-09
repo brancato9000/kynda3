@@ -129,6 +129,15 @@ Verified-creator attestation and dispute; creator-curated maps; the four-way per
 **Phase E — The deep product.**
 Pathfinding, scenes & eras, subject pages as the canonical cultural reference, Wave-C domains, the outward-facing API, and licensing negotiations from strength.
 
+## 9½. THE BOOTSTRAP CONSTRAINT (governing until funding or ~100× cheaper research)
+
+Recorded 2026-07-08, measured economics: research ≈ $2–4.50/subject (one-time capex), fresh search ≈ $0.30 (once per subject, ever), cached search ≈ $0.001. Until grant/funding or a dramatically cheaper research methodology or token pricing arrives, Kynda is **unlaunchable unfettered** — and every decision must respect that:
+
+- **No corpus sprints.** Research spend only by explicit per-batch approval.
+- **Fettered beta is the launch shape**: the daily generation cap IS the business model — a fixed daily budget admits N new subjects/day, demand-ordered by the query log; the indexed corpus serves everyone at ~zero marginal cost.
+- **Phase selection biases to zero-marginal-token work** — which is most of the remaining vision (graph tab, subject pages, contribution Lane 1, source-harvester architecture).
+- **The 100× roadmap, by credibility:** (1) source-harvesting — read each source once, extract claims for every entity it mentions; collapses cost-per-citation 5–20×; (2) Lane 1 fan contributions — URL+quote verified by the dumb gate ≈ free research; (3) cheap-model research + Batch API — the gate carries precision, so the finder only needs recall (3–10× + flat 50%); (4) token price declines over time. Owning the dataset while renting the model means time works for us.
+
 ## 10. The hard parts, honestly
 
 - **Rights.** Excerpt + link + archive is a defensible citation posture; full texts never stored; transcription kept to quotes + timestamps. Archives and podcast networks eventually want deals — good: by then the graph is the thing they want to be in.
