@@ -368,6 +368,64 @@ export async function attachFanEvidence(claimId, { url, quote, archivedUrl, cont
   );
 }
 
+// ─── Admin (V3-27): founder dashboard queries ───────────────────────────
+
+export async function getAdminOverview() {
+  if (!dbConfigured()) return null;
+  const [stats, searches, contributions] = await Promise.all([
+    q(`SELECT
+        (SELECT count(*)::int FROM entities) AS entities,
+        (SELECT count(*)::int FROM claims) AS claims,
+        (SELECT count(*)::int FROM provenance WHERE verification_status = 'quote_confirmed' AND verification_method = 'primary_source_quote_match') AS citations,
+        (SELECT count(*)::int FROM mixes) AS mixes,
+        (SELECT count(*)::int FROM mixes WHERE created_at > now() - interval '24 hours') AS generations_24h,
+        (SELECT count(*)::int FROM query_log WHERE created_at > now() - interval '24 hours') AS searches_24h,
+        (SELECT count(*)::int FROM query_log) AS searches_total`),
+    q(`SELECT ql.raw_query, ql.disambiguation_tier, ql.created_at, e.name AS resolved
+       FROM query_log ql LEFT JOIN entities e ON e.id = ql.resolved_entity_id
+       ORDER BY ql.created_at DESC LIMIT 100`),
+    q(`SELECT id, kind, status, subject_name, item_title, item_creator, slot_type, url, quote, comment, contributor, claim_id, created_at
+       FROM contributions ORDER BY (status IN ('pending','confirmed')) DESC, created_at DESC LIMIT 100`),
+  ]);
+  return {
+    stats: stats.rows[0],
+    searches: searches.rows,
+    contributions: contributions.rows,
+  };
+}
+
+/**
+ * Curator action. Approve: evidence keeps its provenance and the pending
+ * marker clears; flags resolve. Deny: fan-attached provenance is PULLED
+ * (the citation disappears from cards on next serve) and the row rejects.
+ */
+export async function actOnContribution(id, action) {
+  const r = await q("SELECT * FROM contributions WHERE id = $1", [id]);
+  const c = r.rows[0];
+  if (!c) throw new Error("contribution not found");
+  if (action === "approve") {
+    if (c.kind === "evidence" && c.claim_id) {
+      await q(
+        `UPDATE provenance SET notes = regexp_replace(notes, '\\(pending review\\)$', '(approved)')
+         WHERE claim_id = $1 AND source_url = $2 AND notes LIKE 'fan-contributed%'`,
+        [c.claim_id, c.url]
+      );
+    }
+    await q("UPDATE contributions SET status = 'resolved' WHERE id = $1", [id]);
+  } else if (action === "reject") {
+    if (c.kind === "evidence" && c.claim_id) {
+      await q(
+        "DELETE FROM provenance WHERE claim_id = $1 AND source_url = $2 AND notes LIKE 'fan-contributed%'",
+        [c.claim_id, c.url]
+      );
+    }
+    await q("UPDATE contributions SET status = 'rejected' WHERE id = $1", [id]);
+  } else {
+    throw new Error("unknown action");
+  }
+  return { ok: true };
+}
+
 // ─── Influence graph (V3-25) ────────────────────────────────────────────
 // The graph is a pure database read — zero tokens. Node weight is an
 // EVIDENCE measurement (T2 citations ≫ confirmed documentation ≫ bare
