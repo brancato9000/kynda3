@@ -126,3 +126,24 @@ export async function callHaiku({ system, user, schema, maxTokens = 2000 }) {
   recordUsage("haiku", response.model, response.usage);
   return extractJson(response);
 }
+
+export const SONNET = "claude-sonnet-5";
+
+/**
+ * Single structured-output call on an arbitrary model (no tools, no loops) —
+ * the harvest workhorse (V3-29): one call per source, many claims out.
+ */
+export async function callModel(model, { system, user, schema, maxTokens = 8000, effort, label = "model" }) {
+  const response = await client().messages.create({
+    model,
+    max_tokens: maxTokens,
+    system,
+    output_config: {
+      ...(effort ? { effort } : {}),
+      format: { type: "json_schema", schema },
+    },
+    messages: [{ role: "user", content: user }],
+  });
+  recordUsage(label, response.model, response.usage);
+  return extractJson(response);
+}
