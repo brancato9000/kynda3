@@ -306,7 +306,7 @@ export async function recordFinding({ subjectEntityId, finding, verification, ru
 export async function getCitationsForItem(subject, item) {
   if (!dbConfigured()) return [];
   const r = await q(
-    `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date, p.speaker, p.source_degree
+    `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date, p.speaker, p.source_degree, p.notes
      FROM provenance p
      JOIN claims c ON c.id = p.claim_id
      JOIN entities s ON s.id IN (c.subject_id, c.object_id)
@@ -325,9 +325,47 @@ export async function getCitationsForItem(subject, item) {
     quote: row.quote,
     speaker: row.speaker || null,
     degree: row.source_degree || null,
-    publication: row.publication || "source",
+    fan: /^fan-contributed/.test(row.notes || ""),
+    publication: row.publication || (row.source_url ? new URL(row.source_url).hostname.replace(/^www\./, "") : "source"),
     date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
+}
+
+// ─── Contributions (V3-26): Lane 1 evidence + hallucination flags ───────
+
+/** Find the claim connecting this subject↔work pair (either direction). */
+export async function findClaimForPair(subject, itemTitle) {
+  if (!dbConfigured()) return null;
+  const r = await q(
+    `SELECT c.id FROM claims c
+     JOIN entities s ON s.id IN (c.subject_id, c.object_id)
+     JOIN entities o ON o.id IN (c.subject_id, c.object_id) AND o.id <> s.id
+     WHERE (s.mbid = $1 OR s.wikidata_qid = $2 OR lower(s.name) = lower($3))
+       AND lower(o.name) = lower($4)
+     ORDER BY c.created_at LIMIT 1`,
+    [subject.mbid || null, subject.wikidata_qid || null, subject.name, itemTitle]
+  );
+  return r.rows[0]?.id || null;
+}
+
+export async function recordContribution({ kind, subjectName, itemTitle = null, itemCreator = null, slotType = null, claimId = null, url = null, quote = null, comment = null, contributor = null, status = "pending", verification = null }) {
+  if (!dbConfigured()) return null;
+  const r = await q(
+    `INSERT INTO contributions (kind, subject_name, item_title, item_creator, slot_type, claim_id, url, quote, comment, contributor, status, verification)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+    [kind, subjectName, itemTitle, itemCreator, slotType, claimId, url, quote, comment, contributor, status, verification ? JSON.stringify(verification) : null]
+  );
+  return r.rows[0].id;
+}
+
+/** Attach gate-confirmed fan evidence as provenance — displays immediately
+ * with a fan-contributed marker; curator review clears or pulls it. */
+export async function attachFanEvidence(claimId, { url, quote, archivedUrl, contributor }) {
+  await q(
+    `INSERT INTO provenance (claim_id, source_url, archived_url, quote, verification_status, verification_method, verified_at, retrieved_at, notes)
+     VALUES ($1, $2, $3, $4, 'quote_confirmed', 'primary_source_quote_match', now(), now(), $5)`,
+    [claimId, url, archivedUrl || null, quote, `fan-contributed by ${contributor || "anonymous"} (pending review)`]
+  );
 }
 
 // ─── Influence graph (V3-25) ────────────────────────────────────────────

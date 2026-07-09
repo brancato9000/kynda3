@@ -155,6 +155,12 @@ function CitationBlock({ citations }) {
             style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>
             — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""} ↗
           </a>
+          {c.fan && (
+            <span title="Submitted by a fan and machine-verified against the source; awaiting curator review"
+              style={{ fontFamily: FONTS.mono, fontSize: "9px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.6)", marginLeft: "8px", textTransform: "uppercase" }}>
+              · fan-contributed
+            </span>
+          )}
           {c.archivedUrl && (
             <a href={c.archivedUrl} target="_blank" rel="noreferrer"
               style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.5)", textDecoration: "none", marginLeft: "10px" }}>
@@ -167,9 +173,84 @@ function CitationBlock({ citations }) {
   );
 }
 
+// Contribution row (V3-26): flag a problem on any card; add a source to
+// synthesis-labeled connections. Both hit the same deterministic gate the
+// research agents use — nobody has to trust the contributor.
+function ContributeRow({ subject, item, hasCitations }) {
+  const [mode, setMode] = useState(null); // null | "flag" | "evidence" | "sending"
+  const [result, setResult] = useState(null);
+  const [fields, setFields] = useState({ url: "", quote: "", comment: "", contributor: "" });
+
+  async function submit(kind) {
+    setMode("sending");
+    try {
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          subject: { name: subject?.name, mbid: subject?.mbid, wikidata_qid: subject?.wikidata_qid },
+          item: { title: item.title, creator: item.creator, slotType: item.slotType },
+          url: fields.url, quote: fields.quote, comment: fields.comment, contributor: fields.contributor,
+        }),
+      });
+      const data = await res.json();
+      setResult(data.message || data.error || "submitted");
+      setMode(null);
+    } catch (err) {
+      setResult(err.message);
+      setMode(null);
+    }
+  }
+
+  const linkStyle = { background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.45)", padding: 0, textTransform: "uppercase" };
+  const inputStyle = { width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "8px 10px", fontSize: "12px", color: "#e2e8f0", fontFamily: FONTS.body, outline: "none", marginBottom: "6px", boxSizing: "border-box" };
+
+  if (result) return <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.7)", lineHeight: 1.5 }}>{result}</div>;
+
+  return (
+    <div style={{ marginTop: "14px" }}>
+      {!mode && (
+        <div style={{ display: "flex", gap: "16px" }}>
+          <button style={linkStyle} onClick={() => setMode("flag")}>⚑ report an issue</button>
+          {!hasCitations && <button style={linkStyle} onClick={() => setMode("evidence")}>+ know a source? add it</button>}
+        </div>
+      )}
+      {mode === "flag" && (
+        <div>
+          <textarea placeholder="What's wrong with this card? (e.g. 'Gordon Williams did not work on Nirvana Unplugged')" rows={2}
+            value={fields.comment} onChange={(e) => setFields({ ...fields, comment: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
+          <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button style={{ ...linkStyle, color: "rgba(248,113,113,0.8)" }} onClick={() => submit("flag")}>submit flag</button>
+            <button style={linkStyle} onClick={() => setMode(null)}>cancel</button>
+          </div>
+        </div>
+      )}
+      {mode === "evidence" && (
+        <div>
+          <input placeholder="Source URL (interview, review, liner notes…)" value={fields.url} onChange={(e) => setFields({ ...fields, url: e.target.value })} style={inputStyle} />
+          <textarea placeholder="Exact quote from that page documenting the connection — copied verbatim; it will be machine-checked against the page" rows={3}
+            value={fields.quote} onChange={(e) => setFields({ ...fields, quote: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
+          <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button style={{ ...linkStyle, color: "rgba(52,211,153,0.8)" }} onClick={() => submit("evidence")}>verify & submit</button>
+            <button style={linkStyle} onClick={() => setMode(null)}>cancel</button>
+          </div>
+        </div>
+      )}
+      {mode === "sending" && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.6)" }}>
+          <Pulse /> checking against the source…
+        </div>
+      )}
+    </div>
+  );
+}
+
 // One slot = a provenance-ranked carousel of candidates (V3-19). The default
 // shown is the best-evidenced candidate, not the model's first pick.
-function SlotCard({ slot, index }) {
+function SlotCard({ slot, index, subject }) {
   const slotMeta = SLOT_BY_ID[slot.slotType] || { label: slot.slotType, emoji: "◆" };
   const colors = SLOT_COLORS[slot.slotType] || SLOT_COLORS.titan;
   const order = slot.order?.length === slot.candidates.length ? slot.order : slot.candidates.map((_, i) => i);
@@ -276,6 +357,7 @@ function SlotCard({ slot, index }) {
           This attribution was checked against {attribution.source} and could not be confirmed. It may be wrong.
         </div>
       )}
+      <ContributeRow subject={subject} item={item} hasCitations={citations.length > 0} />
     </div>
   );
 }
@@ -646,7 +728,7 @@ export default function Page() {
           {tab === "mix" && (
           <div style={{ display: "grid", gap: "16px" }}>
             {slots.map((slot, i) => slot?.candidates?.length > 0 && (
-              <SlotCard key={i} slot={slot} index={i} />
+              <SlotCard key={i} slot={slot} index={i} subject={subject} />
             ))}
           </div>
           )}
