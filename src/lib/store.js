@@ -368,6 +368,20 @@ export async function attachFanEvidence(claimId, { url, quote, archivedUrl, cont
   );
 }
 
+// ─── Subject pages (V3-28) ──────────────────────────────────────────────
+
+/** All entities that have a stored mix — the set of valid /s/[slug] pages. */
+export async function listSubjects() {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT DISTINCT ON (e.id) e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid,
+            m.payload->>'intro' AS intro
+     FROM entities e JOIN mixes m ON m.subject_entity_id = e.id
+     ORDER BY e.id, m.created_at DESC`
+  );
+  return r.rows;
+}
+
 // ─── Admin (V3-27): founder dashboard queries ───────────────────────────
 
 export async function getAdminOverview() {
