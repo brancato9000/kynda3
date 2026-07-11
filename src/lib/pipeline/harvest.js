@@ -60,7 +60,7 @@ Per claim:
 - sourceDegree: "first" if the speaker is the subject or one of its creators/direct collaborators; "second" for named critics/journalists/scholars or institutional editorial voice; "third" for fan/wiki prose.
 - note: one sentence on what the quote establishes.
 
-Extract only claims the text actually states — completeness matters, but never invent. Also identify the source's publication name and publish date (YYYY-MM-DD or YYYY, "" if absent).`;
+Extract only claims the text actually states — completeness matters, but never invent. Cap output at the 40 STRONGEST claims (most specific, best-quoted) when a page states more — a truncated response loses everything, so respect the cap. Also identify the source's publication name and publish date (YYYY-MM-DD or YYYY, "" if absent).`;
 
 const KIND_MAP = { person: "person", group: "group", work: "work", other: "other" };
 
@@ -117,7 +117,9 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
     system: HARVEST_SYSTEM,
     user: `Source URL: ${url}\n\nPAGE TEXT:\n${text}`,
     schema: HARVEST_SCHEMA,
-    maxTokens: 12_000,
+    // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.
+    // (Five pilot pages died at 12k with uncapped claim counts.)
+    maxTokens: 16_000,
     effort: "medium",
     label: "harvest",
   });
