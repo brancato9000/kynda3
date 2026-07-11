@@ -17,6 +17,7 @@ import { findMention } from "../src/lib/entities/wikipedia.js";
 import { htmlToText } from "../src/lib/verify/evidence.js";
 import { rateLimit } from "../src/lib/guard.js";
 import { sanitizeReason } from "../src/lib/pipeline/mix.js";
+import { validEntityShape } from "../src/lib/pipeline/harvest.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -139,6 +140,19 @@ function testQuoteMatch() {
     cleaned.endsWith("alien-rock-star myth.") && !cleaned.includes("done.yes"));
   check("sanitizeReason passes healthy prose through untouched",
     sanitizeReason("A normal reason with several sentences. It stays exactly as written.") === "A normal reason with several sentences. It stays exactly as written.");
+
+  // validEntityShape — the harvest entity gate (V3-30), fixtures from the
+  // first live harvest batch's actual noise
+  const badShapes = [
+    "aggro punk",                                   // genre, all-lowercase
+    "gamelan and noise music",                      // genre phrase
+    "Eastern European choral music, Canterbury Sound, circus music, marching band music, musique concrète, drone music, free jazz, Tropicália", // composite list
+  ];
+  const goodShapes = ["Surfer Rosa", "Dada", "8½", "Hüsker Dü", "In the Aeroplane Over the Sea", "good kid, m.A.A.d city", "Crosby, Stills & Nash", ">>>", "!!!"];
+  check("validEntityShape rejects the measured noise classes",
+    badShapes.every((s) => !validEntityShape(s)));
+  check("validEntityShape passes real entity names (commas, diacritics, digits included)",
+    goodShapes.every((s) => validEntityShape(s)));
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────

@@ -23,12 +23,13 @@ const HARVEST_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["subjectName", "subjectKind", "subjectDomain", "targetTitle", "targetCreator", "claimType", "quote", "speaker", "sourceDegree", "note"],
+        required: ["subjectName", "subjectKind", "subjectDomain", "targetTitle", "targetKind", "targetCreator", "claimType", "quote", "speaker", "sourceDegree", "note"],
         properties: {
           subjectName: { type: "string" },
           subjectKind: { type: "string", enum: ["person", "group", "work", "other"] },
           subjectDomain: { type: "string", enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"] },
           targetTitle: { type: "string" },
+          targetKind: { type: "string", enum: ["work", "artist", "movement", "other"] },
           targetCreator: { type: "string" },
           claimType: {
             type: "string",
@@ -47,8 +48,10 @@ const HARVEST_SCHEMA = {
 const HARVEST_SYSTEM = `You extract cultural-connection claims from one source text (an interview, feature, review, or liner notes). Find EVERY explicitly stated connection between cultural entities anywhere in the text — the interviewee's influences, comparisons the writer draws, collaborations mentioned, covers, scenes, production credits.
 
 Per claim:
-- subjectName: the entity the claim is ABOUT (the artist naming an influence, the work being compared). subjectKind and subjectDomain describe it.
+- subjectName: the entity the claim is ABOUT (the artist naming an influence, the work being compared). A NAMED entity only — never a description ("the writer's take on X" is not a subject; the subject is X). subjectKind and subjectDomain describe it.
 - targetTitle / targetCreator: the other end of the connection. If the target is a person or band rather than a specific work, put the name in targetTitle and leave targetCreator "".
+- ENTITY SHAPE RULES (both ends): every entity must be a SPECIFIC NAMED work, artist, or movement — something with a Wikipedia-article-shaped identity. Never genres or styles ("aggro punk", "circus music"), never events or moments ("his first Grammy speech" — the entity is the person), never composite lists (one claim per entity; split "influenced by X, Y and Z" into three claims), never versions/descriptions ("the demo version of...", "the writer's description of..."). Named movements are valid using their proper name ("Dada", "Bauhaus" — not "the Dada movement"). targetKind: work | artist | movement | other — use "other" when the target fails these rules, and it will be discarded.
+- Never emit a claim whose target is the subject itself or one of the subject's own works.
 - claimType: "cited_as_influence" when the subject explicitly names the influence themselves; otherwise the best fit.
 - quote: an EXACT verbatim excerpt (40–300 chars) from the provided text documenting this claim. It is machine-checked character-for-character against the text — any paraphrase or reconstruction fails and wastes the claim.
 - speaker: WHOSE WORDS the quote is (a person, never the outlet; "" only if the prose is by an unnamed writer).
@@ -58,6 +61,26 @@ Per claim:
 Extract only claims the text actually states — completeness matters, but never invent. Also identify the source's publication name and publish date (YYYY-MM-DD or YYYY, "" if absent).`;
 
 const KIND_MAP = { person: "person", group: "group", work: "work", other: "other" };
+
+/**
+ * Deterministic entity-shape gate (V3-30). Pure string logic for the
+ * mechanical noise classes measured in the first harvest batch:
+ *   - all-lowercase phrases are genres/styles, not named entities ("aggro punk")
+ *   - 3+ commas means a composite list packed into one entity
+ *   - very long names are descriptions, not identities
+ * The model-side targetKind enum ("other" → discard) handles the judgment
+ * cases (events, speeches, versions) this function can't see.
+ */
+export function validEntityShape(name) {
+  const s = String(name || "").trim();
+  if (s.length < 2 || s.length > 80) return false;
+  if ((s.match(/,/g) || []).length >= 3) return false;
+  if (/^[^a-zA-Z]+$/.test(s) && s.length <= 6) return true; // symbol titles: ">>>", "!!!", "+/-"
+  if (!/[A-Z0-9À-ÞΆ-Ͽ]/.test(s)) return false; // no uppercase/digit anywhere → generic phrase
+  // Known limitation (accepted): stylized all-lowercase titles with letters
+  // ("www.thug.com") are rejected — rare, and re-enterable via curation.
+  return true;
+}
 
 /**
  * Harvest one source URL. Returns a summary; claims and provenance persist
@@ -82,8 +105,18 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
   const runId = `harvest_${Date.now().toString(36)}`;
   const summary = { url, publication, extracted: extraction.claims.length, confirmed: 0, rejected: 0, subjects: new Set() };
 
+  summary.dropped = 0;
   for (const c of extraction.claims) {
     if (!c.subjectName || !c.targetTitle || !c.quote) continue;
+    // Shape gates (V3-30): model-classified junk kinds, malformed entity
+    // names on either end, and self-referential claims are dropped before
+    // they touch the graph.
+    const selfRef = c.targetTitle.trim().toLowerCase() === c.subjectName.trim().toLowerCase();
+    if (c.targetKind === "other" || !validEntityShape(c.targetTitle) || !validEntityShape(c.subjectName) || selfRef) {
+      summary.dropped += 1;
+      log(`    ⊘ dropped (${c.targetKind === "other" ? "kind:other" : selfRef ? "self-reference" : "shape"}): ${c.subjectName} → ${c.targetTitle}`);
+      continue;
+    }
     const match = quoteMatch(text, c.quote);
     const verification = match.matched
       ? { status: "quote_confirmed", archivedUrl }
