@@ -12,7 +12,7 @@ import { upsertEntity, recordFinding } from "../store.js";
 import { findArticleTitle } from "../entities/wikipedia.js";
 import { q, dbConfigured } from "../db.js";
 
-const HARVEST_SCHEMA = {
+export const HARVEST_SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: ["sourceTitle", "publication", "publishedDate", "claims"],
@@ -31,11 +31,11 @@ const HARVEST_SCHEMA = {
           subjectKind: { type: "string", enum: ["person", "group", "work", "other"] },
           subjectDomain: { type: "string", enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"] },
           targetTitle: { type: "string" },
-          targetKind: { type: "string", enum: ["work", "artist", "movement", "other"] },
+          targetKind: { type: "string", enum: ["work", "artist", "movement", "institution", "other"] },
           targetCreator: { type: "string" },
           claimType: {
             type: "string",
-            enum: ["influenced_by", "cited_as_influence", "covers", "covered_by", "collaborated_with", "member_of", "produced_by", "same_scene", "cross_medium_influence"],
+            enum: ["influenced_by", "cited_as_influence", "covers", "covered_by", "collaborated_with", "member_of", "produced_by", "same_scene", "cross_medium_influence", "founded", "taught_at", "studied_under"],
           },
           quote: { type: "string" },
           speaker: { type: "string" },
@@ -52,9 +52,9 @@ const HARVEST_SYSTEM = `You extract cultural-connection claims from one source t
 Per claim:
 - subjectName: the entity the claim is ABOUT (the artist naming an influence, the work being compared). A NAMED entity only — never a description ("the writer's take on X" is not a subject; the subject is X). subjectKind and subjectDomain describe it.
 - targetTitle / targetCreator: the other end of the connection. If the target is a person or band rather than a specific work, put the name in targetTitle and leave targetCreator "".
-- ENTITY SHAPE RULES (both ends): every entity must be a SPECIFIC NAMED work, artist, or movement — something with a Wikipedia-article-shaped identity. Never genres or styles ("aggro punk", "circus music"), never events or moments ("his first Grammy speech" — the entity is the person), never composite lists (one claim per entity; split "influenced by X, Y and Z" into three claims), never versions/descriptions ("the demo version of...", "the writer's description of..."). Named movements are valid using their proper name ("Dada", "Bauhaus" — not "the Dada movement"). targetKind: work | artist | movement | other — use "other" when the target fails these rules, and it will be discarded.
+- ENTITY SHAPE RULES (both ends): every entity must be a SPECIFIC NAMED work, artist, or movement — something with a Wikipedia-article-shaped identity. Never genres or styles ("aggro punk", "circus music"), never events or moments ("his first Grammy speech" — the entity is the person), never composite lists (one claim per entity; split "influenced by X, Y and Z" into three claims), never versions/descriptions ("the demo version of...", "the writer's description of..."). Named movements are valid using their proper name ("Dada", "Bauhaus" — not "the Dada movement"). Named institutions — universities, companies, labs, dance companies, festivals, organizations — are valid targets for founded / taught_at / member_of / studied_under claims. targetKind: work | artist | movement | institution | other — use "other" when the target fails these rules, and it will be discarded.
 - Never emit a claim whose target is the subject itself or one of the subject's own works.
-- claimType: "cited_as_influence" when the subject explicitly names the influence themselves; otherwise the best fit.
+- claimType: "cited_as_influence" when the subject explicitly names the influence themselves; otherwise the best fit. Institutional/lineage claims count as connections: "studied_under" (trained under a teacher/mentor — this is influence lineage, especially in dance and theater), "taught_at" (faculty/teaching post at a named institution), "founded" (founded a named company, school, festival, or organization).
 - quote: an EXACT verbatim excerpt (40–300 chars) from the provided text documenting this claim. It is machine-checked character-for-character against the text — any paraphrase or reconstruction fails and wastes the claim.
 - speaker: WHOSE WORDS the quote is (a person, never the outlet; "" only if the prose is by an unnamed writer).
 - sourceDegree: "first" if the speaker is the subject or one of its creators/direct collaborators; "second" for named critics/journalists/scholars or institutional editorial voice; "third" for fan/wiki prose.
@@ -113,16 +113,26 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
   if (!page.ok) return { url, error: `fetch failed (${page.status || page.error})` };
   const text = page.text.slice(0, 60_000);
 
-  const extraction = await callModel(model, {
-    system: HARVEST_SYSTEM,
-    user: `Source URL: ${url}\n\nPAGE TEXT:\n${text}`,
-    schema: HARVEST_SCHEMA,
-    // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.
-    // (Five pilot pages died at 12k with uncapped claim counts.)
-    maxTokens: 16_000,
-    effort: "medium",
-    label: "harvest",
-  });
+  // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.
+  // But thinking draws from the same budget, and dense pages can think most
+  // of it away before the JSON starts: retry once at 32k on truncation.
+  let extraction;
+  for (const maxTokens of [16_000, 32_000]) {
+    try {
+      extraction = await callModel(model, {
+        system: HARVEST_SYSTEM,
+        user: `Source URL: ${url}\n\nPAGE TEXT:\n${text}`,
+        schema: HARVEST_SCHEMA,
+        maxTokens,
+        effort: "medium",
+        label: "harvest",
+      });
+      break;
+    } catch (err) {
+      if (maxTokens === 32_000 || !/max_tokens/.test(err.message)) throw err;
+      log(`    ↻ output truncated at ${maxTokens} tokens — retrying at 32k`);
+    }
+  }
 
   const archivedUrl = await waybackSnapshot(url).catch(() => null);
   const publication = extraction.publication || new URL(url).hostname.replace(/^www\./, "");

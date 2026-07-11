@@ -107,9 +107,17 @@ async function findOrCreateClaim({ subjectId, objectId, claimType, slotType, sum
 }
 
 async function addProvenance(claimId, { status, method, url = null, quote = null, notes = null, publication = null, publishedDate = null, archivedUrl = null, speaker = null, sourceDegree = null }) {
+  // Idempotent on (claim, url, quote, status) so a source page can be
+  // re-harvested without stacking duplicate citations.
   await q(
     `INSERT INTO provenance (claim_id, source_url, archived_url, quote, publication, published_date, verification_status, verification_method, verified_at, retrieved_at, notes, speaker, source_degree)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9, $10, $11)`,
+     SELECT $1, $2, $3, $4, $5, $6, $7, $8, now(), now(), $9, $10, $11
+     WHERE NOT EXISTS (
+       SELECT 1 FROM provenance WHERE claim_id = $1
+         AND source_url IS NOT DISTINCT FROM $2
+         AND quote IS NOT DISTINCT FROM $4
+         AND verification_status = $7
+     )`,
     [claimId, url, archivedUrl, quote, publication, publishedDate || null, status, method, notes, speaker, sourceDegree]
   );
 }
@@ -465,8 +473,10 @@ export async function actOnContribution(id, action) {
 // EVIDENCE measurement (T2 citations ≫ confirmed documentation ≫ bare
 // claim), which finally replaces kynda2's model-vibes "significance" score.
 
-const PREDECESSOR_TYPES = ["influenced_by", "cited_as_influence", "cross_medium_influence"];
-const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at"];
+// studied_under IS influence lineage — in dance especially, the form
+// transmits teacher-to-body — so it renders as a predecessor edge.
+export const PREDECESSOR_TYPES = ["influenced_by", "cited_as_influence", "cross_medium_influence", "studied_under"];
+export const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at", "founded", "taught_at"];
 
 export async function getGraphForSubject(subject) {
   if (!dbConfigured()) return null;

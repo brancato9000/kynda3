@@ -22,6 +22,7 @@ const CLAIM_LABELS = {
   cross_medium_influence: "cross-medium influence", same_scene: "shared scene",
   collaborated_with: "collaboration", produced_by: "production", member_of: "membership",
   covers: "cover", covered_by: "covered by", used_gear: "gear", recorded_at: "recorded at",
+  founded: "founded", taught_at: "taught at", studied_under: "studied under",
 };
 
 export default function GraphView({ data, subjectName, onNavigate }) {

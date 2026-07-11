@@ -17,7 +17,8 @@ import { findMention } from "../src/lib/entities/wikipedia.js";
 import { htmlToText } from "../src/lib/verify/evidence.js";
 import { rateLimit } from "../src/lib/guard.js";
 import { sanitizeReason } from "../src/lib/pipeline/mix.js";
-import { validEntityShape } from "../src/lib/pipeline/harvest.js";
+import { validEntityShape, HARVEST_SCHEMA } from "../src/lib/pipeline/harvest.js";
+import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -153,6 +154,17 @@ function testQuoteMatch() {
     badShapes.every((s) => !validEntityShape(s)));
   check("validEntityShape passes real entity names (commas, diacritics, digits included)",
     goodShapes.every((s) => validEntityShape(s)));
+
+  // Claim vocabulary wiring (V3-34, from the Skybetter interview harvest:
+  // "taught_at Brown University" was dropped because institutions had no
+  // targetKind). Every claim type the harvester can emit must have a graph
+  // role, and institutions must be a legal target kind.
+  const claimProps = HARVEST_SCHEMA.properties.claims.items.properties;
+  const orphans = claimProps.claimType.enum.filter(
+    (t) => !PREDECESSOR_TYPES.includes(t) && !PEER_TYPES.includes(t));
+  check("every harvest claim type has a graph role", orphans.length === 0, `orphaned: ${orphans.join(", ")}`);
+  check("institutional vocabulary is wired (studied_under is lineage, institution is a target kind)",
+    PREDECESSOR_TYPES.includes("studied_under") && claimProps.targetKind.enum.includes("institution"));
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────

@@ -25,7 +25,7 @@ export const FINDINGS_SCHEMA = {
           targetCreator: { type: "string" },
           claimType: {
             type: "string",
-            enum: ["influenced_by", "cited_as_influence", "covers", "covered_by", "collaborated_with", "member_of", "produced_by", "same_scene", "cross_medium_influence"],
+            enum: ["influenced_by", "cited_as_influence", "covers", "covered_by", "collaborated_with", "member_of", "produced_by", "same_scene", "cross_medium_influence", "founded", "taught_at", "studied_under"],
           },
           sourceUrl: { type: "string" },
           quote: { type: "string" },

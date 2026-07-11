@@ -83,6 +83,13 @@ function extractJson(response) {
     // Whole fallback chain refused — should not happen for cultural queries.
     throw new Error("Model declined the request");
   }
+  if (response.stop_reason === "max_tokens") {
+    // Thinking shares the max_tokens budget with the JSON text: on dense
+    // inputs the model can think the budget away and leave a JSON stump.
+    // Name the condition so callers can retry with a bigger budget instead
+    // of surfacing "Unterminated string in JSON at position 137".
+    throw new Error("output truncated (max_tokens)");
+  }
   const text = response.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
@@ -134,7 +141,9 @@ export const SONNET = "claude-sonnet-5";
  * the harvest workhorse (V3-29): one call per source, many claims out.
  */
 export async function callModel(model, { system, user, schema, maxTokens = 8000, effort, label = "model" }) {
-  const response = await client().messages.create({
+  // Streamed (then reassembled) because the SDK rejects non-streaming
+  // requests that could run >10 min — which a 32k-token harvest retry can.
+  const response = await client().messages.stream({
     model,
     max_tokens: maxTokens,
     system,
@@ -143,7 +152,7 @@ export async function callModel(model, { system, user, schema, maxTokens = 8000,
       format: { type: "json_schema", schema },
     },
     messages: [{ role: "user", content: user }],
-  });
+  }).finalMessage();
   recordUsage(label, response.model, response.usage);
   return extractJson(response);
 }
