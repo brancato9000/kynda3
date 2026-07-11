@@ -29,19 +29,35 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
     const r = await q("SELECT id FROM entities WHERE wikidata_qid = $1", [wikidata_qid]);
     if (r.rows[0]) return r.rows[0].id;
   }
-  if (!mbid && !wikidata_qid) {
-    // Name matching ignores domain (different pipelines guess domains
-    // differently — that split created duplicate entities, V3-25 lesson).
-    // Creator disambiguates same-titled works when both sides know it.
-    const creator = metadata?.creator || null;
-    const r = await q(
-      `SELECT id FROM entities
-       WHERE lower(name) = lower($1) AND kind = $2
-         AND ($3::text IS NULL OR metadata->>'creator' IS NULL OR lower(metadata->>'creator') = lower($3))
-       ORDER BY created_at LIMIT 1`,
-      [name, kindOf(kind), creator]
-    );
-    if (r.rows[0]) return r.rows[0].id;
+  // Name matching ignores domain (V3-25) and treats creator-shaped kinds
+  // (person/group/other) as ONE identity pool (V3-33 — three Frank Sinatras
+  // taught us kind guesses differ per pipeline). Works stay separate from
+  // people unless the work carries no creator (harvest artist-targets),
+  // since real name collisions exist (Cake's song "Frank Sinatra").
+  const creator = metadata?.creator || null;
+  const k = kindOf(kind);
+  const kindClause = k === "work" && creator
+    ? "kind = 'work'"
+    : "kind IN ('person','group','other','work')";
+  const r0 = await q(
+    `SELECT id, mbid, wikidata_qid FROM entities
+     WHERE lower(name) = lower($1) AND ${kindClause}
+       AND ($2::text IS NULL OR $2 = '' OR metadata->>'creator' IS NULL OR metadata->>'creator' = '' OR lower(metadata->>'creator') = lower($2))
+       AND (mbid IS NULL OR $3::uuid IS NULL OR mbid = $3)
+       AND (wikidata_qid IS NULL OR $4::text IS NULL OR wikidata_qid = $4)
+     ORDER BY (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC, created_at LIMIT 1`,
+    [name, creator, mbid, wikidata_qid]
+  );
+  if (r0.rows[0]) {
+    // Enrich the match with any canonical IDs it lacks — prevents future
+    // id-lookup misses from spawning duplicates.
+    if ((mbid && !r0.rows[0].mbid) || (wikidata_qid && !r0.rows[0].wikidata_qid)) {
+      await q(
+        "UPDATE entities SET mbid = COALESCE(mbid, $2), wikidata_qid = COALESCE(wikidata_qid, $3) WHERE id = $1",
+        [r0.rows[0].id, mbid, wikidata_qid]
+      ).catch(() => {});
+    }
+    return r0.rows[0].id;
   }
   const r = await q(
     `INSERT INTO entities (kind, domain, name, year_start, mbid, wikidata_qid, metadata)
@@ -265,11 +281,15 @@ export async function getClaimTargets(subjectEntityId, limit = 12) {
  * 'unverifiable'/'dead_link' — it earns nothing.
  */
 export async function recordFinding({ subjectEntityId, finding, verification, runId }) {
+  // targetKind-aware (V3-33): artist/movement targets are creator-shaped
+  // entities, not works — hardcoding "work" spawned duplicates of every
+  // person the harvester mentioned.
+  const targetKind = finding.targetKind === "work" ? "work" : finding.targetKind ? "other" : "work";
   const workId = await upsertEntity({
     name: finding.targetTitle,
-    kind: "work",
+    kind: targetKind,
     domain: "other",
-    metadata: { creator: finding.targetCreator },
+    metadata: finding.targetCreator ? { creator: finding.targetCreator } : {},
   });
   if (!workId || workId === subjectEntityId) return null;
 

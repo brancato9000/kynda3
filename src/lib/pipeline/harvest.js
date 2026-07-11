@@ -157,6 +157,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
       subjectEntityId,
       finding: {
         targetTitle: c.targetTitle,
+        targetKind: c.targetKind,
         targetCreator: c.targetCreator || "",
         claimType: c.claimType,
         sourceUrl: url,

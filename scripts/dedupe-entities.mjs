@@ -29,11 +29,18 @@ function conflicts(a, b) {
 }
 
 try {
+  // Pass 2 rule (V3-33): creator-shaped kinds (person/group/other) are one
+  // identity pool, and creator-less "work" rows (harvest artist-targets)
+  // join it. Works WITH a creator stay separate — real collisions exist
+  // (Cake's song "Frank Sinatra").
   const groups = await client.query(`
-    SELECT lower(name) AS lname, kind, json_agg(json_build_object(
-      'id', id, 'name', name, 'mbid', mbid, 'wikidata_qid', wikidata_qid, 'created_at', created_at)
-      ORDER BY (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC, created_at) AS members
-    FROM entities GROUP BY 1, 2 HAVING count(*) > 1`);
+    SELECT lower(name) AS lname, json_agg(json_build_object(
+      'id', id, 'name', name, 'kind', kind, 'mbid', mbid, 'wikidata_qid', wikidata_qid, 'created_at', created_at)
+      ORDER BY (kind IN ('person','group')) DESC, (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC, created_at) AS members
+    FROM entities
+    WHERE kind IN ('person','group','other')
+       OR (kind = 'work' AND COALESCE(metadata->>'creator', '') = '')
+    GROUP BY 1 HAVING count(*) > 1`);
 
   let merged = 0, kept = 0, claimsDeduped = 0;
   for (const g of groups.rows) {
@@ -41,22 +48,38 @@ try {
     const keeper = members[0];
     const toMerge = members.slice(1).filter((m) => !conflicts(keeper, m));
     const barred = members.slice(1).filter((m) => conflicts(keeper, m));
-    if (barred.length) console.log(`  ⚠ NOT merging (distinct canonical IDs): "${keeper.name}" [${g.kind}] — ${barred.length} kept separate`);
+    if (barred.length) console.log(`  ⚠ NOT merging (distinct canonical IDs): "${keeper.name}" — ${barred.length} kept separate`);
     if (!toMerge.length) continue;
 
-    console.log(`${APPLY ? "MERGING" : "would merge"}: "${keeper.name}" [${g.kind}] ← ${toMerge.length} duplicate(s)`);
+    console.log(`${APPLY ? "MERGING" : "would merge"}: "${keeper.name}" [${keeper.kind}] ← ${toMerge.map((m) => m.kind).join(", ")}`);
     merged += toMerge.length;
     kept += 1;
     if (!APPLY) continue;
 
     await client.query("BEGIN");
     try {
+      // Keeper absorbs any canonical IDs its duplicates carry — strip the
+      // dupe FIRST or the unique index on ids rejects the copy.
       for (const dupe of toMerge) {
-        // Claims that would become self-referential after repointing: delete.
-        await client.query(
-          "DELETE FROM claims WHERE (subject_id = $1 AND object_id = $2) OR (subject_id = $2 AND object_id = $1)",
-          [dupe.id, keeper.id]
-        );
+        if ((dupe.mbid && !keeper.mbid) || (dupe.wikidata_qid && !keeper.wikidata_qid)) {
+          await client.query("UPDATE entities SET mbid = NULL, wikidata_qid = NULL WHERE id = $1", [dupe.id]);
+          await client.query(
+            "UPDATE entities SET mbid = COALESCE(mbid, $2), wikidata_qid = COALESCE(wikidata_qid, $3) WHERE id = $1",
+            [keeper.id, dupe.mbid, dupe.wikidata_qid]
+          );
+          keeper.mbid = keeper.mbid || dupe.mbid;
+          keeper.wikidata_qid = keeper.wikidata_qid || dupe.wikidata_qid;
+        }
+      }
+      // Claims BETWEEN any two group members become self-referential after
+      // repointing (CHECK violation → whole-group rollback): delete them all
+      // up front, keeper included.
+      const groupIds = [keeper.id, ...toMerge.map((m) => m.id)];
+      await client.query(
+        "DELETE FROM claims WHERE subject_id = ANY($1::uuid[]) AND object_id = ANY($1::uuid[])",
+        [groupIds]
+      );
+      for (const dupe of toMerge) {
         await client.query("UPDATE claims SET subject_id = $2 WHERE subject_id = $1", [dupe.id, keeper.id]);
         await client.query("UPDATE claims SET object_id = $2 WHERE object_id = $1", [dupe.id, keeper.id]);
         await client.query("UPDATE mixes SET subject_entity_id = $2 WHERE subject_entity_id = $1", [dupe.id, keeper.id]);

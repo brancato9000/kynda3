@@ -466,7 +466,7 @@ const DEMO = {
 
 // ─── App (V3-28: reusable — home renders it bare; /s/[slug] subject
 // pages render it with an initialSubject that boots the mix) ──────────
-export default function KyndaApp({ initialSubject = null }) {
+export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState("idle"); // idle | searching | choosing | mixing
   const [error, setError] = useState(null);
@@ -676,6 +676,35 @@ export default function KyndaApp({ initialSubject = null }) {
 
       {error && (
         <div style={{ fontFamily: FONTS.mono, fontSize: "13px", color: "rgba(248,113,113,0.85)", marginBottom: "24px" }}>{error}</div>
+      )}
+
+      {/* Browsable index (V3-33): everything already in the graph, one click
+          away — no guessing what's been built. Hidden once a search starts. */}
+      {phase === "idle" && indexedSubjects.length > 0 && (
+        <div style={{ marginTop: "8px" }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "14px" }}>
+            In the graph so far — {indexedSubjects.length} subjects
+          </div>
+          {[...new Set(indexedSubjects.map((s) => s.domain))].map((domain) => (
+            <div key={domain} style={{ marginBottom: "18px" }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: BASE.gold, marginBottom: "8px" }}>
+                {domain}
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {indexedSubjects.filter((s) => s.domain === domain).map((s) => (
+                  <a key={s.slug} href={`/s/${s.slug}`}
+                    style={{
+                      fontFamily: FONTS.body, fontSize: "13px", color: "rgba(226,232,240,0.85)",
+                      background: BASE.surfaceRaised, border: "1px solid rgba(255,255,255,0.09)",
+                      borderRadius: "16px", padding: "5px 14px", textDecoration: "none",
+                    }}>
+                    {s.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {phase === "choosing" && subject && (
