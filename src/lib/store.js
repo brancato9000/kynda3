@@ -8,7 +8,7 @@
 import { q, dbConfigured } from "./db.js";
 import { norm } from "./entities/musicbrainz.js";
 
-const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"]);
+const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"]);
 const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "other"]);
 
 const domainOf = (d) => (DOMAINS.has(d) ? d : "other");

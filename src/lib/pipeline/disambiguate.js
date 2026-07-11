@@ -27,7 +27,7 @@ const RANK_SCHEMA = {
     alternativeIndexes: { type: "array", items: { type: "integer" } },
     domain: {
       type: "string",
-      enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"],
+      enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"],
     },
   },
 };

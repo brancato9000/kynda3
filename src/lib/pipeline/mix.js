@@ -35,7 +35,7 @@ const MIX_SCHEMA = {
           via: { anyOf: [{ type: "string" }, { type: "null" }] },
           medium: {
             type: "string",
-            enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "other"],
+            enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"],
           },
           reason: { type: "string" },
         },
@@ -202,6 +202,7 @@ const WIKIDATA_KEYWORDS = {
   design: ["design", "typeface", "chair", "poster"],
   architecture: ["building", "architecture", "tower", "museum", "house"],
   theater: ["play", "musical", "opera", "ballet"],
+  dance: ["ballet", "dance", "choreograph", "dancer", "dance company"],
 };
 
 /**
