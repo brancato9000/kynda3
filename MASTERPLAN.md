@@ -100,6 +100,8 @@ Each domain needs two things: an **entity spine** (canonical IDs) and **domain-n
 
 Fashion, comedy, and architecture are **spine-poor** — no MusicBrainz equivalent exists. There, agent-built entity records (Wikidata-anchored, evidence-backed) are themselves part of the moat. And the **cross-medium edges** — the music→film→fashion threads no vertical database can see — are Kynda's unique wedge; the `culture` slot was always the prototype of this.
 
+**Strategy inversion (2026-07-09, after the harvester's economics landed):** the wave gates above apply to the MIX PRODUCT's attribution verifiers, not to the graph. Harvest verification is quote-confirmation — medium-agnostic by construction — so **the corpus goes wide across all of culture first; per-domain verifiers deepen the product behind it.** The whole-culture Wikipedia index (Tier 1: ~100–200k substantial cultural articles across every medium, section-targeted + Batch API) prices at **$3–8k one-time** — the funded-phase purchase is not a music database but the first cross-medium influence graph. Kynda is not constrained by medium; that is the point of Kynda.
+
 ## 8. Pillar V — Product surfaces
 
 - **The Mix** ✅ — the curated doorway (stays the wedge product).
