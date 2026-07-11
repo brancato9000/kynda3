@@ -19,8 +19,9 @@ try {
   }
 } catch { /* env */ }
 
-const { harvestSource } = await import("../src/lib/pipeline/harvest.js");
+const { harvestSource, harvestSubjectWikipedia } = await import("../src/lib/pipeline/harvest.js");
 const { usageSummary } = await import("../src/lib/ai/anthropic.js");
+const { listSubjects } = await import("../src/lib/store.js");
 const { q, getPool } = await import("../src/lib/db.js");
 
 const args = process.argv.slice(2);
@@ -33,6 +34,33 @@ const model = MODELS[flag("--model")] || MODELS.sonnet;
 
 try {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set");
+
+  // Corpus batch (V3-31): harvest every existing subject's Wikipedia page.
+  if (args.includes("--wikipedia-all")) {
+    const subjects = await listSubjects();
+    console.log(`corpus batch: ${subjects.length} subjects`);
+    let confirmed = 0, rejected = 0, dropped = 0, harvested = 0, skipped = 0;
+    for (const subject of subjects) {
+      console.log(`\n▸ ${subject.name}`);
+      try {
+        const s = await harvestSubjectWikipedia(subject, { model, log: console.log });
+        if (s.skipped) { console.log(`  ⊘ skipped: ${s.skipped}`); skipped += 1; continue; }
+        if (s.error) { console.log(`  ✗ ${s.error}`); continue; }
+        harvested += 1;
+        confirmed += s.confirmed; rejected += s.rejected; dropped += s.dropped || 0;
+        console.log(`  → ${s.confirmed} confirmed / ${s.rejected} rejected / ${s.dropped || 0} shape-dropped`);
+      } catch (err) {
+        console.log(`  ✗ failed: ${err.message}`);
+      }
+    }
+    const { totalUsd } = usageSummary();
+    console.log(`\n═══ CORPUS BATCH LEDGER ═══`);
+    console.log(`harvested: ${harvested} pages (${skipped} skipped) | confirmed: ${confirmed} / rejected: ${rejected} / shape-dropped: ${dropped}`);
+    console.log(`TOTAL: $${totalUsd.toFixed(2)}${confirmed ? ` | $${(totalUsd / confirmed).toFixed(3)} per confirmed citation` : ""}`);
+    await getPool()?.end();
+    process.exit(0);
+  }
+
   let urls = [];
   if (flag("--url")) urls = [flag("--url")];
   else if (flag("--from-corpus")) {

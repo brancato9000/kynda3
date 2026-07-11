@@ -11,6 +11,7 @@
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
+import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 
 export const maxDuration = 300;
 
@@ -125,6 +126,18 @@ export async function POST(req) {
           await persistMixRun({ subject, intro: mix.intro, slots: slotsWithVerifs });
         } catch (err) {
           console.error("persistMixRun failed:", err.message);
+        }
+
+        // Harvest-on-search (V3-31): every fresh subject also gets its
+        // Wikipedia page harvested (+~$0.07), so it enters the graph with
+        // dozens of quote-confirmed claims from minute one. Best-effort,
+        // after the response is fully delivered; rides the fresh-path
+        // guards already passed above.
+        try {
+          const h = await harvestSubjectWikipedia(subject);
+          if (h?.confirmed) console.log(`harvest-on-search: ${subject.name} +${h.confirmed} citations`);
+        } catch (err) {
+          console.error("harvest-on-search failed:", err.message);
         }
       } catch (err) {
         console.error("mix error:", err);

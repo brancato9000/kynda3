@@ -9,6 +9,8 @@ import { callModel, SONNET } from "../ai/anthropic.js";
 import { fetchPageText, waybackSnapshot } from "../verify/evidence.js";
 import { quoteMatch } from "../verify/quoteMatch.js";
 import { upsertEntity, recordFinding } from "../store.js";
+import { findArticleTitle } from "../entities/wikipedia.js";
+import { q, dbConfigured } from "../db.js";
 
 const HARVEST_SCHEMA = {
   type: "object",
@@ -80,6 +82,26 @@ export function validEntityShape(name) {
   // Known limitation (accepted): stylized all-lowercase titles with letters
   // ("www.thug.com") are rejected — rare, and re-enterable via curation.
   return true;
+}
+
+/**
+ * Harvest a subject's Wikipedia page — the richest free source class
+ * (V3-31). Resolves the article (QID-first), skips if that URL was already
+ * harvested, then runs the standard harvest. Used by both the corpus batch
+ * and harvest-on-search.
+ */
+export async function harvestSubjectWikipedia(subject, { model = SONNET, log = () => {} } = {}) {
+  if (!dbConfigured()) return { skipped: "no database" };
+  const title = await findArticleTitle({ name: subject.name, qid: subject.wikidata_qid });
+  if (!title) return { skipped: "no wikipedia article" };
+  const url = `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+  const already = await q(
+    `SELECT 1 FROM provenance p JOIN claims c ON c.id = p.claim_id
+     WHERE c.agent_run_id LIKE 'harvest%' AND p.source_url = $1 LIMIT 1`,
+    [url]
+  );
+  if (already.rows[0]) return { skipped: "already harvested", url };
+  return harvestSource(url, { model, log });
 }
 
 /**
