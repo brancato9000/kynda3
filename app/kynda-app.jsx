@@ -251,6 +251,79 @@ function ContributeRow({ subject, item, hasCitations }) {
   );
 }
 
+// Lane 2 (V3-35): propose a whole new card. The fan names the influence and
+// hands us a URL containing the evidence; Kynda fetches, extracts, and
+// machine-verifies — then a curator publishes. The fan solves discovery,
+// the machine does the trusting.
+function AddConnectionCard({ subject }) {
+  const [open, setOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+  const [fields, setFields] = useState({ influence: "", url: "", contributor: "" });
+
+  async function submit() {
+    if (!fields.influence.trim() || !fields.url.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "new_card",
+          subject: { name: subject?.name, mbid: subject?.mbid, wikidata_qid: subject?.wikidata_qid },
+          influence: fields.influence, url: fields.url, contributor: fields.contributor,
+        }),
+      });
+      const data = await res.json();
+      setResult(data.message || data.error || "submitted");
+    } catch (err) {
+      setResult(err.message);
+    }
+    setSending(false);
+  }
+
+  const inputStyle = { width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "8px 10px", fontSize: "12px", color: "#e2e8f0", fontFamily: FONTS.body, outline: "none", marginBottom: "6px", boxSizing: "border-box" };
+  const linkStyle = { background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.45)", padding: 0, textTransform: "uppercase" };
+
+  return (
+    <div style={{ marginTop: "20px", padding: "16px 18px", borderRadius: "10px", background: "rgba(250,204,21,0.03)", border: "1px dashed rgba(250,204,21,0.18)" }}>
+      {!open && !result && (
+        <button style={{ ...linkStyle, color: "rgba(250,204,21,0.7)" }} onClick={() => setOpen(true)}>
+          + know an influence we're missing? name it, link a source — Kynda builds the card
+        </button>
+      )}
+      {open && !result && !sending && (
+        <div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(250,204,21,0.7)", marginBottom: "10px" }}>
+            Propose a connection for {subject?.name}
+          </div>
+          <input placeholder="Who or what influenced them? (artist, work, movement…)" value={fields.influence}
+            onChange={(e) => setFields({ ...fields, influence: e.target.value })} style={inputStyle} />
+          <input placeholder="URL of a page documenting it (interview, feature, liner notes…)" value={fields.url}
+            onChange={(e) => setFields({ ...fields, url: e.target.value })} style={inputStyle} />
+          <input placeholder="Your name (optional)" value={fields.contributor}
+            onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <button style={{ ...linkStyle, color: "rgba(52,211,153,0.8)" }} onClick={submit}>verify & build</button>
+            <button style={linkStyle} onClick={() => setOpen(false)}>cancel</button>
+          </div>
+          <div style={{ marginTop: "8px", fontFamily: FONTS.mono, fontSize: "9.5px", color: "rgba(148,163,184,0.4)", lineHeight: 1.5 }}>
+            No typing evidence out — Kynda reads the page, extracts the claim, and machine-checks every quote. Verified cards go to curator review before publishing.
+          </div>
+        </div>
+      )}
+      {sending && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.6)" }}>
+          <Pulse /> Kynda is reading the source — extraction and quote-checking can take a minute or two…
+        </div>
+      )}
+      {result && (
+        <div style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.7)", lineHeight: 1.6 }}>{result}</div>
+      )}
+    </div>
+  );
+}
+
 // One slot = a provenance-ranked carousel of candidates (V3-19). The default
 // shown is the best-evidenced candidate, not the model's first pick.
 function SlotCard({ slot, index, subject }) {
@@ -299,6 +372,12 @@ function SlotCard({ slot, index, subject }) {
           {item.creator}{item.year ? ` · ${item.year}` : ""}{item.medium && item.medium !== "music" ? ` · ${item.medium}` : ""}
         </span>
         <FactChip attribution={attribution} />
+        {item.contributed && (
+          <span title="Proposed by the community; quote-verified by machine; published by a curator"
+            style={{ fontFamily: FONTS.mono, fontSize: "9px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(250,204,21,0.65)", border: "1px solid rgba(250,204,21,0.25)", borderRadius: "4px", padding: "1px 6px" }}>
+            community
+          </span>
+        )}
       </div>
       <RevealText text={item.reason} msPerWord={12} delayMs={200}
         style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(226,232,240,0.82)" }} />
@@ -787,6 +866,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
             ))}
           </div>
           )}
+
+          {tab === "mix" && done && subject && <AddConnectionCard subject={subject} />}
 
           {tab === "mix" && done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>

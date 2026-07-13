@@ -52,6 +52,23 @@ export async function generationCapReached() {
   }
 }
 
+const DAILY_CONTRIBUTION_HARVEST_CAP = parseInt(process.env.KYNDA_DAILY_CONTRIB_CAP || "20", 10);
+
+/** True when today's contribution-harvest budget (model-backed Lane 2
+ * submissions) is exhausted. Fails CLOSED without a DB — unlike search,
+ * these always cost tokens. */
+export async function contributionHarvestCapReached() {
+  if (!dbConfigured()) return true;
+  try {
+    const r = await q(
+      "SELECT count(*)::int AS n FROM contributions WHERE kind = 'new_card' AND created_at > now() - interval '24 hours'"
+    );
+    return r.rows[0].n >= DAILY_CONTRIBUTION_HARVEST_CAP;
+  } catch {
+    return true;
+  }
+}
+
 /** True when today's search budget is exhausted. Fails open without a DB. */
 export async function searchCapReached() {
   if (!dbConfigured()) return false;

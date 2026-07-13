@@ -19,6 +19,7 @@ import { rateLimit } from "../src/lib/guard.js";
 import { sanitizeReason } from "../src/lib/pipeline/mix.js";
 import { validEntityShape, HARVEST_SCHEMA } from "../src/lib/pipeline/harvest.js";
 import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
+import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-card.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -165,6 +166,17 @@ function testQuoteMatch() {
   check("every harvest claim type has a graph role", orphans.length === 0, `orphaned: ${orphans.join(", ")}`);
   check("institutional vocabulary is wired (studied_under is lineage, institution is a target kind)",
     PREDECESSOR_TYPES.includes("studied_under") && claimProps.targetKind.enum.includes("institution"));
+
+  // Lane 2 wiring (V3-35): every claim type the harvester can emit must land
+  // in a mix slot when a contributed card publishes, and the free pre-gate's
+  // name matcher must survive real page-text noise.
+  const unslotted = claimProps.claimType.enum.filter((t) => !CLAIM_SLOTS[t]);
+  check("every harvest claim type maps to a mix slot for contributed cards", unslotted.length === 0, `unslotted: ${unslotted.join(", ")}`);
+  const pageText = "In a 2003 interview, James Mercer said The Shins owed everything to Neutral Milk Hotel’s “In the Aeroplane Over the Sea”, to Björk, and to Echo & the Bunnymen.";
+  check("pageNamesEntity matches through curly quotes, case, diacritics, and &/and",
+    pageNamesEntity(pageText, "neutral milk hotel") && pageNamesEntity(pageText, "Björk") &&
+    pageNamesEntity(pageText, "In the Aeroplane Over the Sea") && pageNamesEntity(pageText, "Echo and the Bunnymen") &&
+    !pageNamesEntity(pageText, "Radiohead") && !pageNamesEntity(pageText, ""));
 }
 
 // ── Stage 3: scoring self-test ──────────────────────────────────────────────
