@@ -21,6 +21,7 @@ import { validEntityShape, HARVEST_SCHEMA } from "../src/lib/pipeline/harvest.js
 import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
 import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-card.js";
 import { experienceLinks } from "../src/lib/experience.js";
+import { MIX_SLOT_TYPES, SLOT_COLORS } from "../src/design/tokens.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -173,6 +174,10 @@ function testQuoteMatch() {
   // name matcher must survive real page-text noise.
   const unslotted = claimProps.claimType.enum.filter((t) => !CLAIM_SLOTS[t]);
   check("every harvest claim type maps to a mix slot for contributed cards", unslotted.length === 0, `unslotted: ${unslotted.join(", ")}`);
+
+  // Covers slots (V3-39): taxonomy + colors present for the machine-sourced slots.
+  check("covers slots exist in the taxonomy with colors",
+    ["covers", "covered_by"].every((id) => MIX_SLOT_TYPES.some((s) => s.id === id) && !!SLOT_COLORS[id]));
   // Experience links (V3-38): library-first for every medium, URLs safely
   // encoded, and the streaming preference only applies where it makes sense.
   const media = ["music", "film", "literature", "art", "dance", "other"];
@@ -184,6 +189,12 @@ function testQuoteMatch() {
     tricky.stream.url.startsWith("https://open.spotify.com/") && tricky.pickService);
   check("experienceLinks: literature never routes to a streaming service",
     experienceLinks({ title: "Beloved", creator: "Toni Morrison", medium: "literature" }).stream === null);
+  const coverLink = experienceLinks(
+    { title: "Take Me to the River", creator: "Al Green", medium: "music", slotType: "covers" },
+    { subjectName: "Talking Heads" });
+  check("experienceLinks: covers cards point at the performance itself",
+    coverLink.library[0].label === "watch the cover" &&
+    coverLink.library[0].url.includes("Talking%20Heads") && coverLink.library[0].url.includes("live%20cover"));
 
   const pageText = "In a 2003 interview, James Mercer said The Shins owed everything to Neutral Milk Hotel’s “In the Aeroplane Over the Sea”, to Björk, and to Echo & the Bunnymen.";
   check("pageNamesEntity matches through curly quotes, case, diacritics, and &/and",

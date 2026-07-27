@@ -27,10 +27,23 @@ const YT = (q) => `https://www.youtube.com/results?search_query=${q}`;
  * for one mix item. `pickService` marks media where the streaming-service
  * preference applies (music) so the UI can offer the switcher there.
  */
-export function experienceLinks(item, { service = "youtube" } = {}) {
+export function experienceLinks(item, { service = "youtube", subjectName = "" } = {}) {
   const q = enc(item);
   if (!q) return { library: [], stream: null, pickService: false };
   const svc = STREAM_SERVICES.find((s) => s.id === service) || STREAM_SERVICES[2];
+
+  // Covers cards (V3-39): the most visceral experience link in the product —
+  // point straight at the performance. "Covered Them" → the subject playing
+  // the song; "Covered By" → the coverer playing the subject's song.
+  if (item.slotType === "covers" || item.slotType === "covered_by") {
+    const coverer = item.slotType === "covers" ? subjectName : item.creator || item.title;
+    const perfQ = encodeURIComponent([coverer, item.title, "live cover"].filter(Boolean).join(" "));
+    return {
+      library: [{ label: "watch the cover", url: YT(perfQ) }],
+      stream: { label: svc.label, url: svc.url(q) },
+      pickService: true,
+    };
+  }
 
   switch (item.medium) {
     case "music":

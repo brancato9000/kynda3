@@ -255,7 +255,7 @@ function ContributeRow({ subject, item, hasCitations }) {
 // "Where to experience it" (V3-38): library-first links, then the user's own
 // streaming service (preference in localStorage; deep links land in their
 // logged-in player — no accounts on our side, ever).
-function ExperienceRow({ item }) {
+function ExperienceRow({ item, subjectName }) {
   const [service, setService] = useState("youtube");
   useEffect(() => {
     setService(localStorage.getItem("kynda_stream_service") || "youtube");
@@ -263,7 +263,7 @@ function ExperienceRow({ item }) {
     window.addEventListener("kynda-service-change", sync);
     return () => window.removeEventListener("kynda-service-change", sync);
   }, []);
-  const { library, stream, pickService } = experienceLinks(item, { service });
+  const { library, stream, pickService } = experienceLinks(item, { service, subjectName });
   if (!library.length && !stream) return null;
 
   function pick(id) {
@@ -286,10 +286,15 @@ function ExperienceRow({ item }) {
             stream: {stream.label} ↗
           </a>
           {pickService && (
-            <select aria-label="Choose your streaming service" value={service} onChange={(e) => pick(e.target.value)}
-              style={{ background: "none", border: "none", color: "rgba(148,163,184,0.4)", fontFamily: FONTS.mono, fontSize: "10px", cursor: "pointer", outline: "none", width: "18px", appearance: "auto" }}>
-              {STREAM_SERVICES.map((s) => <option key={s.id} value={s.id} style={{ background: "#1a1b22" }}>{s.label}</option>)}
-            </select>
+            <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+              <span style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", textTransform: "uppercase", color: "rgba(148,163,184,0.4)", borderBottom: "1px dotted rgba(148,163,184,0.35)" }}>
+                more options ⌄
+              </span>
+              <select aria-label="Choose your streaming service" value={service} onChange={(e) => pick(e.target.value)}
+                style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}>
+                {STREAM_SERVICES.map((s) => <option key={s.id} value={s.id} style={{ background: "#1a1b22" }}>{s.label}</option>)}
+              </select>
+            </span>
           )}
         </span>
       )}
@@ -520,7 +525,7 @@ function SlotCard({ slot, index, subject }) {
           This attribution was checked against {attribution.source} and could not be confirmed. It may be wrong.
         </div>
       )}
-      <ExperienceRow item={item} />
+      <ExperienceRow item={item} subjectName={subject?.name} />
       <ContributeRow subject={subject} item={item} hasCitations={citations.length > 0} />
     </div>
   );

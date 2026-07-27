@@ -26,6 +26,10 @@ export const MIX_SLOT_TYPES = [
   { id: "essential", label: "From the Canon", emoji: "★", description: "A definitive work from the subject themselves" },
   { id: "legacy", label: "Legacy", emoji: "▹", description: "A successor carrying the creative torch forward" },
   { id: "collaborator", label: "Key Collaborator", emoji: "⊕", description: "A crucial creative partner who shaped the work" },
+  // Covers slots (V3-39) are fully machine-sourced: live-show history
+  // (setlist.fm) and the research corpus, no model in the loop.
+  { id: "covers", label: "Covered Them", emoji: "↻", description: "Songs by others this artist chose to perform or record — influence you can hear" },
+  { id: "covered_by", label: "Covered By", emoji: "↺", description: "Artists who took on this artist's songs — legacy you can hear" },
 ];
 
 export const SLOT_COLORS = {
@@ -37,6 +41,8 @@ export const SLOT_COLORS = {
   essential: { bg: "rgba(250,204,21,0.05)", border: "rgba(250,204,21,0.18)", text: "#facc15" },
   legacy: { bg: "rgba(52,211,153,0.05)", border: "rgba(52,211,153,0.18)", text: "#34d399" },
   collaborator: { bg: "rgba(129,140,248,0.05)", border: "rgba(129,140,248,0.18)", text: "#818cf8" },
+  covers: { bg: "rgba(45,212,191,0.05)", border: "rgba(45,212,191,0.18)", text: "#2dd4bf" },
+  covered_by: { bg: "rgba(232,121,249,0.05)", border: "rgba(232,121,249,0.18)", text: "#e879f9" },
 };
 
 // Influence graph palette (DD-03). Subject node: dark fill, gold border.

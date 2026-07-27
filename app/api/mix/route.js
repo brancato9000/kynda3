@@ -9,7 +9,7 @@
 //   {type:"done"}
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
-import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
+import { persistMixRun, getStoredMix, getCitationsForItem, getCoversSlots } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 
@@ -37,6 +37,29 @@ export async function POST(req) {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (obj) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+
+      // Covers slots (V3-39): built from the claims store at serve time —
+      // fully machine-sourced, zero tokens. Appended after the mix slots on
+      // both paths; harvest-sourced candidates get citations re-read so their
+      // receipts surface and rank.
+      async function sendCoversSlots(baseIndex) {
+        const coverSlots = await getCoversSlots(subject).catch((err) => {
+          console.error("getCoversSlots failed:", err.message);
+          return [];
+        });
+        for (let i = 0; i < coverSlots.length; i++) {
+          const slot = coverSlots[i];
+          const s = baseIndex + i;
+          for (let c = 0; c < slot.candidates.length; c++) {
+            const entry = slot.candidates[c];
+            const citations = await getCitationsForItem(subject, entry.item).catch(() => []);
+            send({ type: "item", s, c, slotType: slot.slotType, item: entry.item });
+            send({ type: "verification", s, c, verification: { ...entry.verification, citations } });
+          }
+          send({ type: "rank", s, order: slot.candidates.map((_, i2) => i2) });
+        }
+      }
+
       try {
         // L1: per-instance memory. L2: the claims store (survives deploys).
         let cached = getCachedMix(subject);
@@ -66,6 +89,7 @@ export async function POST(req) {
             }
             send({ type: "rank", s, order: rankCandidates(verifications) });
           }
+          await sendCoversSlots(cached.slots.length);
           send({ type: "done", cached: true });
           return;
         }
@@ -119,6 +143,7 @@ export async function POST(req) {
         );
 
         cacheMix(subject, { intro: mix.intro, slots: slotsWithVerifs });
+        await sendCoversSlots(slotsWithVerifs.length);
         send({ type: "done" });
 
         // Persist (V3-17) — every candidate becomes a claim in the graph.

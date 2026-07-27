@@ -396,6 +396,126 @@ export async function attachFanEvidence(claimId, { url, quote, archivedUrl, cont
   );
 }
 
+// ─── Covers (V3-39): behavioral influence, machine-sourced ──────────────
+// Covers are what an artist DID, repeatedly, in public — not what they said.
+// These claims come from structured sources (setlist.fm live history,
+// harvests), and the covers slots build from the claims store at serve time:
+// the first fully machine-sourced slots, no model anywhere in the loop.
+
+/** Persist one live-cover fact from setlist.fm. Idempotent. */
+export async function recordCoverClaim({ subjectEntityId, song, artist, count, firstYear, lastYear, runId }) {
+  const workId = await upsertEntity({
+    name: song,
+    kind: "work",
+    domain: "music",
+    metadata: { creator: artist },
+  });
+  if (!workId || workId === subjectEntityId) return null;
+  const existing = await q(
+    "SELECT id FROM claims WHERE subject_id = $1 AND object_id = $2 AND claim_type = 'covers' LIMIT 1",
+    [subjectEntityId, workId]
+  );
+  let claimId = existing.rows[0]?.id;
+  const years = firstYear && lastYear && firstYear !== lastYear ? `${firstYear}–${lastYear}` : firstYear || "";
+  const summary = `Performed live ${count} time${count === 1 ? "" : "s"}${years ? ` (${years})` : ""} per setlist.fm`;
+  if (!claimId) {
+    const r = await q(
+      `INSERT INTO claims (subject_id, object_id, claim_type, slot_affinity, summary, origin, model_version, agent_run_id)
+       VALUES ($1, $2, 'covers', '{covers}', $3, 'structured_db', 'setlistfm', $4) RETURNING id`,
+      [subjectEntityId, workId, summary, runId]
+    );
+    claimId = r.rows[0].id;
+  } else {
+    await q("UPDATE claims SET summary = $2 WHERE id = $1", [claimId, summary]);
+  }
+  await addProvenance(claimId, {
+    status: "db_relationship",
+    method: "setlistfm",
+    url: `https://www.setlist.fm/search?query=${encodeURIComponent(`"${song}"`)}`,
+    publication: "setlist.fm",
+    notes: summary,
+  });
+  return claimId;
+}
+
+const COVER_SLOT_META = {
+  covers: { pick: (row, name) => row.claim_type === "covers" && row.is_subject_side },
+  covered_by: { pick: (row, name) => (row.claim_type === "covers" && !row.is_subject_side) || (row.claim_type === "covered_by" && row.is_subject_side) },
+};
+
+/**
+ * Build the two covers slots ("Covered Them" / "Covered By") straight from
+ * the claims store. Every candidate is a deterministic fact with a receipt:
+ * setlist.fm performance records get a ✓ linked to the record; harvest-
+ * sourced covers surface their quote citations via the standard serve path.
+ */
+export async function getCoversSlots(subject) {
+  if (!dbConfigured()) return [];
+  const er = await q(
+    `SELECT id FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) OR lower(name) = lower($3)
+     ORDER BY (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC LIMIT 1`,
+    [subject.mbid || null, subject.wikidata_qid || null, subject.name]
+  );
+  const eid = er.rows[0]?.id;
+  if (!eid) return [];
+
+  const r = await q(
+    `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS is_subject_side,
+            o.name, o.kind, o.year_start, o.metadata->>'creator' AS creator, o.domain,
+            p.verification_status, p.verification_method, p.source_url, p.notes
+     FROM claims c
+     JOIN entities o ON o.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
+     LEFT JOIN LATERAL (
+       SELECT verification_status, verification_method, source_url, notes FROM provenance
+       WHERE claim_id = c.id AND verification_status IN ('db_relationship', 'quote_confirmed')
+       ORDER BY (verification_method = 'setlistfm') DESC, created_at DESC LIMIT 1
+     ) p ON true
+     WHERE (c.subject_id = $1 OR c.object_id = $1) AND c.claim_type IN ('covers', 'covered_by')
+       AND p.verification_status IS NOT NULL`,
+    [eid]
+  );
+  if (!r.rows.length) return [];
+
+  const slots = [];
+  for (const slotType of ["covers", "covered_by"]) {
+    const rows = r.rows.filter((row) => COVER_SLOT_META[slotType].pick(row));
+    if (!rows.length) continue;
+    const candidates = rows.slice(0, 8).map((row) => {
+      const fromSetlist = row.verification_method === "setlistfm";
+      const direction = slotType === "covers"
+        ? `${subject.name} took on “${row.name}”${row.creator ? ` — original by ${row.creator}` : ""}.`
+        : `${row.name}${row.creator ? ` (${row.creator})` : ""} took on ${subject.name}.`;
+      const clean = (s) => String(s || "").trim().replace(/\.+$/, "");
+      const receipt = fromSetlist
+        ? ` ${clean(row.summary || row.notes)}. A cover is influence you can hear: a song the artist chose, learned, and performed.`
+        : row.summary
+          ? ` ${clean(row.summary)}.`
+          : " Documented in the research corpus with a primary-source citation below.";
+      return {
+        item: {
+          slotType,
+          title: row.name,
+          creator: row.creator || "",
+          year: row.year_start ? String(row.year_start) : "",
+          medium: row.domain && row.domain !== "other" ? row.domain : "music",
+          reason: direction + receipt,
+          via: null,
+          machineSourced: true,
+        },
+        verification: {
+          attribution: fromSetlist
+            ? { status: "verified", source: "setlist.fm", url: row.source_url, detail: row.notes || "live performance record" }
+            : { status: "skipped", reason: "Sourced from the research corpus — see citation" },
+          connection: { status: "not_applicable" },
+          citations: [],
+        },
+      };
+    });
+    slots.push({ slotType, candidates });
+  }
+  return slots;
+}
+
 // ─── Subject pages (V3-28) ──────────────────────────────────────────────
 
 /** All entities that have a stored mix — the set of valid /s/[slug] pages. */
