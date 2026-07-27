@@ -2,6 +2,8 @@
 // Used for film/TV/literature/art resolution until TMDb/Open Library
 // clients land in Phase 1. Deterministic path: no model calls.
 
+import { fetchWithRetry } from "./net.js";
+
 const USER_AGENT = "Kynda/0.1 (brancato@gmail.com)";
 const RATE_MS = 600;
 
@@ -62,7 +64,7 @@ export async function searchEntity(query, limit = 6) {
     url.searchParams.set("language", "en");
     url.searchParams.set("format", "json");
     url.searchParams.set("limit", String(limit));
-    const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
     if (!res.ok) throw new Error(`Wikidata ${res.status}`);
     const data = await res.json();
     return (data.search || []).map((e) => ({

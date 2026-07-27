@@ -3,6 +3,8 @@
 // This module is part of the deterministic verification path: no model calls,
 // exact comparisons only (V3-03).
 
+import { fetchWithRetry } from "./net.js";
+
 const MB_ROOT = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "Kynda/0.1 (brancato@gmail.com)";
 const RATE_MS = 1100;
@@ -30,7 +32,7 @@ async function mbFetch(resource, params) {
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
     url.searchParams.set("fmt", "json");
     for (let attempt = 0; ; attempt++) {
-      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
       if (res.status === 503 && attempt < 2) {
         await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
         continue;
