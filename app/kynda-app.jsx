@@ -251,6 +251,40 @@ function ContributeRow({ subject, item, hasCitations }) {
   );
 }
 
+// Tappable category explainer (Brown alumni-board feedback): the slot
+// taxonomy is the product's vocabulary — say what each word means, in place.
+// Tap/click toggles (touch has no hover); outside-tap dismisses.
+function InfoDot({ text, color }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [open]);
+  return (
+    <span style={{ position: "relative", display: "inline-flex" }}>
+      <button aria-label={`What does this category mean? ${text}`} aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        style={{
+          background: "none", border: `1px solid ${color}`, opacity: open ? 1 : 0.55, color,
+          borderRadius: "50%", width: "15px", height: "15px", lineHeight: 1, cursor: "pointer",
+          fontSize: "9px", fontFamily: FONTS.body, fontStyle: "italic", padding: 0,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>i</button>
+      {open && (
+        <span role="tooltip" onClick={(e) => e.stopPropagation()} style={{
+          position: "absolute", top: "22px", left: "-8px", zIndex: 30, width: "min(230px, 60vw)",
+          background: "#1a1b22", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "8px",
+          padding: "10px 12px", fontFamily: FONTS.body, fontSize: "12px", lineHeight: 1.5,
+          color: "rgba(226,232,240,0.9)", letterSpacing: "normal", textTransform: "none",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+        }}>{text}</span>
+      )}
+    </span>
+  );
+}
+
 // Lane 2 (V3-35): propose a whole new card. The fan names the influence and
 // hands us a URL containing the evidence; Kynda fetches, extracts, and
 // machine-verifies — then a curator publishes. The fan solves discovery,
@@ -349,8 +383,9 @@ function SlotCard({ slot, index, subject }) {
       overflowWrap: "anywhere", overflow: "hidden",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <span style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: colors.text }}>
           {slotMeta.emoji} {slotMeta.label}
+          {slotMeta.description && <InfoDot text={slotMeta.description} color={colors.text} />}
         </span>
         {slot.candidates.length > 1 && (
           <span title="Multiple candidates for this slot, ordered by evidence strength"
@@ -460,10 +495,17 @@ function SubjectCard({ subject }) {
     <div style={{ padding: "26px 28px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", marginBottom: "24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
         <div style={{ fontFamily: FONTS.display, fontSize: "38px", lineHeight: 1.05, marginBottom: "6px" }}>{subject.name}</div>
-        <button onClick={share} title="Copy a permanent link to this subject"
-          style={{ background: "none", border: "1px solid rgba(148,163,184,0.25)", borderRadius: "6px", padding: "4px 12px", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.06em", color: copied ? BASE.gold : "rgba(148,163,184,0.6)", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-          {copied ? "link copied ✓" : "share ↗"}
-        </button>
+        <span style={{ display: "inline-flex", gap: "8px" }}>
+          <button onClick={share} title="Copy a permanent link to this subject"
+            style={{ background: "none", border: "1px solid rgba(148,163,184,0.25)", borderRadius: "6px", padding: "4px 12px", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.06em", color: copied ? BASE.gold : "rgba(148,163,184,0.6)", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+            {copied ? "link copied ✓" : "share ↗"}
+          </button>
+          <a href={`/s/${slugify(subject.name)}/print`} target="_blank" rel="noreferrer"
+            title="A printable document with the full influence list, receipts, and graph — save as PDF from the print dialog"
+            style={{ background: "none", border: "1px solid rgba(148,163,184,0.25)", borderRadius: "6px", padding: "4px 12px", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.06em", color: "rgba(148,163,184,0.6)", textTransform: "uppercase", whiteSpace: "nowrap", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+            pdf ⤓
+          </a>
+        </span>
       </div>
       <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: BASE.gold, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>
         {[subject.domain !== "unknown" ? subject.domain : null, subject.yearsActive, subject.description].filter(Boolean).join(" · ")}
