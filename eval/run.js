@@ -20,6 +20,7 @@ import { sanitizeReason } from "../src/lib/pipeline/mix.js";
 import { validEntityShape, HARVEST_SCHEMA } from "../src/lib/pipeline/harvest.js";
 import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
 import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-card.js";
+import { experienceLinks } from "../src/lib/experience.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -172,6 +173,18 @@ function testQuoteMatch() {
   // name matcher must survive real page-text noise.
   const unslotted = claimProps.claimType.enum.filter((t) => !CLAIM_SLOTS[t]);
   check("every harvest claim type maps to a mix slot for contributed cards", unslotted.length === 0, `unslotted: ${unslotted.join(", ")}`);
+  // Experience links (V3-38): library-first for every medium, URLs safely
+  // encoded, and the streaming preference only applies where it makes sense.
+  const media = ["music", "film", "literature", "art", "dance", "other"];
+  check("experienceLinks: every medium leads with a library/free link",
+    media.every((medium) => experienceLinks({ title: "X", creator: "Y", medium }).library.length > 0));
+  const tricky = experienceLinks({ title: 'Sgt. Pepper’s & Friends "Live"', creator: "The Beatles", medium: "music" }, { service: "spotify" });
+  check("experienceLinks: URLs are encoded and service preference is honored",
+    tricky.library.every((l) => !l.url.includes(" ") && !l.url.includes('"')) &&
+    tricky.stream.url.startsWith("https://open.spotify.com/") && tricky.pickService);
+  check("experienceLinks: literature never routes to a streaming service",
+    experienceLinks({ title: "Beloved", creator: "Toni Morrison", medium: "literature" }).stream === null);
+
   const pageText = "In a 2003 interview, James Mercer said The Shins owed everything to Neutral Milk Hotel’s “In the Aeroplane Over the Sea”, to Björk, and to Echo & the Bunnymen.";
   check("pageNamesEntity matches through curly quotes, case, diacritics, and &/and",
     pageNamesEntity(pageText, "neutral milk hotel") && pageNamesEntity(pageText, "Björk") &&

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../src/design/tokens.js";
+import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
 import GraphView from "./graph-view.jsx";
 import { slugify } from "../src/lib/slug.js";
 
@@ -251,6 +252,51 @@ function ContributeRow({ subject, item, hasCitations }) {
   );
 }
 
+// "Where to experience it" (V3-38): library-first links, then the user's own
+// streaming service (preference in localStorage; deep links land in their
+// logged-in player — no accounts on our side, ever).
+function ExperienceRow({ item }) {
+  const [service, setService] = useState("youtube");
+  useEffect(() => {
+    setService(localStorage.getItem("kynda_stream_service") || "youtube");
+    const sync = (e) => setService(e.detail);
+    window.addEventListener("kynda-service-change", sync);
+    return () => window.removeEventListener("kynda-service-change", sync);
+  }, []);
+  const { library, stream, pickService } = experienceLinks(item, { service });
+  if (!library.length && !stream) return null;
+
+  function pick(id) {
+    localStorage.setItem("kynda_stream_service", id);
+    window.dispatchEvent(new CustomEvent("kynda-service-change", { detail: id }));
+  }
+
+  const linkStyle = { fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none", textTransform: "uppercase" };
+  return (
+    <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+      <span style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(148,163,184,0.45)" }}>
+        experience it
+      </span>
+      {library.map((l, i) => (
+        <a key={i} href={l.url} target="_blank" rel="noreferrer" style={linkStyle}>{l.label} ↗</a>
+      ))}
+      {stream && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <a href={stream.url} target="_blank" rel="noreferrer" style={{ ...linkStyle, color: "rgba(148,163,184,0.65)" }}>
+            stream: {stream.label} ↗
+          </a>
+          {pickService && (
+            <select aria-label="Choose your streaming service" value={service} onChange={(e) => pick(e.target.value)}
+              style={{ background: "none", border: "none", color: "rgba(148,163,184,0.4)", fontFamily: FONTS.mono, fontSize: "10px", cursor: "pointer", outline: "none", width: "18px", appearance: "auto" }}>
+              {STREAM_SERVICES.map((s) => <option key={s.id} value={s.id} style={{ background: "#1a1b22" }}>{s.label}</option>)}
+            </select>
+          )}
+        </span>
+      )}
+    </div>
+  );
+}
+
 // Tappable category explainer (Brown alumni-board feedback): the slot
 // taxonomy is the product's vocabulary — say what each word means, in place.
 // Tap/click toggles (touch has no hover); outside-tap dismisses.
@@ -474,6 +520,7 @@ function SlotCard({ slot, index, subject }) {
           This attribution was checked against {attribution.source} and could not be confirmed. It may be wrong.
         </div>
       )}
+      <ExperienceRow item={item} />
       <ContributeRow subject={subject} item={item} hasCitations={citations.length > 0} />
     </div>
   );
