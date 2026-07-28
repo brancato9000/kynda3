@@ -28,8 +28,8 @@ export const MIX_SLOT_TYPES = [
   { id: "collaborator", label: "Key Collaborator", emoji: "⊕", description: "A crucial creative partner who shaped the work" },
   // Covers slots (V3-39) are fully machine-sourced: live-show history
   // (setlist.fm) and the research corpus, no model in the loop.
-  { id: "covers", label: "Covered Them", emoji: "↻", description: "Songs by others this artist chose to perform or record — influence you can hear" },
-  { id: "covered_by", label: "Covered By", emoji: "↺", description: "Artists who took on this artist's songs — legacy you can hear" },
+  { id: "covers", label: "Covered Them", emoji: "↻", description: "Other artists covered by this artist" },
+  { id: "covered_by", label: "Covered By", emoji: "↺", description: "Artists who covered this artist's songs" },
 ];
 
 export const SLOT_COLORS = {

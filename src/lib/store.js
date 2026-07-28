@@ -503,11 +503,9 @@ export async function getCoversSlots(subject) {
         ? `${subject.name} took on “${row.name}”${row.creator ? ` — original by ${row.creator}` : ""}.`
         : `${row.name}${row.creator ? ` (${row.creator})` : ""} took on ${subject.name}.`;
       const clean = (s) => String(s || "").trim().replace(/\.+$/, "");
-      const receipt = fromSetlist
-        ? ` ${clean(row.summary || row.notes)}. A cover is influence you can hear: a song the artist chose, learned, and performed.`
-        : row.summary
-          ? ` ${clean(row.summary)}.`
-          : " Documented in the research corpus with a primary-source citation below.";
+      const receipt = fromSetlist || row.summary
+        ? ` ${clean(row.summary || row.notes)}.`
+        : " Documented in the research corpus with a primary-source citation below.";
       return {
         item: {
           slotType,
