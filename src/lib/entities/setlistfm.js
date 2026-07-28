@@ -11,16 +11,24 @@ export function setlistfmConfigured() {
 }
 
 async function sfmGet(path) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      "x-api-key": process.env.KYNDA_SETLISTFM_KEY,
-      Accept: "application/json",
-      "User-Agent": "Kynda/3.0 (cultural influence graph; brancato@gmail.com)",
-    },
-  });
-  if (res.status === 404) return null; // no setlists for this artist
-  if (!res.ok) throw new Error(`setlist.fm ${res.status}`);
-  return res.json();
+  // Burst limits bite mid-pagination on heavy touring artists: back off and
+  // retry a 429 page instead of losing the whole artist.
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`${BASE}${path}`, {
+      headers: {
+        "x-api-key": process.env.KYNDA_SETLISTFM_KEY,
+        Accept: "application/json",
+        "User-Agent": "Kynda/3.0 (cultural influence graph; brancato@gmail.com)",
+      },
+    });
+    if (res.status === 404) return null; // no setlists for this artist
+    if (res.status === 429 && attempt < 3) {
+      await sleep(8000 * (attempt + 1));
+      continue;
+    }
+    if (!res.ok) throw new Error(`setlist.fm ${res.status}`);
+    return res.json();
+  }
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -60,7 +68,7 @@ export async function getLiveCovers(mbid, { maxPages = 15 } = {}) {
     }
     const seen = page * (data.itemsPerPage || 20);
     if (seen >= (data.total || 0)) break;
-    await sleep(650);
+    await sleep(1200);
   }
   return [...covers.values()].sort((a, b) => b.count - a.count);
 }
