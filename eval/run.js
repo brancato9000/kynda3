@@ -22,6 +22,7 @@ import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
 import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-card.js";
 import { experienceLinks } from "../src/lib/experience.js";
 import { MIX_SLOT_TYPES, SLOT_COLORS } from "../src/design/tokens.js";
+import { videoTitleMatches } from "../src/lib/entities/youtube.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -178,6 +179,14 @@ function testQuoteMatch() {
   // Covers slots (V3-39): taxonomy + colors present for the machine-sourced slots.
   check("covers slots exist in the taxonomy with colors",
     ["covers", "covered_by"].every((id) => MIX_SLOT_TYPES.some((s) => s.id === id) && !!SLOT_COLORS[id]));
+
+  // Verified cover videos (V3-40): the title gate is deterministic — both the
+  // coverer and the song must appear, through punctuation/case/&-vs-and noise.
+  check("videoTitleMatches requires both coverer and song in the title",
+    videoTitleMatches("Talking Heads - Take Me To The River (Live from Rome 1980)", "Talking Heads", "Take Me to the River") &&
+    videoTitleMatches("Jeff Buckley — Hallelujah (Official Video)", "Jeff Buckley", "Hallelujah") &&
+    !videoTitleMatches("Al Green - Take Me to the River", "Talking Heads", "Take Me to the River") &&
+    !videoTitleMatches("Talking Heads Interview 1984", "Talking Heads", "Take Me to the River"));
   // Experience links (V3-38): library-first for every medium, URLs safely
   // encoded, and the streaming preference only applies where it makes sense.
   const media = ["music", "film", "literature", "art", "dance", "other"];

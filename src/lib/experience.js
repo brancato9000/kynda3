@@ -36,6 +36,14 @@ export function experienceLinks(item, { service = "youtube", subjectName = "" } 
   // point straight at the performance. "Covered Them" → the subject playing
   // the song; "Covered By" → the coverer playing the subject's song.
   if (item.slotType === "covers" || item.slotType === "covered_by") {
+    // Title-verified video (V3-40) beats a search when the ingest found one.
+    if (item.videoUrl) {
+      return {
+        library: [{ label: "▶ watch the cover", url: item.videoUrl }],
+        stream: { label: svc.label, url: svc.url(q) },
+        pickService: true,
+      };
+    }
     const coverer = item.slotType === "covers" ? subjectName : item.creator || item.title;
     const perfQ = encodeURIComponent([coverer, item.title, "live cover"].filter(Boolean).join(" "));
     return {

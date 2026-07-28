@@ -438,6 +438,17 @@ export async function recordCoverClaim({ subjectEntityId, song, artist, count, f
   return claimId;
 }
 
+/** Attach a title-verified YouTube video to a cover claim (V3-40). */
+export async function recordCoverVideo(claimId, { url, title, channel }) {
+  await addProvenance(claimId, {
+    status: "db_relationship",
+    method: "youtube_video",
+    url,
+    publication: "YouTube",
+    notes: `video: ${title}${channel ? ` — ${channel}` : ""}`,
+  });
+}
+
 const COVER_SLOT_META = {
   covers: { pick: (row, name) => row.claim_type === "covers" && row.is_subject_side },
   covered_by: { pick: (row, name) => (row.claim_type === "covers" && !row.is_subject_side) || (row.claim_type === "covered_by" && row.is_subject_side) },
@@ -462,14 +473,20 @@ export async function getCoversSlots(subject) {
   const r = await q(
     `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS is_subject_side,
             o.name, o.kind, o.year_start, o.metadata->>'creator' AS creator, o.domain,
-            p.verification_status, p.verification_method, p.source_url, p.notes
+            p.verification_status, p.verification_method, p.source_url, p.notes, v.video_url
      FROM claims c
      JOIN entities o ON o.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
      LEFT JOIN LATERAL (
        SELECT verification_status, verification_method, source_url, notes FROM provenance
        WHERE claim_id = c.id AND verification_status IN ('db_relationship', 'quote_confirmed')
+         AND verification_method <> 'youtube_video'
        ORDER BY (verification_method = 'setlistfm') DESC, created_at DESC LIMIT 1
      ) p ON true
+     LEFT JOIN LATERAL (
+       SELECT source_url AS video_url FROM provenance
+       WHERE claim_id = c.id AND verification_method = 'youtube_video'
+       ORDER BY created_at DESC LIMIT 1
+     ) v ON true
      WHERE (c.subject_id = $1 OR c.object_id = $1) AND c.claim_type IN ('covers', 'covered_by')
        AND p.verification_status IS NOT NULL`,
     [eid]
@@ -501,6 +518,7 @@ export async function getCoversSlots(subject) {
           reason: direction + receipt,
           via: null,
           machineSourced: true,
+          ...(row.video_url ? { videoUrl: row.video_url } : {}),
         },
         verification: {
           attribution: fromSetlist
