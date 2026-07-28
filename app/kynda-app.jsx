@@ -855,6 +855,23 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         <div style={{ fontFamily: FONTS.mono, fontSize: "13px", color: "rgba(248,113,113,0.85)", marginBottom: "24px" }}>{error}</div>
       )}
 
+      {/* Find the thread (V3-41): pathfinding entry — plain GET form, the
+          server renders the shareable /path page. */}
+      {phase === "idle" && (
+        <form method="GET" action="/path" style={{ margin: "4px 0 30px", padding: "16px 18px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "10px" }}>
+            Find the thread — the shortest documented path between any two points in the graph
+          </div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <input name="from" placeholder="From (e.g. Kraftwerk)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
+            <input name="to" placeholder="To (e.g. Doechii)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
+            <button type="submit" style={{ background: "none", border: "1px solid rgba(250,204,21,0.4)", borderRadius: "6px", padding: "9px 18px", color: BASE.gold, fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+              trace
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* Browsable index (V3-33): everything already in the graph, one click
           away — no guessing what's been built. Hidden once a search starts. */}
       {phase === "idle" && indexedSubjects.length > 0 && (

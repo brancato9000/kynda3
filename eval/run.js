@@ -23,6 +23,7 @@ import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-car
 import { experienceLinks } from "../src/lib/experience.js";
 import { MIX_SLOT_TYPES, SLOT_COLORS } from "../src/design/tokens.js";
 import { videoTitleMatches } from "../src/lib/entities/youtube.js";
+import { findPath, HOP_PHRASES } from "../src/lib/path.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
@@ -182,6 +183,21 @@ function testQuoteMatch() {
 
   // Verified cover videos (V3-40): the title gate is deterministic — both the
   // coverer and the song must appear, through punctuation/case/&-vs-and noise.
+  // Pathfinding (V3-41): evidence-weighted Dijkstra fixtures. A→B→C is two
+  // cited hops (cost 2); the direct A→C synthesis edge costs 3 — the path
+  // with receipts must win despite being longer.
+  const E = (s, o, tier) => ({ subjectId: s, objectId: o, claimType: "influenced_by", tier });
+  const fixtureEdges = [E("A", "B", "cited"), E("B", "C", "cited"), E("A", "C", "synthesis"), E("D", "E", "cited")];
+  const viaB = findPath(fixtureEdges, "A", "C");
+  check("findPath prefers two cited hops over one synthesis leap",
+    viaB?.hops.length === 2 && viaB.hops[0].edge.objectId === "B");
+  check("findPath traverses claim direction both ways", findPath(fixtureEdges, "C", "A")?.hops.length === 2);
+  check("findPath returns null for disconnected components", findPath(fixtureEdges, "A", "E") === null);
+  check("findPath handles unknown endpoints and self-paths",
+    findPath(fixtureEdges, "A", "Z") === null && findPath(fixtureEdges, "A", "A")?.hops.length === 0);
+  check("every claim type has a hop phrase",
+    claimProps.claimType.enum.concat(["used_gear", "recorded_at"]).every((t) => !!HOP_PHRASES[t]));
+
   check("videoTitleMatches requires both coverer and song in the title",
     videoTitleMatches("Talking Heads - Take Me To The River (Live from Rome 1980)", "Talking Heads", "Take Me to the River") &&
     videoTitleMatches("Jeff Buckley — Hallelujah (Official Video)", "Jeff Buckley", "Hallelujah") &&

@@ -7,6 +7,7 @@
 
 import { q, dbConfigured } from "./db.js";
 import { norm } from "./entities/musicbrainz.js";
+import { findPath } from "./path.js";
 
 const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"]);
 const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "other"]);
@@ -530,6 +531,88 @@ export async function getCoversSlots(subject) {
     slots.push({ slotType, candidates });
   }
   return slots;
+}
+
+// ─── Pathfinding (V3-41) ────────────────────────────────────────────────
+
+async function resolvePathEndpoint(name) {
+  const exact = await q(
+    `SELECT id, name FROM entities WHERE lower(name) = lower($1)
+     ORDER BY (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC, created_at LIMIT 1`,
+    [name]
+  );
+  if (exact.rows[0]) return { entity: exact.rows[0] };
+  const near = await q(
+    "SELECT name FROM entities WHERE name ILIKE $1 ORDER BY length(name) LIMIT 5",
+    [`%${name}%`]
+  );
+  return { suggestions: near.rows.map((r) => r.name) };
+}
+
+/**
+ * Shortest documented path between two named entities. Pure DB read — the
+ * whole edge list loads in one query (the graph is small) and Dijkstra runs
+ * in memory. Every hop returns its claim direction, evidence tier, and best
+ * receipt.
+ */
+export async function getPathBetween(fromName, toName) {
+  if (!dbConfigured()) return { error: "no database" };
+  const [from, to] = await Promise.all([resolvePathEndpoint(fromName), resolvePathEndpoint(toName)]);
+  if (!from.entity || !to.entity) {
+    return {
+      error: "not_found",
+      from: from.entity?.name || null,
+      to: to.entity?.name || null,
+      suggestions: { from: from.suggestions || [], to: to.suggestions || [] },
+    };
+  }
+
+  const er = await q(
+    `SELECT c.subject_id, c.object_id, c.claim_type,
+            CASE WHEN p.verification_status = 'quote_confirmed' THEN 'cited'
+                 WHEN p.verification_status IS NOT NULL THEN 'documented'
+                 ELSE 'synthesis' END AS tier,
+            p.quote, p.speaker, p.publication, p.source_url
+     FROM claims c
+     LEFT JOIN LATERAL (
+       SELECT verification_status, quote, speaker, publication, source_url FROM provenance
+       WHERE claim_id = c.id AND verification_status IN ('quote_confirmed', 'db_relationship')
+       ORDER BY (verification_status = 'quote_confirmed') DESC, created_at DESC LIMIT 1
+     ) p ON true`
+  );
+  const edges = er.rows.map((r) => ({
+    subjectId: r.subject_id, objectId: r.object_id, claimType: r.claim_type,
+    tier: r.tier, quote: r.quote, speaker: r.speaker, publication: r.publication, sourceUrl: r.source_url,
+  }));
+
+  const path = findPath(edges, from.entity.id, to.entity.id);
+  if (!path) return { error: "no_path", from: from.entity.name, to: to.entity.name };
+
+  const ids = new Set([from.entity.id, to.entity.id]);
+  for (const h of path.hops) { ids.add(h.edge.subjectId); ids.add(h.edge.objectId); }
+  const names = await q("SELECT id, name, kind, domain FROM entities WHERE id = ANY($1::uuid[])", [[...ids]]);
+  const byId = Object.fromEntries(names.rows.map((r) => [r.id, r]));
+  const subjectSlugs = new Set((await listSubjects()).map((s) => s.name.toLowerCase()));
+
+  return {
+    from: from.entity.name,
+    to: to.entity.name,
+    hopCount: path.hops.length,
+    hops: path.hops.map((h) => ({
+      from: byId[h.fromId]?.name,
+      to: byId[h.toId]?.name,
+      subject: byId[h.edge.subjectId]?.name,
+      object: byId[h.edge.objectId]?.name,
+      claimType: h.edge.claimType,
+      tier: h.edge.tier,
+      quote: h.edge.quote,
+      speaker: h.edge.speaker,
+      publication: h.edge.publication,
+      sourceUrl: h.edge.sourceUrl,
+      fromIndexed: subjectSlugs.has((byId[h.fromId]?.name || "").toLowerCase()),
+      toIndexed: subjectSlugs.has((byId[h.toId]?.name || "").toLowerCase()),
+    })),
+  };
 }
 
 // ─── Subject pages (V3-28) ──────────────────────────────────────────────
