@@ -817,7 +817,11 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
       `}</style>
 
       <header style={{ marginBottom: "36px" }}>
-        <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}>Kynda</h1>
+        <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}>
+          {/* Full navigation (not client state reset) so the logo works
+              identically from /s/[slug] pages and mid-search alike. */}
+          <a href="/" style={{ color: "inherit", textDecoration: "none" }} title="Back to the start">Kynda</a>
+        </h1>
         <div style={{ fontFamily: FONTS.display, fontStyle: "italic", color: BASE.gold, fontSize: "15px", margin: "6px 0 10px" }}>
           (KIN-duh): Old Norse for “to light up”
         </div>
