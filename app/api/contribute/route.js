@@ -3,9 +3,10 @@
 // agent findings (fetch → strip → quote-match → archive lookup).
 
 import { verifyEvidence } from "../../../src/lib/verify/evidence.js";
-import { findClaimForPair, recordContribution, attachFanEvidence } from "../../../src/lib/store.js";
+import { q } from "../../../src/lib/db.js";
+import { findClaimForPair, recordContribution, attachFanEvidence, getStoredMix } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, contributionHarvestCapReached } from "../../../src/lib/guard.js";
-import { preGate, findConfirmedPair } from "../../../src/lib/pipeline/contribute-card.js";
+import { preGate, findConfirmedPair, findConfirmedSubjectClaims } from "../../../src/lib/pipeline/contribute-card.js";
 import { harvestSource } from "../../../src/lib/pipeline/harvest.js";
 
 export const maxDuration = 300;
@@ -72,9 +73,11 @@ export async function POST(req) {
 
     if (kind === "new_card") {
       // Lane 2 (V3-35): fan names an influence + a URL; Kynda builds the card.
+      // Influence optional (V3-43): a bare URL is a MAP SUBMISSION — every
+      // confirmed claim about the subject becomes its own card proposal.
       const influence = (body.influence || "").trim().slice(0, 120);
-      if (!influence || !url) {
-        return Response.json({ error: "An influence name and a source URL are required." }, { status: 400 });
+      if (!url) {
+        return Response.json({ error: "A source URL is required." }, { status: 400 });
       }
       // Model-backed, so guarded harder: 2/hour per IP + a global daily cap.
       if (!rateLimit(`contribute:new_card:${ip}`, { limit: 2, windowMs: 3_600_000 })) {
@@ -101,6 +104,40 @@ export async function POST(req) {
       if (harvest.error) {
         return Response.json({ ok: true, confirmed: false, message: `The page couldn't be processed (${harvest.error}).` });
       }
+
+      if (!influence) {
+        // Map submission (V3-43): propose a card for every confirmed claim
+        // about the subject, skipping what's already mapped or already queued.
+        const found = await findConfirmedSubjectClaims(subject.name, gate.resolvedUrl);
+        const stored = await getStoredMix(subject).catch(() => null);
+        const inMix = new Set(
+          (stored?.slots || []).flatMap((s) => (s.candidates || []).map((c) => c.item?.title?.toLowerCase())).filter(Boolean)
+        );
+        const queued = await q(
+          "SELECT lower(item_title) AS t FROM contributions WHERE kind = 'new_card' AND lower(subject_name) = lower($1) AND status IN ('pending', 'confirmed')",
+          [subject.name]
+        );
+        const alreadyQueued = new Set(queued.rows.map((r) => r.t));
+        let proposed = 0, existing = 0;
+        for (const f of found) {
+          const key = f.target_name.toLowerCase();
+          if (inMix.has(key) || alreadyQueued.has(key)) { existing += 1; continue; }
+          await recordContribution({
+            kind: "new_card", claimId: f.claim_id, url: gate.resolvedUrl,
+            quote: f.quote, status: "confirmed",
+            verification: { mapSubmission: true, claimType: f.claim_type, speaker: f.speaker || null },
+            ...base, itemTitle: f.target_name,
+          });
+          proposed += 1;
+        }
+        return Response.json({
+          ok: true, confirmed: proposed > 0,
+          message: found.length === 0
+            ? `The page yielded ${harvest.confirmed} verified citations across the graph, but no confirmed connections naming ${subject.name} directly — thank you regardless.`
+            : `${found.length} verified connection${found.length === 1 ? "" : "s"} about ${subject.name} found on that page: ${proposed} proposed as new cards (with our curators now)${existing ? `, ${existing} already on the map — their citations just got stronger` : ""}. Your page also yielded ${harvest.confirmed} verified citations across the graph.`,
+        });
+      }
+
       const pair = await findConfirmedPair(subject.name, influence, gate.resolvedUrl);
       await recordContribution({
         kind: "new_card", claimId: pair?.claim_id || null, url: gate.resolvedUrl,

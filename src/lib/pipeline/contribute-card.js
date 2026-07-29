@@ -56,8 +56,31 @@ export async function preGate(url, subjectName, influenceName) {
   }
   if (!page.ok) return { ok: false, reason: "unreachable", resolvedUrl: url };
   if (!pageNamesEntity(page.text, subjectName)) return { ok: false, reason: "missing_subject", resolvedUrl };
-  if (!pageNamesEntity(page.text, influenceName)) return { ok: false, reason: "missing_influence", resolvedUrl };
+  // Map submissions (V3-43): no named influence — the subject alone gates.
+  if (influenceName && !pageNamesEntity(page.text, influenceName)) return { ok: false, reason: "missing_influence", resolvedUrl };
   return { ok: true, resolvedUrl };
+}
+
+/**
+ * Map submissions (V3-43): every quote-confirmed claim from THIS source that
+ * touches the subject — the whole map the article documents, not one pair.
+ * Ordered by speaker degree (the artist's own words first), capped by caller.
+ */
+export async function findConfirmedSubjectClaims(subjectName, sourceUrl, { limit = 12 } = {}) {
+  const r = await q(
+    `SELECT DISTINCT ON (o.id)
+            c.id AS claim_id, c.claim_type, p.quote, p.speaker, p.source_degree,
+            o.name AS target_name
+     FROM claims c
+     JOIN provenance p ON p.claim_id = c.id AND p.verification_status = 'quote_confirmed' AND p.source_url = $2
+     JOIN entities s ON s.id IN (c.subject_id, c.object_id)
+       AND lower(regexp_replace(s.name, '\\s+&\\s+', ' and ', 'g')) = lower(regexp_replace($1, '\\s+&\\s+', ' and ', 'g'))
+     JOIN entities o ON o.id IN (c.subject_id, c.object_id) AND o.id <> s.id
+     ORDER BY o.id, (CASE p.source_degree WHEN 'first' THEN 0 WHEN 'second' THEN 1 ELSE 2 END)
+     LIMIT $3`,
+    [subjectName, sourceUrl, limit]
+  );
+  return r.rows;
 }
 
 /**

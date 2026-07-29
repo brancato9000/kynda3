@@ -413,7 +413,7 @@ function AddConnectionCard({ subject }) {
   const [fields, setFields] = useState({ influence: "", url: "", contributor: "" });
 
   async function submit() {
-    if (!fields.influence.trim() || !fields.url.trim()) return;
+    if (!fields.url.trim()) return;
     setSending(true);
     try {
       const res = await fetch("/api/contribute", {
@@ -448,7 +448,7 @@ function AddConnectionCard({ subject }) {
           <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(250,204,21,0.7)", marginBottom: "10px" }}>
             Propose a connection for {subject?.name}
           </div>
-          <input placeholder="Who or what influenced them? (artist, work, movement…)" value={fields.influence}
+          <input placeholder="Who or what influenced them? (optional — leave blank and Kynda maps everything the page documents)" value={fields.influence}
             onChange={(e) => setFields({ ...fields, influence: e.target.value })} style={inputStyle} />
           <input placeholder="URL of a page documenting it (interview, feature, liner notes…)" value={fields.url}
             onChange={(e) => setFields({ ...fields, url: e.target.value })} style={inputStyle} />
