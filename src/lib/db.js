@@ -48,8 +48,13 @@ export async function q(text, params = []) {
     try {
       return await p.query(text, params);
     } catch (err) {
-      if (attempt < 2 && TRANSIENT.has(err.code)) {
-        await new Promise((r) => setTimeout(r, 2_000 * (attempt + 1)));
+      // Pooler drops surface as message-only errors ("Connection terminated
+      // due to connection timeout / unexpectedly") with no code — they killed
+      // three long sweeps before this branch existed. Give them longer
+      // backoff than coded transients: the pooler needs time to reap.
+      const terminated = /connection terminated|connection ended|timeout exceeded when trying to connect/i.test(err.message || "");
+      if (attempt < 4 && (TRANSIENT.has(err.code) || terminated)) {
+        await new Promise((r) => setTimeout(r, (terminated ? 15_000 : 2_000) * (attempt + 1)));
         continue;
       }
       throw err;
