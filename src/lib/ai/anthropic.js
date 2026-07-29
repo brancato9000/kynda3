@@ -42,6 +42,7 @@ export function anthropicClient() {
 const PRICES = {
   // USD per million tokens: [input, output] (sticker prices)
   "claude-fable-5": [10, 50],
+  "claude-opus-5": [5, 25],
   "claude-opus-4-8": [5, 25],
   "claude-sonnet-5": [3, 15],
   "claude-haiku-4-5": [1, 5],

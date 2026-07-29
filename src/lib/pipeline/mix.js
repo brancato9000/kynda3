@@ -7,7 +7,7 @@
 // machine-earned or not shown. Non-music verifiers (TMDb, Open Library)
 // arrive in Phase 1b; until then those items are honestly labeled inferred.
 
-import { callFable } from "../ai/anthropic.js";
+import { callFable, callModel } from "../ai/anthropic.js";
 import { verifyReleaseGroup, getArtistMembers, norm } from "../entities/musicbrainz.js";
 import { verifyWorkByDescription } from "../entities/wikidata.js";
 import { verifyBook } from "../entities/openlibrary.js";
@@ -98,7 +98,10 @@ export async function loadSubjectMembers(subject) {
   }
 }
 
-export async function generateMix(subject, members = []) {
+// options.model (V3-44 evaluation): generate the mix on a different model —
+// same prompt, same schema, same deterministic verification downstream. The
+// badge rates ARE the model eval; the verifier stays dumb either way.
+export async function generateMix(subject, members = [], { model = null, effort = "low" } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
@@ -110,12 +113,21 @@ export async function generateMix(subject, members = []) {
   }
   if (context.length) parts.push(`This specifically refers to:\n${context.join("\n")}`);
 
-  const mix = await callFable({
-    system: MIX_SYSTEM,
-    user: parts.join("\n\n"),
-    schema: MIX_SCHEMA,
-    maxTokens: 16_000,
-  });
+  const mix = model
+    ? await callModel(model, {
+        system: MIX_SYSTEM,
+        user: parts.join("\n\n"),
+        schema: MIX_SCHEMA,
+        maxTokens: 16_000,
+        effort,
+        label: `mix_${model}`,
+      })
+    : await callFable({
+        system: MIX_SYSTEM,
+        user: parts.join("\n\n"),
+        schema: MIX_SCHEMA,
+        maxTokens: 16_000,
+      });
 
   // Deterministic slot-rule enforcement (AD-10) — never trust prompt compliance.
   const subjectNorm = norm(subject.name);
