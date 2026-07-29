@@ -11,6 +11,7 @@ import { callFable, callModel } from "../ai/anthropic.js";
 import { verifyReleaseGroup, getArtistMembers, norm } from "../entities/musicbrainz.js";
 import { verifyWorkByDescription } from "../entities/wikidata.js";
 import { verifyBook } from "../entities/openlibrary.js";
+import { verifyFilm, verifyTvShow, tmdbConfigured } from "../entities/tmdb.js";
 import { getArticle, findMention } from "../entities/wikipedia.js";
 
 const SLOT_IDS = ["titan", "ghost", "geography", "culture", "peer", "essential", "legacy", "collaborator"];
@@ -257,6 +258,24 @@ export async function verifyAttribution(item) {
         };
       }
       return { status: "not_found", source: "Open Library" };
+    }
+
+    // Film & TV (V3-46): TMDb is a real catalog — deterministic
+    // title+creator match, and a miss convicts, same contract as
+    // MusicBrainz for music. Falls through to the award-only Wikidata
+    // check when TMDb isn't configured.
+    if ((item.medium === "film" || item.medium === "television") && tmdbConfigured()) {
+      const result = item.medium === "film"
+        ? await verifyFilm(item.title, item.creator, item.year)
+        : await verifyTvShow(item.title, item.creator, item.year);
+      if (result.verified) {
+        return { status: "verified", source: "TMDB", url: result.url, detail: result.detail, method: "tmdb_credits" };
+      }
+      return {
+        status: "not_found",
+        source: "TMDB",
+        ...(result.actualCreator ? { detail: `TMDB credits ${result.actualCreator}`, url: result.url } : {}),
+      };
     }
 
     const keywords = WIKIDATA_KEYWORDS[item.medium];

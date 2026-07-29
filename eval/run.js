@@ -26,6 +26,7 @@ import { videoTitleMatches } from "../src/lib/entities/youtube.js";
 import { findPath, HOP_PHRASES } from "../src/lib/path.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
+import { verifyFilm, tmdbConfigured } from "../src/lib/entities/tmdb.js";
 import { searchEntity } from "../src/lib/entities/wikidata.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -255,6 +256,16 @@ async function testScoring(subjects) {
 // ── Stage 4: live verification ──────────────────────────────────────────────
 async function testLive(subjects) {
   console.log("\nStage 4 — live verification (MusicBrainz / Wikidata)");
+
+  // TMDb film/TV verification (V3-46): true attribution passes, the trap
+  // convicts WITH the actual director named. Gated on the key being present.
+  if (tmdbConfigured()) {
+    const psycho = await verifyFilm("Psycho", "Alfred Hitchcock", "1960");
+    check("TMDb verifies Psycho as Hitchcock's", psycho.verified === true);
+    const trap = await verifyFilm("Psycho", "Steven Spielberg", "1960");
+    check("TMDb convicts the Psycho/Spielberg trap and names the real director",
+      trap.verified === false && /hitchcock/i.test(trap.actualCreator || ""));
+  }
   for (const g of subjects) {
     if (g.canonical.mbid) {
       const results = await searchArtist(g.subject, 8);
