@@ -35,7 +35,7 @@ export async function findCoverVideo(coverer, song) {
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${q}&key=${KEY()}`
   );
-  if (res.status === 403) throw new Error("youtube quota exhausted (resets daily)");
+  if (res.status === 403 || res.status === 429) throw new Error("youtube quota exhausted (resets daily)");
   if (!res.ok) throw new Error(`youtube ${res.status}`);
   const data = await res.json();
   for (const item of data.items || []) {
