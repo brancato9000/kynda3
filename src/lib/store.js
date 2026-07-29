@@ -102,7 +102,7 @@ async function findOrCreateClaim({ subjectId, objectId, claimType, slotType, sum
   const r = await q(
     `INSERT INTO claims (subject_id, object_id, claim_type, slot_affinity, summary, origin, model_version, agent_run_id)
      VALUES ($1, $2, $3, $4, $5, 'runtime_generation', $6, $7) RETURNING id`,
-    [subjectId, objectId, claimType, [slotType], summary, process.env.KYNDA_MODEL_VERSION || "claude-fable-5", via || null]
+    [subjectId, objectId, claimType, [slotType], summary, process.env.KYNDA_MODEL_VERSION || process.env.KYNDA_MIX_MODEL || "claude-opus-5", via || null]
   );
   return { id: r.rows[0].id, created: true };
 }
@@ -208,7 +208,7 @@ export async function persistMixRun({ subject, rawQuery = null, intro, slots = n
 
   await q(
     "INSERT INTO mixes (subject_entity_id, payload, source, model_version) VALUES ($1, $2, 'generated', $3)",
-    [subjectId, JSON.stringify(slots ? { intro, slots } : { intro, entries }), process.env.KYNDA_MODEL_VERSION || "claude-fable-5"]
+    [subjectId, JSON.stringify(slots ? { intro, slots } : { intro, entries }), process.env.KYNDA_MODEL_VERSION || process.env.KYNDA_MIX_MODEL || "claude-opus-5"]
   );
 
   if (rawQuery) {
@@ -311,7 +311,7 @@ export async function recordFinding({ subjectEntityId, finding, verification, ru
     const r = await q(
       `INSERT INTO claims (subject_id, object_id, claim_type, slot_affinity, summary, origin, model_version, agent_run_id)
        VALUES ($1, $2, $3, '{}', $4, 'agent_research', $5, $6) RETURNING id`,
-      [subjectEntityId, workId, finding.claimType, finding.note || null, process.env.KYNDA_MODEL_VERSION || "claude-fable-5", runId]
+      [subjectEntityId, workId, finding.claimType, finding.note || null, process.env.KYNDA_MODEL_VERSION || "claude-sonnet-5", runId]
     );
     claimId = r.rows[0].id;
   }

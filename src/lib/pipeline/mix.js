@@ -98,10 +98,14 @@ export async function loadSubjectMembers(subject) {
   }
 }
 
-// options.model (V3-44 evaluation): generate the mix on a different model —
-// same prompt, same schema, same deterministic verification downstream. The
-// badge rates ARE the model eval; the verifier stays dumb either way.
-export async function generateMix(subject, members = [], { model = null, effort = "low" } = {}) {
+// Mix model (V3-44, adopted 2026-07-15): Opus 5 measured equal-or-better on
+// every machine-graded badge rate at ~1/3 the cost, and Tony approved the
+// prose. Fable remains selectable (KYNDA_MIX_MODEL=claude-fable-5 routes
+// through callFable's refusal-fallback path). The verifier stays dumb
+// either way — badge rates ARE the model eval.
+export const MIX_MODEL = process.env.KYNDA_MIX_MODEL || "claude-opus-5";
+
+export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low" } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
@@ -113,7 +117,7 @@ export async function generateMix(subject, members = [], { model = null, effort 
   }
   if (context.length) parts.push(`This specifically refers to:\n${context.join("\n")}`);
 
-  const mix = model
+  const mix = model && model !== "claude-fable-5"
     ? await callModel(model, {
         system: MIX_SYSTEM,
         user: parts.join("\n\n"),
