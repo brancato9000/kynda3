@@ -515,6 +515,8 @@ export async function getCoversSlots(subject) {
           year: row.year_start ? String(row.year_start) : "",
           medium: row.domain && row.domain !== "other" ? row.domain : "music",
           reason: direction + receipt,
+          // Playlist-friendly receipt (V3-42): the raw stat line, no prose.
+          stat: clean(row.summary || row.notes) || null,
           via: null,
           machineSourced: true,
           ...(row.video_url ? { videoUrl: row.video_url } : {}),

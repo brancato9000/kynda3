@@ -336,6 +336,72 @@ function InfoDot({ text, color }) {
   );
 }
 
+// Covers tab (V3-42): covers read as a playlist, not prose — Tony's call.
+// Two simple lists ("Covered them" / "Covered by"), each row a song with its
+// play-count receipt, the verified video when we have one, and the source.
+function CoversTab({ data, subject }) {
+  const sections = [
+    { slotType: "covers", label: "↻ Covered them", sub: SLOT_BY_ID.covers?.description },
+    { slotType: "covered_by", label: "↺ Covered by", sub: SLOT_BY_ID.covered_by?.description },
+  ];
+  const bySlot = Object.fromEntries((data?.slots || []).map((s) => [s.slotType, s.candidates]));
+  const any = sections.some((s) => (bySlot[s.slotType] || []).length > 0);
+  if (!any) {
+    return (
+      <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.7)", lineHeight: 1.7 }}>
+        No documented covers for {subject?.name} yet — the setlist archive grows as the graph does.
+      </div>
+    );
+  }
+  return (
+    <div>
+      {sections.map(({ slotType, label, sub }) => {
+        const rows = bySlot[slotType] || [];
+        if (!rows.length) return null;
+        return (
+          <div key={slotType} style={{ marginBottom: "30px" }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: SLOT_COLORS[slotType]?.text || BASE.gold }}>
+              {label}
+            </div>
+            {sub && <div style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.5)", margin: "3px 0 12px" }}>{sub}</div>}
+            <div>
+              {rows.map((c, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "12px", padding: "10px 2px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  {c.item.videoUrl ? (
+                    <a href={c.item.videoUrl} target="_blank" rel="noreferrer" title="Watch the cover (title-verified video)"
+                      style={{ fontFamily: FONTS.mono, fontSize: "13px", color: BASE.gold, textDecoration: "none", flexShrink: 0 }}>▶</a>
+                  ) : (
+                    <span style={{ fontFamily: FONTS.mono, fontSize: "13px", color: "rgba(148,163,184,0.3)", flexShrink: 0 }}>♪</span>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontFamily: FONTS.display, fontSize: "17px" }}>
+                      {c.item.videoUrl
+                        ? <a href={c.item.videoUrl} target="_blank" rel="noreferrer" style={{ color: "#e2e8f0", textDecoration: "none" }}>{c.item.title}</a>
+                        : c.item.title}
+                    </span>
+                    {c.item.creator && (
+                      <span style={{ fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.7)", marginLeft: "10px" }}>{c.item.creator}</span>
+                    )}
+                    {c.item.stat && (
+                      <div style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.45)", marginTop: "2px" }}>{c.item.stat}</div>
+                    )}
+                  </div>
+                  {c.verification?.attribution?.url && (
+                    <a href={c.verification.attribution.url} target="_blank" rel="noreferrer" title={c.verification.attribution.detail || "source record"}
+                      style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", textTransform: "uppercase", color: "rgba(52,211,153,0.6)", textDecoration: "none", flexShrink: 0 }}>
+                      {c.verification.attribution.source || "source"} ↗
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Lane 2 (V3-35): propose a whole new card. The fan names the influence and
 // hands us a URL containing the evidence; Kynda fetches, extracts, and
 // machine-verifies — then a curator publishes. The fan solves discovery,
@@ -651,6 +717,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
   const [done, setDone] = useState(false);
   const [tab, setTab] = useState("mix");
   const [graph, setGraph] = useState({ status: "idle", data: null, error: null });
+  const [covers, setCovers] = useState({ status: "idle", data: null, error: null });
   const runRef = useRef(0);
 
   // Graph is lazy (kynda2 AD-05) and free — a pure claims-store read.
@@ -671,6 +738,25 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
       setGraph({ status: "error", data: null, error: err.message });
     }
   }, [graph.status]);
+
+  // Covers tab (V3-42): lazy and free, same pattern as the graph.
+  const openCoversTab = useCallback(async (subj) => {
+    setTab("covers");
+    if (covers.status === "loading" || covers.status === "ready") return;
+    setCovers({ status: "loading", data: null, error: null });
+    try {
+      const res = await fetch("/api/covers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: subj }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "covers failed");
+      setCovers({ status: "ready", data, error: null });
+    } catch (err) {
+      setCovers({ status: "error", data: null, error: err.message });
+    }
+  }, [covers.status]);
 
   // ?demo=1 seeds fixture data for offline design iteration — no API calls.
   useEffect(() => {
@@ -748,7 +834,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     setTier("certain");
     setPhase("mixing");
     setIntro(null); setSlots([]); setDone(false); setError(null);
-    setTab("mix"); setGraph({ status: "idle", data: null, error: null });
+    setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     fireMix(subj, run);
   }, [fireMix]);
 
@@ -770,7 +856,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
     setIntro(null); setSlots([]); setDone(false);
-    setTab("mix"); setGraph({ status: "idle", data: null, error: null });
+    setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     try {
       const res = await fetch("/api/disambiguate", {
         method: "POST",
@@ -855,23 +941,6 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         <div style={{ fontFamily: FONTS.mono, fontSize: "13px", color: "rgba(248,113,113,0.85)", marginBottom: "24px" }}>{error}</div>
       )}
 
-      {/* Find the thread (V3-41): pathfinding entry — plain GET form, the
-          server renders the shareable /path page. */}
-      {phase === "idle" && (
-        <form method="GET" action="/path" style={{ margin: "4px 0 30px", padding: "16px 18px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "10px" }}>
-            Find the thread — the shortest documented path between any two points in the graph
-          </div>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <input name="from" placeholder="From (e.g. Kraftwerk)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
-            <input name="to" placeholder="To (e.g. Doechii)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
-            <button type="submit" style={{ background: "none", border: "1px solid rgba(250,204,21,0.4)", borderRadius: "6px", padding: "9px 18px", color: BASE.gold, fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
-              trace
-            </button>
-          </div>
-        </form>
-      )}
-
       {/* Browsable index (V3-33): everything already in the graph, one click
           away — no guessing what's been built. Hidden once a search starts. */}
       {phase === "idle" && indexedSubjects.length > 0 && (
@@ -901,6 +970,23 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         </div>
       )}
 
+      {/* Find the thread (V3-41): pathfinding entry — below the index by
+          design (V3-42): browsing what's mapped comes first. */}
+      {phase === "idle" && (
+        <form method="GET" action="/path" style={{ margin: "26px 0 30px", padding: "16px 18px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "10px" }}>
+            Find the shortest documented path between any two points in the graph
+          </div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <input name="from" placeholder="From (e.g. Kraftwerk)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
+            <input name="to" placeholder="To (e.g. Doechii)" style={{ flex: "1 1 150px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "9px 12px", fontSize: "13px", color: "#e2e8f0", outline: "none" }} />
+            <button type="submit" style={{ background: "none", border: "1px solid rgba(250,204,21,0.4)", borderRadius: "6px", padding: "9px 18px", color: BASE.gold, fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+              trace
+            </button>
+          </div>
+        </form>
+      )}
+
       {phase === "choosing" && subject && (
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontFamily: FONTS.mono, fontSize: "12px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(148,163,184,0.7)", marginBottom: "14px" }}>
@@ -928,11 +1014,11 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
             </div>
           )}
 
-          {/* MIX | GRAPH tabs (graph is lazy and token-free) */}
+          {/* MIX | COVERS | GRAPH tabs (covers and graph are lazy and token-free) */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            {[["mix", "Mix"], ["graph", "Graph"]].map(([id, label]) => (
+            {[["mix", "Mix"], ["covers", "Covers"], ["graph", "Graph"]].map(([id, label]) => (
               <button key={id}
-                onClick={() => (id === "graph" ? openGraphTab(subject) : setTab("mix"))}
+                onClick={() => (id === "graph" ? openGraphTab(subject) : id === "covers" ? openCoversTab(subject) : setTab("mix"))}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   fontFamily: FONTS.mono, fontSize: "12px", letterSpacing: "0.1em", textTransform: "uppercase",
@@ -944,6 +1030,20 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
               </button>
             ))}
           </div>
+
+          {tab === "covers" && (
+            <div>
+              {covers.status === "loading" && (
+                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Pulse /> reading the setlists…
+                </div>
+              )}
+              {covers.status === "error" && (
+                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.7)" }}>{covers.error}</div>
+              )}
+              {covers.status === "ready" && <CoversTab data={covers.data} subject={subject} />}
+            </div>
+          )}
 
           {tab === "graph" && (
             <div>
