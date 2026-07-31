@@ -37,6 +37,21 @@ const P31_MAP = {
   Q2743: { kind: "work", domain: "theater" }, Q58483083: { kind: "work", domain: "dance" },
 };
 
+// P106 occupation → domain for PERSONS (V3-51b): MusicBrainz-first
+// disambiguation labels anyone with an MB presence as music (Homer! Fosse!).
+// Wikidata's ordered occupation list corrects the browsing domain.
+const P106_MAP = {
+  Q2500638: "dance", Q5716684: "dance",           // choreographer, dancer
+  Q3501317: "fashion",                             // fashion designer
+  Q42973: "architecture",                          // architect
+  Q2526255: "film", Q3455803: "film", Q28389: "film", // film director, director, screenwriter
+  Q1028181: "art", Q1281618: "art", Q33231: "art", // painter, sculptor, photographer
+  Q36180: "literature", Q49757: "literature", Q6625963: "literature", Q214917: "literature", // writer, poet, novelist, playwright
+  Q4964182: "other",                               // philosopher (Ideas)
+  Q36834: "music", Q639669: "music", Q177220: "music", // composer, musician, singer
+  Q947873: "television", Q578109: "television",    // presenter, TV producer
+};
+
 // Only subjects (mixed entities) — the browsing surface Tony sees.
 const subjects = await q(`
   SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.wikidata_qid
@@ -50,17 +65,22 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
   const url = new URL("https://www.wikidata.org/w/api.php");
   url.searchParams.set("action", "wbgetentities");
   url.searchParams.set("ids", batch.map((b) => b.wikidata_qid).join("|"));
-  url.searchParams.set("props", "claims");
+  url.searchParams.set("props", "claims"); // P31 + P106 both live in claims
   url.searchParams.set("format", "json");
   const res = await fetchWithRetry(url, { headers: { "User-Agent": "Kynda/3.0 (brancato@gmail.com)" } });
   const entities = (await res.json()).entities || {};
   for (const row of batch) {
-    const p31s = (entities[row.wikidata_qid]?.claims?.P31 || [])
-      .map((c) => c.mainsnak?.datavalue?.value?.id).filter(Boolean);
+    const claims = entities[row.wikidata_qid]?.claims || {};
+    const p31s = (claims.P31 || []).map((c) => c.mainsnak?.datavalue?.value?.id).filter(Boolean);
     const hit = p31s.map((qid) => P31_MAP[qid]).find(Boolean);
     if (!hit) continue;
     const newKind = hit.kind;
-    const newDomain = hit.domain || row.domain;
+    let newDomain = hit.domain || row.domain;
+    if (newKind === "person" || newKind === "group") {
+      // First mapped occupation wins — Wikidata orders them by primacy.
+      const occ = (claims.P106 || []).map((c) => c.mainsnak?.datavalue?.value?.id).map((qid) => P106_MAP[qid]).find(Boolean);
+      if (occ) newDomain = occ;
+    }
     if (newKind === row.kind && newDomain === row.domain) continue;
     console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}`);
     fixed += 1;
