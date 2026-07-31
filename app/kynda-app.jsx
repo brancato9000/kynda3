@@ -67,10 +67,22 @@ function FactChip({ attribution }) {
     );
   }
   if (attribution.status === "not_found") {
+    // Two flavors (V3-50, Tony's call). A catalog that FOUND the work under
+    // a different creator has convicted — red, with the actual creator named.
+    // A plain miss is usually catalog coverage, not a lie — soft yellow ⚠.
+    const convicted = /credits/i.test(attribution.detail || "");
+    if (convicted) {
+      return (
+        <span title={`${attribution.detail} — this attribution appears to be wrong`}
+          style={{ ...chipBase, color: "rgba(248,113,113,0.85)", border: "1px solid rgba(248,113,113,0.35)" }}>
+          ✕ misattributed
+        </span>
+      );
+    }
     return (
-      <span title={`Not found in ${attribution.source} — this work may be misattributed`}
-        style={{ ...chipBase, color: "rgba(248,113,113,0.85)", border: "1px solid rgba(248,113,113,0.35)" }}>
-        ✕ failed fact-check
+      <span title={`Kynda can't verify this work against the ${attribution.source} database and would appreciate confirmation`}
+        style={{ ...chipBase, color: "rgba(250,204,21,0.8)", border: "1px solid rgba(250,204,21,0.3)", cursor: "help" }}>
+        ⚠
       </span>
     );
   }
@@ -489,7 +501,9 @@ function SlotCard({ slot, index, subject }) {
   const attribution = verification?.attribution;
   const connection = verification?.connection;
   const citations = verification?.citations || [];
-  const failed = attribution?.status === "not_found";
+  // Only convictions (catalog names a different creator) dim the card and
+  // warn below; a plain catalog miss is a soft ⚠ chip, nothing more (V3-50).
+  const failed = attribution?.status === "not_found" && /credits/i.test(attribution?.detail || "");
   return (
     <div style={{
       background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: "8px",
@@ -588,7 +602,7 @@ function SlotCard({ slot, index, subject }) {
       )}
       {failed && (
         <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.7)", lineHeight: 1.5 }}>
-          This attribution was checked against {attribution.source} and could not be confirmed. It may be wrong.
+          {attribution.detail} — this card's attribution appears to be wrong.
         </div>
       )}
       <ExperienceRow item={item} subjectName={subject?.name} />
