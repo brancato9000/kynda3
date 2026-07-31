@@ -1,6 +1,5 @@
 # Backlog — subjects queued for a future wave. Same "Category<TAB>Name"
 # format wave.mjs reads, so a wave can be cut straight from this file
 # (comment lines have no tab and are filtered out by the roster parser).
-# Keith Jarrett: Tony's pick (2026-07-31) — held because new music waits
-# for category balance (V3-51 reframe).
-Musicians	Keith Jarrett
+# (Keith Jarrett, the first entry, was seeded same-day at Tony's request —
+# 2026-07-31, $0.27 all-in: mix + Wikipedia harvest.)
