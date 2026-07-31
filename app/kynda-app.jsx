@@ -965,7 +965,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
           {[...new Set(indexedSubjects.map((s) => s.domain))].map((domain) => (
             <div key={domain} style={{ marginBottom: "18px" }}>
               <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: BASE.gold, marginBottom: "8px" }}>
-                {domain}
+                {/* Display label only — the stored domain stays 'other' */}
+                {domain === "other" ? "ideas" : domain}
               </div>
               {/* Creators and creations browse separately (V3-51): a person
                   and their work carry different influence signatures. */}
@@ -990,9 +991,6 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
                           borderRadius: "16px", padding: "5px 14px", textDecoration: "none",
                         }}>
                         {s.name}
-                        {wantWork && s.creator && (
-                          <span style={{ fontFamily: FONTS.mono, fontStyle: "normal", fontSize: "10px", color: "rgba(148,163,184,0.55)" }}> — {s.creator}</span>
-                        )}
                       </a>
                     ))}
                   </div>
