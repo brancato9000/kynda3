@@ -9,8 +9,9 @@
 
 import { callFable, callModel } from "../ai/anthropic.js";
 import { verifyReleaseGroup, getArtistMembers, norm } from "../entities/musicbrainz.js";
-import { verifyWorkByDescription } from "../entities/wikidata.js";
+import { verifyWorkByDescription, verifyWorkByCreatorProperty } from "../entities/wikidata.js";
 import { verifyBook } from "../entities/openlibrary.js";
+import { verifyGutenberg } from "../entities/gutendex.js";
 import { verifyFilm, verifyTvShow, tmdbConfigured } from "../entities/tmdb.js";
 import { getArticle, findMention } from "../entities/wikipedia.js";
 
@@ -220,6 +221,8 @@ const WIKIDATA_KEYWORDS = {
   architecture: ["building", "architecture", "tower", "museum", "house"],
   theater: ["play", "musical", "opera", "ballet"],
   dance: ["ballet", "dance", "choreograph", "dancer", "dance company"],
+  // Used for creator-property conviction gating, not the award-only path.
+  literature: ["book", "novel", "poem", "play", "essay", "dialogue", "epic", "poetry", "treatise", "short story", "novella"],
 };
 
 /**
@@ -247,6 +250,10 @@ export async function verifyAttribution(item) {
     }
 
     if (item.medium === "literature") {
+      // Layered (V3-48): Open Library is edition-literal and misses
+      // classics/translations. Wikidata models authorship as entity links
+      // (strong exactly where OL is weak), and Gutenberg backstops the
+      // public domain. Conviction only after all three miss.
       const result = await verifyBook(item.title, item.creator);
       if (result.verified) {
         return {
@@ -257,7 +264,18 @@ export async function verifyAttribution(item) {
           method: "openlibrary_search",
         };
       }
-      return { status: "not_found", source: "Open Library" };
+      const wd = await verifyWorkByCreatorProperty(item.title, item.creator, WIKIDATA_KEYWORDS.literature).catch(() => ({ found: false }));
+      if (wd.verified) {
+        return { status: "verified", source: "Wikidata", url: wd.url, detail: `${wd.property}: ${wd.creatorLabel}`, method: "wikidata_creator_property" };
+      }
+      if (wd.found) {
+        return { status: "not_found", source: "Wikidata", detail: `Wikidata credits ${wd.actualCreators.join(", ")}`, url: `https://www.wikidata.org/wiki/${wd.qid}` };
+      }
+      const pg = await verifyGutenberg(item.title, item.creator).catch(() => ({ verified: false }));
+      if (pg.verified) {
+        return { status: "verified", source: "Project Gutenberg", url: pg.url, detail: pg.title, method: "gutendex_search" };
+      }
+      return { status: "not_found", source: "Open Library · Wikidata · Gutenberg" };
     }
 
     // Film & TV (V3-46): TMDb is a real catalog — deterministic
@@ -280,6 +298,18 @@ export async function verifyAttribution(item) {
 
     const keywords = WIKIDATA_KEYWORDS[item.medium];
     if (keywords) {
+      // Property check first (V3-48): entity-linked authorship can verify
+      // AND convict — a found work crediting a different creator is real
+      // misattribution evidence, with the actual creator named.
+      const prop = await verifyWorkByCreatorProperty(item.title, item.creator, keywords).catch(() => ({ found: false }));
+      if (prop.verified) {
+        return { status: "verified", source: "Wikidata", url: prop.url, detail: `${prop.property}: ${prop.creatorLabel}`, method: "wikidata_creator_property" };
+      }
+      if (prop.found) {
+        return { status: "not_found", source: "Wikidata", detail: `Wikidata credits ${prop.actualCreators.join(", ")}`, url: `https://www.wikidata.org/wiki/${prop.qid}` };
+      }
+      // Absent from Wikidata's typed claims → fall back to the award-only
+      // description check; a miss there stays unchecked, never red.
       const result = await verifyWorkByDescription(item.title, item.creator, keywords);
       if (result.verified) {
         return {
@@ -290,7 +320,6 @@ export async function verifyAttribution(item) {
           method: "wikidata_description",
         };
       }
-      // Award-only: a Wikidata description miss is weak evidence — unchecked, not red.
       return { status: "skipped", reason: "no confident Wikidata match; this check awards but never convicts" };
     }
 

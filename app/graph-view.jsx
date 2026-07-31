@@ -23,6 +23,7 @@ const CLAIM_LABELS = {
   collaborated_with: "collaboration", produced_by: "production", member_of: "membership",
   covers: "cover", covered_by: "covered by", used_gear: "gear", recorded_at: "recorded at",
   founded: "founded", taught_at: "taught at", studied_under: "studied under",
+  created_by: "created by",
 };
 
 export default function GraphView({ data, subjectName, onNavigate }) {

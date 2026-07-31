@@ -17,6 +17,7 @@ try {
 } catch { /* env */ }
 
 const { verifyAttribution } = await import("../src/lib/pipeline/mix.js");
+const MEDIA = new Set((process.argv[2] || "film,television").split(","));
 const { tmdbConfigured } = await import("../src/lib/entities/tmdb.js");
 const { q, getPool } = await import("../src/lib/db.js");
 
@@ -34,7 +35,7 @@ for (const row of mixes.rows) {
   for (const slot of slots) {
     for (const cand of slot.candidates || []) {
       const item = cand.item;
-      if (!item || (item.medium !== "film" && item.medium !== "television")) continue;
+      if (!item || !MEDIA.has(item.medium)) continue;
       const prior = cand.verification?.attribution?.status || "none";
       const fresh = await verifyAttribution(item);
       checked += 1;

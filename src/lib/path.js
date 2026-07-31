@@ -24,6 +24,7 @@ export const HOP_PHRASES = {
   founded: "founded",
   taught_at: "taught at",
   studied_under: "studied under",
+  created_by: "was created by",
 };
 
 /**

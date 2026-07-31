@@ -51,6 +51,116 @@ export async function verifyWorkByDescription(title, creator, mediumKeywords) {
   return { verified: false };
 }
 
+// Creator-shaped Wikidata properties (V3-48): authorship modeled as typed
+// entity links, not description prose. This is what makes the check strong
+// enough to CONVICT when a found work names a different creator.
+const CREATOR_PROPS = {
+  P50: "author", P170: "creator", P84: "architect", P57: "director",
+  P58: "screenwriter", P86: "composer", P110: "illustrator",
+  P287: "designed by", P1809: "choreographer",
+};
+
+/** Loose-but-honest name equality: exact normalized match, or every token of
+ * the shorter name appearing in the longer ("Picasso" ≈ "Pablo Picasso"). */
+export function creatorNameMatches(a, b, norm) {
+  const na = norm(a), nb = norm(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  const [short, long] = na.length <= nb.length ? [na, nb] : [nb, na];
+  const longTokens = new Set(long.split(" "));
+  return short.split(" ").every((t) => longTokens.has(t));
+}
+
+/**
+ * Entity-property attribution check (V3-48): find the WORK on Wikidata and
+ * read its creator-shaped claims. Three verdicts:
+ *   { verified: true, qid, property }          — creator entity matches
+ *   { found: true, actualCreators: [...] }     — work found, creator differs → caller convicts
+ *   { found: false }                            — work absent → caller stays award-only
+ */
+const stripArticle = (s) => String(s || "").replace(/^(the|a|an)\s+/i, "");
+
+export async function verifyWorkByCreatorProperty(title, creator, mediumKeywords = null) {
+  const { norm } = await import("./musicbrainz.js");
+  // Generic titles ("Republic") drown among homonyms; try the title as
+  // given, then the article-stripped/article-added variant.
+  let candidates = await searchEntity(title, 10);
+  const variant = stripArticle(title) === title ? `The ${title}` : stripArticle(title);
+  if (variant.toLowerCase() !== title.toLowerCase()) {
+    const more = await searchEntity(variant, 6);
+    const seen = new Set(candidates.map((c) => c.qid));
+    candidates = candidates.concat(more.filter((c) => !seen.has(c.qid)));
+  }
+  if (!candidates.length) return { found: false };
+
+  const entities = await rateLimited(async () => {
+    const url = new URL("https://www.wikidata.org/w/api.php");
+    url.searchParams.set("action", "wbgetentities");
+    url.searchParams.set("ids", candidates.map((c) => c.qid).join("|"));
+    url.searchParams.set("props", "claims");
+    url.searchParams.set("format", "json");
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
+    if (!res.ok) throw new Error(`Wikidata ${res.status}`);
+    return (await res.json()).entities || {};
+  });
+
+  // Gather creator-property target QIDs per candidate work.
+  const perWork = [];
+  const allTargets = new Set();
+  for (const c of candidates) {
+    const claims = entities[c.qid]?.claims || {};
+    const targets = [];
+    for (const [prop, label] of Object.entries(CREATOR_PROPS)) {
+      for (const cl of claims[prop] || []) {
+        const qid = cl.mainsnak?.datavalue?.value?.id;
+        if (qid) { targets.push({ qid, prop, propLabel: label }); allTargets.add(qid); }
+      }
+    }
+    if (targets.length) perWork.push({ work: c, targets });
+  }
+  if (!perWork.length) return { found: false };
+
+  const labels = await rateLimited(async () => {
+    const url = new URL("https://www.wikidata.org/w/api.php");
+    url.searchParams.set("action", "wbgetentities");
+    url.searchParams.set("ids", [...allTargets].slice(0, 50).join("|"));
+    url.searchParams.set("props", "labels");
+    url.searchParams.set("languages", "en");
+    url.searchParams.set("format", "json");
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
+    if (!res.ok) throw new Error(`Wikidata ${res.status}`);
+    const data = (await res.json()).entities || {};
+    return Object.fromEntries(Object.entries(data).map(([qid, e]) => [qid, e.labels?.en?.value || null]));
+  });
+
+  for (const { work, targets } of perWork) {
+    for (const t of targets) {
+      const name = labels[t.qid];
+      if (name && creatorNameMatches(creator, name, norm)) {
+        return {
+          verified: true, qid: work.qid,
+          url: `https://www.wikidata.org/wiki/${work.qid}`,
+          property: t.propLabel, creatorLabel: name,
+          description: work.description,
+        };
+      }
+    }
+  }
+  // CONVICTION requires medium context (the Revelations/Ailey lesson): a
+  // homonym pool full of other-medium works proves nothing about this one.
+  // Only candidates whose description matches the medium may convict; if
+  // none do, the work is simply absent → award-only.
+  const convictable = mediumKeywords
+    ? perWork.filter(({ work }) => {
+        const d = norm(work.description || "");
+        return d && mediumKeywords.some((k) => d.includes(k));
+      })
+    : perWork;
+  if (!convictable.length) return { found: false };
+  const actualCreators = [...new Set(convictable.flatMap(({ targets }) => targets.map((t) => labels[t.qid])).filter(Boolean))].slice(0, 4);
+  return { found: true, actualCreators, qid: convictable[0].work.qid };
+}
+
 /**
  * Search Wikidata entities by label. Returns real candidates with QIDs and
  * descriptions — the raw material for retrieval-first disambiguation

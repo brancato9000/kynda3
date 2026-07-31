@@ -697,7 +697,7 @@ export async function actOnContribution(id, action) {
 // studied_under IS influence lineage — in dance especially, the form
 // transmits teacher-to-body — so it renders as a predecessor edge.
 export const PREDECESSOR_TYPES = ["influenced_by", "cited_as_influence", "cross_medium_influence", "studied_under"];
-export const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at", "founded", "taught_at"];
+export const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at", "founded", "taught_at", "created_by"];
 
 export async function getGraphForSubject(subject) {
   if (!dbConfigured()) return null;

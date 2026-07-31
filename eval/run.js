@@ -16,7 +16,7 @@ import { quoteMatch } from "../src/lib/verify/quoteMatch.js";
 import { findMention } from "../src/lib/entities/wikipedia.js";
 import { htmlToText } from "../src/lib/verify/evidence.js";
 import { rateLimit } from "../src/lib/guard.js";
-import { sanitizeReason } from "../src/lib/pipeline/mix.js";
+import { sanitizeReason, verifyAttribution } from "../src/lib/pipeline/mix.js";
 import { validEntityShape, HARVEST_SCHEMA } from "../src/lib/pipeline/harvest.js";
 import { PREDECESSOR_TYPES, PEER_TYPES } from "../src/lib/store.js";
 import { CLAIM_SLOTS, pageNamesEntity } from "../src/lib/pipeline/contribute-card.js";
@@ -27,7 +27,7 @@ import { findPath, HOP_PHRASES } from "../src/lib/path.js";
 import { scoreMixResult } from "./scoring.js";
 import { searchArtist, verifyReleaseGroup, getArtistMembers, norm } from "../src/lib/entities/musicbrainz.js";
 import { verifyFilm, tmdbConfigured } from "../src/lib/entities/tmdb.js";
-import { searchEntity } from "../src/lib/entities/wikidata.js";
+import { searchEntity, creatorNameMatches } from "../src/lib/entities/wikidata.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OFFLINE = process.argv.includes("--offline");
@@ -199,6 +199,15 @@ function testQuoteMatch() {
   check("every claim type has a hop phrase",
     claimProps.claimType.enum.concat(["used_gear", "recorded_at"]).every((t) => !!HOP_PHRASES[t]));
 
+  // Domain verifiers (V3-48): the name matcher behind the Wikidata
+  // creator-property check.
+  const nrm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  check("creatorNameMatches: exact, subset, and rejection cases",
+    creatorNameMatches("Picasso", "Pablo Picasso", nrm) &&
+    creatorNameMatches("Frank Lloyd Wright", "Frank Lloyd Wright", nrm) &&
+    !creatorNameMatches("Salvador Dalí", "Pablo Picasso", nrm) &&
+    !creatorNameMatches("", "Plato", nrm));
+
   check("videoTitleMatches requires both coverer and song in the title",
     videoTitleMatches("Talking Heads - Take Me To The River (Live from Rome 1980)", "Talking Heads", "Take Me to the River") &&
     videoTitleMatches("Jeff Buckley — Hallelujah (Official Video)", "Jeff Buckley", "Hallelujah") &&
@@ -256,6 +265,17 @@ async function testScoring(subjects) {
 // ── Stage 4: live verification ──────────────────────────────────────────────
 async function testLive(subjects) {
   console.log("\nStage 4 — live verification (MusicBrainz / Wikidata)");
+
+  // Domain verifiers (V3-48): classics verify through the layered literature
+  // path; a real work with a wrong creator convicts naming the actual; a
+  // homonym pool without the medium never falsely convicts.
+  const republic = await verifyAttribution({ title: "Republic", creator: "Plato", medium: "literature" });
+  check("literature: 'Republic' by Plato verifies through the layered path", republic.status === "verified", republic.detail || republic.reason);
+  const mobyTrap = await verifyAttribution({ title: "Moby-Dick", creator: "Charles Dickens", medium: "literature" });
+  check("literature trap: Moby-Dick/Dickens convicts naming Melville",
+    mobyTrap.status === "not_found" && /Melville/.test(mobyTrap.detail || ""), mobyTrap.detail);
+  const ailey = await verifyAttribution({ title: "Revelations", creator: "Alvin Ailey", medium: "dance" });
+  check("dance: homonym pool without the ballet stays unchecked, never falsely convicts", ailey.status !== "not_found", ailey.status);
 
   // TMDb film/TV verification (V3-46): true attribution passes, the trap
   // convicts WITH the actual director named. Gated on the key being present.

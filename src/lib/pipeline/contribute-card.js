@@ -27,6 +27,7 @@ export const CLAIM_SLOTS = {
   taught_at: "collaborator",
   covers: "legacy",
   covered_by: "legacy",
+  created_by: "collaborator",
   used_gear: "culture",
   recorded_at: "geography",
 };
