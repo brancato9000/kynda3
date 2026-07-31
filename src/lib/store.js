@@ -10,7 +10,7 @@ import { norm } from "./entities/musicbrainz.js";
 import { findPath } from "./path.js";
 
 const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "fashion", "other"]);
-const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "other"]);
+const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "concept", "other"]);
 
 const domainOf = (d) => (DOMAINS.has(d) ? d : "other");
 const kindOf = (k) => (KINDS.has(k) ? k : "other");
