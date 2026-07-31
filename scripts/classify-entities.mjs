@@ -20,6 +20,7 @@ try {
 } catch { /* env */ }
 
 const { fetchWithRetry } = await import("../src/lib/entities/net.js");
+const { searchEntity } = await import("../src/lib/entities/wikidata.js");
 const { q, getPool } = await import("../src/lib/db.js");
 const DRY = process.argv.includes("--dry");
 
@@ -41,7 +42,7 @@ const P31_MAP = {
 // disambiguation labels anyone with an MB presence as music (Homer! Fosse!).
 // Wikidata's ordered occupation list corrects the browsing domain.
 const P106_MAP = {
-  Q2500638: "dance", Q5716684: "dance",           // choreographer, dancer
+  Q2490358: "dance", Q5716684: "dance",           // choreographer (the QID that actually appears on Astaire/Fosse/Robbins/Bausch), dancer
   Q3501317: "fashion",                             // fashion designer
   Q42973: "architecture",                          // architect
   Q2526255: "film", Q3455803: "film", Q28389: "film", // film director, director, screenwriter
@@ -52,13 +53,92 @@ const P106_MAP = {
   Q947873: "television", Q578109: "television",    // presenter, TV producer
 };
 
+// V3-51 follow-up: "first mapped occupation wins" drifted — TV creators
+// carry screenwriter/film credits ahead of TV-producer (Bochco → film) and
+// dancers surface via actor/singer credits (Astaire). But a blanket
+// priority list overshoots the other way: Hitchcock has a TV-producer
+// credit, Michelangelo an architect one, Bowie literally lists painter
+// FIRST. The tiers that fit the data:
+//   1. choreographer is never a secondary credit → absolute priority
+//      (plain "dancer" IS one — Prince has it; Astaire/Fosse/Robbins/
+//      Bausch all carry choreographer Q2490358, Prince doesn't);
+//   2. dance/fashion otherwise win — unless music is present (Prince,
+//      Tyler, the Creator);
+//   3. Wikidata's first occupation carries real primacy when it's a strong
+//      primary (film director, architect, composer) — keeps Hitchcock and
+//      Godard film while Bochco/Weiner/Brooks (screenwriter-first) move on;
+//   4. television beats the scatter that screenwriter/producer credits
+//      create (Bochco, Lear, Groening → television);
+//   5. the entity's current domain stands when the occupation set agrees
+//      with it — category rosters seeded domains correctly, so only
+//      inconsistent labels are drift (keeps Bowie music despite painter,
+//      Michelangelo art despite architect);
+//   6. else first mapped occupation, as before.
+const PRIMARY_OCCS = new Set(["Q2526255", "Q42973", "Q36834"]); // film director, architect, composer
+const ABSOLUTE_OCCS = new Set(["Q2490358"]); // choreographer
+
+function personDomain(claims, current) {
+  const occs = (claims.P106 || []).map((c) => c.mainsnak?.datavalue?.value?.id).filter((qid) => P106_MAP[qid]);
+  if (!occs.length) return null;
+  const domains = occs.map((qid) => P106_MAP[qid]);
+  const absolute = occs.find((qid) => ABSOLUTE_OCCS.has(qid));
+  if (absolute) return P106_MAP[absolute];
+  if (domains.includes("dance") && !domains.includes("music")) return "dance";
+  if (domains.includes("fashion") && !domains.includes("music")) return "fashion";
+  if (PRIMARY_OCCS.has(occs[0])) return P106_MAP[occs[0]];
+  if (domains.includes("television")) return "television";
+  if (domains.includes(current)) return current;
+  return domains[0];
+}
+
 // Only subjects (mixed entities) — the browsing surface Tony sees.
 const subjects = await q(`
   SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.wikidata_qid
   FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
   WHERE e.wikidata_qid IS NOT NULL`);
 
-console.log(`${subjects.rows.length} subjects with QIDs to check${DRY ? " (dry)" : ""}`);
+// QID backfill (V3-51 follow-up): the MusicBrainz-first drift left the
+// worst-labeled subjects with NO QID at all (Fosse, Astaire, Lear — the
+// exact cases this script exists to fix), so classification skipped them.
+// Resolve conservatively: exact label match AND the top hit is a human
+// (checked via P31 in the main loop). A wrong QID is worse than none —
+// bands and homonym traps (Psycho the group, V3-08) stay unresolved.
+const noQid = await q(`
+  SELECT DISTINCT e.id, e.name, e.kind, e.domain
+  FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
+  WHERE e.wikidata_qid IS NULL`);
+// Homonym traps checked against the mix payloads: OUR Paul Taylor is the
+// smooth-jazz saxophonist and OUR John Meyer the Dutch garage guitarist
+// (Arthur & the Cronies) — neither is on Wikidata; the exact-label hits
+// are strangers (a power-electronics musician, an Australian politician).
+const NOT_ON_WIKIDATA = new Set(["Paul Taylor", "John Meyer"]);
+for (const row of noQid.rows) {
+  if (NOT_ON_WIKIDATA.has(row.name)) continue;
+  const exact = (await searchEntity(row.name, 5)).filter((h) => (h.label || "").toLowerCase() === row.name.toLowerCase());
+  if (!exact.length) continue;
+  // Among exact-label hits, take the first HUMAN with a mapped occupation:
+  // skips "Homer (male given name)" for Q6691 the poet, and rejects the
+  // bishops that "Miguel" surfaces instead of the R&B singer.
+  const url = new URL("https://www.wikidata.org/w/api.php");
+  url.searchParams.set("action", "wbgetentities");
+  url.searchParams.set("ids", exact.map((h) => h.qid).join("|"));
+  url.searchParams.set("props", "claims");
+  url.searchParams.set("format", "json");
+  const res = await fetchWithRetry(url, { headers: { "User-Agent": "Kynda/3.0 (brancato@gmail.com)" } });
+  const cand = (await res.json()).entities || {};
+  const hit = exact.find((h) => {
+    const c = cand[h.qid]?.claims || {};
+    return (c.P31 || []).some((x) => x.mainsnak?.datavalue?.value?.id === "Q5")
+      && (c.P106 || []).some((x) => P106_MAP[x.mainsnak?.datavalue?.value?.id]);
+  });
+  if (!hit) continue;
+  const taken = await q("SELECT id FROM entities WHERE wikidata_qid = $1", [hit.qid]);
+  if (taken.rows.length) continue; // duplicate entity — dedupe's job, not ours
+  subjects.rows.push({ ...row, wikidata_qid: hit.qid, resolved: hit.description || "?" });
+  await new Promise((r) => setTimeout(r, 300));
+}
+
+console.log(`${subjects.rows.length} subjects to check (${noQid.rows.length} lacked QIDs)${DRY ? " (dry)" : ""}`);
 let fixed = 0;
 for (let i = 0; i < subjects.rows.length; i += 40) {
   const batch = subjects.rows.slice(i, i + 40);
@@ -72,19 +152,22 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
   for (const row of batch) {
     const claims = entities[row.wikidata_qid]?.claims || {};
     const p31s = (claims.P31 || []).map((c) => c.mainsnak?.datavalue?.value?.id).filter(Boolean);
+    if (row.resolved && !p31s.includes("Q5")) continue; // backfill accepts humans only
     const hit = p31s.map((qid) => P31_MAP[qid]).find(Boolean);
     if (!hit) continue;
     const newKind = hit.kind;
     let newDomain = hit.domain || row.domain;
     if (newKind === "person" || newKind === "group") {
-      // First mapped occupation wins — Wikidata orders them by primacy.
-      const occ = (claims.P106 || []).map((c) => c.mainsnak?.datavalue?.value?.id).map((qid) => P106_MAP[qid]).find(Boolean);
+      const occ = personDomain(claims, row.domain);
       if (occ) newDomain = occ;
     }
-    if (newKind === row.kind && newDomain === row.domain) continue;
-    console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}`);
+    if (newKind === row.kind && newDomain === row.domain && !row.resolved) continue;
+    console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}${row.resolved ? ` [+${row.wikidata_qid}: ${row.resolved}]` : ""}`);
     fixed += 1;
-    if (!DRY) await q("UPDATE entities SET kind = $2, domain = $3 WHERE id = $1", [row.id, newKind, newDomain]);
+    if (!DRY) {
+      if (row.resolved) await q("UPDATE entities SET wikidata_qid = COALESCE(wikidata_qid, $2) WHERE id = $1", [row.id, row.wikidata_qid]);
+      await q("UPDATE entities SET kind = $2, domain = $3 WHERE id = $1", [row.id, newKind, newDomain]);
+    }
   }
   await new Promise((r) => setTimeout(r, 700));
 }
