@@ -93,7 +93,7 @@ function personDomain(claims, current) {
 
 // Only subjects (mixed entities) — the browsing surface Tony sees.
 const subjects = await q(`
-  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.wikidata_qid
+  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override, e.wikidata_qid
   FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
   WHERE e.wikidata_qid IS NOT NULL`);
 
@@ -104,7 +104,7 @@ const subjects = await q(`
 // (checked via P31 in the main loop). A wrong QID is worse than none —
 // bands and homonym traps (Psycho the group, V3-08) stay unresolved.
 const noQid = await q(`
-  SELECT DISTINCT e.id, e.name, e.kind, e.domain
+  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override
   FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
   WHERE e.wikidata_qid IS NULL`);
 // Homonym traps checked against the mix payloads: OUR Paul Taylor is the
@@ -156,8 +156,10 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
     const hit = p31s.map((qid) => P31_MAP[qid]).find(Boolean);
     if (!hit) continue;
     const newKind = hit.kind;
-    let newDomain = hit.domain || row.domain;
-    if (newKind === "person" || newKind === "group") {
+    // An admin override (V3-53, scripts/override-domain.mjs) pins the
+    // browsing domain — hygiene never recomputes it.
+    let newDomain = row.domain_override || hit.domain || row.domain;
+    if (!row.domain_override && (newKind === "person" || newKind === "group")) {
       const occ = personDomain(claims, row.domain);
       if (occ) newDomain = occ;
     }
