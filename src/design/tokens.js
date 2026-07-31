@@ -64,6 +64,8 @@ export const CONFIDENCE_COLORS = {
 // Typewriter pacing (DD-02): ms per word, delay before start.
 export const REVEAL_TIMING = {
   bio: { msPerWord: 55, delayMs: 400 },
-  intro: { msPerWord: 45, delayMs: 900 },
+  // intro is SEQUENCED after the bio finishes (V3-54) — its delay is the
+  // breathing gap between the two reveals, not an offset from page load.
+  intro: { msPerWord: 45, delayMs: 400 },
   connectionContext: { msPerWord: 40, delayMs: 100 },
 };

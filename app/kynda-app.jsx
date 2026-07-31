@@ -9,23 +9,28 @@ import { slugify } from "../src/lib/slug.js";
 const SLOT_BY_ID = Object.fromEntries(MIX_SLOT_TYPES.map((s) => [s.id, s]));
 
 // ─── Typewriter (kynda2 DD-02) ────────────────────────────────
-function RevealText({ text, msPerWord = 45, delayMs = 400, style }) {
+// `start` gates the reveal without unmounting — the transparent words keep
+// their layout space, so sequenced text never shifts the page (V3-54).
+// `onDone` fires when the last word is shown, letting reveals chain.
+function RevealText({ text, msPerWord = 45, delayMs = 400, style, start = true, onDone }) {
   const [count, setCount] = useState(0);
   const words = (text || "").split(" ");
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
   useEffect(() => {
     setCount(0);
-    if (!text) return;
+    if (!text || !start) return;
     let i = 0;
     let interval;
     const timeout = setTimeout(() => {
       interval = setInterval(() => {
         i += 1;
         setCount(i);
-        if (i >= words.length) clearInterval(interval);
+        if (i >= words.length) { clearInterval(interval); onDoneRef.current?.(); }
       }, msPerWord);
     }, delayMs);
     return () => { clearTimeout(timeout); clearInterval(interval); };
-  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [text, start]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span style={style}>
       {words.map((w, i) => (
@@ -614,8 +619,12 @@ function SlotCard({ slot, index, subject }) {
 // ─── Subject / disambiguation UI ──────────────────────────────
 // Bio is QUOTED from Wikipedia, never generated (V3-15). The metadata line
 // only shows database fields (MusicBrainz life-span, catalog descriptions).
-function SubjectCard({ subject }) {
+function SubjectCard({ subject, onBioDone }) {
   const [copied, setCopied] = useState(false);
+  // No bio to reveal → the sequence gate opens immediately.
+  useEffect(() => {
+    if (!subject.bio?.text) onBioDone?.();
+  }, [subject.name]); // eslint-disable-line react-hooks/exhaustive-deps
   function share() {
     const url = `${window.location.origin}/s/${slugify(subject.name)}`;
     navigator.clipboard?.writeText(url).then(() => {
@@ -645,6 +654,7 @@ function SubjectCard({ subject }) {
       {subject.bio?.text ? (
         <>
           <RevealText text={subject.bio.text} msPerWord={REVEAL_TIMING.bio.msPerWord} delayMs={REVEAL_TIMING.bio.delayMs}
+            onDone={onBioDone}
             style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.8)" }} />
           <div style={{ marginTop: "10px" }}>
             <a href={subject.bio.url} target="_blank" rel="noreferrer"
@@ -727,6 +737,9 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
   const [alternatives, setAlternatives] = useState([]);
   const [tier, setTier] = useState(null);
   const [intro, setIntro] = useState(null);
+  // Sequenced load (V3-54): the Wikipedia bio reveals first; the mix intro
+  // waits for it. One thing at a time — the eye needs a single track.
+  const [bioDone, setBioDone] = useState(false);
   const [slots, setSlots] = useState([]);
   const [done, setDone] = useState(false);
   const [tab, setTab] = useState("mix");
@@ -847,7 +860,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     setAlternatives([]);
     setTier("certain");
     setPhase("mixing");
-    setIntro(null); setSlots([]); setDone(false); setError(null);
+    setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false);
     setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     fireMix(subj, run);
   }, [fireMix]);
@@ -869,7 +882,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     const run = ++runRef.current;
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
-    setIntro(null); setSlots([]); setDone(false);
+    setIntro(null); setSlots([]); setDone(false); setBioDone(false);
     setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     try {
       const res = await fetch("/api/disambiguate", {
@@ -1035,7 +1048,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
 
       {phase === "mixing" && subject && (
         <>
-          <SubjectCard subject={subject} />
+          <SubjectCard subject={subject} onBioDone={() => setBioDone(true)} />
           {tier === "likely" && alternatives.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
               <span style={{ fontFamily: FONTS.mono, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(148,163,184,0.6)" }}>
@@ -1096,7 +1109,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
 
           {tab === "mix" && intro && (
             <div style={{ marginBottom: "28px" }}>
-              <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={100}
+              <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={REVEAL_TIMING.intro.delayMs}
+                start={bioDone}
                 style={{ fontFamily: FONTS.display, fontSize: "19px", fontStyle: "italic", lineHeight: 1.6, color: "rgba(226,232,240,0.9)" }} />
             </div>
           )}
