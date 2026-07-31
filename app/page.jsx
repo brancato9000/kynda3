@@ -13,8 +13,16 @@ export default async function Page() {
   try {
     const subjects = await listSubjects();
     indexedSubjects = subjects
-      .map((s) => ({ name: s.name, domain: s.domain || "other", slug: slugify(s.name) }))
-      .sort((a, b) => a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name));
+      .map((s) => ({
+        name: s.name,
+        domain: s.domain || "other",
+        slug: slugify(s.name),
+        // Creators vs creations (V3-51): the browse experience keeps them
+        // distinct — a person and their work have different signatures.
+        isWork: s.kind === "work",
+        creator: s.creator || null,
+      }))
+      .sort((a, b) => a.domain.localeCompare(b.domain) || (a.isWork === b.isWork ? a.name.localeCompare(b.name) : a.isWork ? 1 : -1));
   } catch {
     // no database → no index; search still works
   }

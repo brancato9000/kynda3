@@ -29,7 +29,7 @@ export const HARVEST_SCHEMA = {
         properties: {
           subjectName: { type: "string" },
           subjectKind: { type: "string", enum: ["person", "group", "work", "other"] },
-          subjectDomain: { type: "string", enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"] },
+          subjectDomain: { type: "string", enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "fashion", "other"] },
           targetTitle: { type: "string" },
           targetKind: { type: "string", enum: ["work", "artist", "movement", "institution", "other"] },
           targetCreator: { type: "string" },

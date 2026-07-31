@@ -967,18 +967,37 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
               <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: BASE.gold, marginBottom: "8px" }}>
                 {domain}
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {indexedSubjects.filter((s) => s.domain === domain).map((s) => (
-                  <a key={s.slug} href={`/s/${s.slug}`}
-                    style={{
-                      fontFamily: FONTS.body, fontSize: "13px", color: "rgba(226,232,240,0.85)",
-                      background: BASE.surfaceRaised, border: "1px solid rgba(255,255,255,0.09)",
-                      borderRadius: "16px", padding: "5px 14px", textDecoration: "none",
-                    }}>
-                    {s.name}
-                  </a>
-                ))}
-              </div>
+              {/* Creators and creations browse separately (V3-51): a person
+                  and their work carry different influence signatures. */}
+              {[false, true].map((wantWork) => {
+                const group = indexedSubjects.filter((s) => s.domain === domain && !!s.isWork === wantWork);
+                if (!group.length) return null;
+                return (
+                  <div key={String(wantWork)} style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginBottom: "6px" }}>
+                    {wantWork && (
+                      <span style={{ fontFamily: FONTS.mono, fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.4)" }}>
+                        works
+                      </span>
+                    )}
+                    {group.map((s) => (
+                      <a key={s.slug} href={`/s/${s.slug}`}
+                        style={{
+                          fontFamily: wantWork ? FONTS.display : FONTS.body,
+                          fontStyle: wantWork ? "italic" : "normal",
+                          fontSize: wantWork ? "13.5px" : "13px", color: "rgba(226,232,240,0.85)",
+                          background: wantWork ? "rgba(255,255,255,0.015)" : BASE.surfaceRaised,
+                          border: wantWork ? "1px dashed rgba(255,255,255,0.12)" : "1px solid rgba(255,255,255,0.09)",
+                          borderRadius: "16px", padding: "5px 14px", textDecoration: "none",
+                        }}>
+                        {s.name}
+                        {wantWork && s.creator && (
+                          <span style={{ fontFamily: FONTS.mono, fontStyle: "normal", fontSize: "10px", color: "rgba(148,163,184,0.55)" }}> — {s.creator}</span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>

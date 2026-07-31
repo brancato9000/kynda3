@@ -9,7 +9,7 @@ import { q, dbConfigured } from "./db.js";
 import { norm } from "./entities/musicbrainz.js";
 import { findPath } from "./path.js";
 
-const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"]);
+const DOMAINS = new Set(["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "fashion", "other"]);
 const KINDS = new Set(["person", "group", "work", "release", "recording", "film", "tv_show", "book", "place", "other"]);
 
 const domainOf = (d) => (DOMAINS.has(d) ? d : "other");
@@ -624,7 +624,7 @@ export async function listSubjects() {
   if (!dbConfigured()) return [];
   const r = await q(
     `SELECT DISTINCT ON (e.id) e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid,
-            m.payload->>'intro' AS intro
+            e.metadata->>'creator' AS creator, m.payload->>'intro' AS intro
      FROM entities e JOIN mixes m ON m.subject_entity_id = e.id
      ORDER BY e.id, m.created_at DESC`
   );
