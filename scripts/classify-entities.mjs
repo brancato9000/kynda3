@@ -93,7 +93,7 @@ function personDomain(claims, current) {
 
 // Only subjects (mixed entities) — the browsing surface Tony sees.
 const subjects = await q(`
-  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override, e.wikidata_qid
+  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override, e.year_start, e.year_end, e.wikidata_qid
   FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
   WHERE e.wikidata_qid IS NOT NULL`);
 
@@ -104,7 +104,7 @@ const subjects = await q(`
 // (checked via P31 in the main loop). A wrong QID is worse than none —
 // bands and homonym traps (Psycho the group, V3-08) stay unresolved.
 const noQid = await q(`
-  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override
+  SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.domain_override, e.year_start, e.year_end
   FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
   WHERE e.wikidata_qid IS NULL`);
 // Homonym traps checked against the mix payloads: OUR Paul Taylor is the
@@ -163,12 +163,28 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
       const occ = personDomain(claims, row.domain);
       if (occ) newDomain = occ;
     }
-    if (newKind === row.kind && newDomain === row.domain && !row.resolved) continue;
-    console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}${row.resolved ? ` [+${row.wikidata_qid}: ${row.resolved}]` : ""}`);
+    // Years from Wikidata (V3-57): birth/death for people, inception/
+    // dissolution for groups, publication or inception for works. Fills
+    // gaps only — an existing year (e.g. MusicBrainz life-span) stands.
+    const wdYear = (pid) => {
+      const t = (claims[pid] || [])[0]?.mainsnak?.datavalue?.value?.time;
+      const m = t?.match(/^([+-]\d{1,6})/);
+      return m ? parseInt(m[1], 10) : null;
+    };
+    const ys = newKind === "person" ? wdYear("P569") : newKind === "group" ? wdYear("P571") : wdYear("P577") ?? wdYear("P571");
+    const ye = newKind === "person" ? wdYear("P570") : newKind === "group" ? wdYear("P576") : null;
+    const fillYs = row.year_start == null && ys != null;
+    const fillYe = row.year_end == null && ye != null;
+    if (newKind === row.kind && newDomain === row.domain && !fillYs && !fillYe && !row.resolved) continue;
+    const yearNote = fillYs || fillYe ? ` [${fillYs ? ys : row.year_start}–${fillYe ? ye : row.year_end ?? ""}]` : "";
+    console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}${yearNote}${row.resolved ? ` [+${row.wikidata_qid}: ${row.resolved}]` : ""}`);
     fixed += 1;
     if (!DRY) {
       if (row.resolved) await q("UPDATE entities SET wikidata_qid = COALESCE(wikidata_qid, $2) WHERE id = $1", [row.id, row.wikidata_qid]);
-      await q("UPDATE entities SET kind = $2, domain = $3 WHERE id = $1", [row.id, newKind, newDomain]);
+      await q(
+        "UPDATE entities SET kind = $2, domain = $3, year_start = COALESCE(year_start, $4), year_end = COALESCE(year_end, $5) WHERE id = $1",
+        [row.id, newKind, newDomain, ys, ye]
+      );
     }
   }
   await new Promise((r) => setTimeout(r, 700));
