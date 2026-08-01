@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FONTS, BASE } from "../../src/design/tokens.js";
+import Wordmark from "../../src/design/wordmark.jsx";
 
 const mono = (size = "11px", color = "rgba(148,163,184,0.7)") => ({
   fontFamily: FONTS.mono, fontSize: size, color, letterSpacing: "0.04em",
@@ -59,7 +60,7 @@ export default function Admin() {
   if (!token) {
     return (
       <main style={{ maxWidth: "420px", margin: "120px auto", padding: "0 24px" }}>
-        <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "32px" }}>Kynda <span style={{ color: BASE.gold }}>admin</span></h1>
+        <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "32px" }}><Wordmark /> <span style={{ color: BASE.gold }}>admin</span></h1>
         <form onSubmit={(e) => { e.preventDefault(); setToken(input); }}>
           <input type="password" placeholder="admin token" value={input} onChange={(e) => setInput(e.target.value)}
             style={{ width: "100%", boxSizing: "border-box", background: BASE.surfaceRaised, border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "12px 16px", fontSize: "14px", color: "#e2e8f0", outline: "none", margin: "16px 0 10px" }} />
@@ -76,7 +77,7 @@ export default function Admin() {
   return (
     <main style={{ maxWidth: "980px", margin: "0 auto", padding: "48px 24px 120px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "28px" }}>
-        <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "36px", margin: 0 }}>Kynda <span style={{ color: BASE.gold }}>admin</span></h1>
+        <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "36px", margin: 0 }}><Wordmark /> <span style={{ color: BASE.gold }}>admin</span></h1>
         <button onClick={() => load(token)} style={{ ...mono("11px", BASE.gold), background: "none", border: "1px solid rgba(250,204,21,0.3)", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", textTransform: "uppercase" }}>refresh</button>
       </div>
 

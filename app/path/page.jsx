@@ -5,6 +5,7 @@
 import { getPathBetween } from "../../src/lib/store.js";
 import { HOP_PHRASES } from "../../src/lib/path.js";
 import { slugify } from "../../src/lib/slug.js";
+import Wordmark from "../../src/design/wordmark.jsx";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function PathPage({ searchParams }) {
 
   return (
     <main style={{ maxWidth: "680px", margin: "0 auto", padding: "48px 24px 80px", color: "#e2e8f0" }}>
-      <a href="/" style={{ fontFamily: SERIF, fontSize: "30px", color: "#e2e8f0", textDecoration: "none" }}>Kynda</a>
+      <a href="/" style={{ fontFamily: SERIF, fontSize: "30px", color: "#e2e8f0", textDecoration: "none" }}><Wordmark /></a>
       <div style={{ fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(148,163,184,0.6)", margin: "4px 0 28px" }}>
         Find the thread · shortest documented path
       </div>

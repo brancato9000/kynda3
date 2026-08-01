@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../src/design/tokens.js";
+import Wordmark from "../src/design/wordmark.jsx";
 import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
 import GraphView from "./graph-view.jsx";
 import { slugify } from "../src/lib/slug.js";
@@ -920,7 +921,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}>
           {/* Full navigation (not client state reset) so the logo works
               identically from /s/[slug] pages and mid-search alike. */}
-          <a href="/" style={{ color: "inherit", textDecoration: "none" }} title="Back to the start">Kynda</a>
+          <a href="/" style={{ color: "inherit", textDecoration: "none" }} title="Back to the start"><Wordmark /></a>
         </h1>
         <div style={{ fontFamily: FONTS.display, fontStyle: "italic", color: BASE.gold, fontSize: "15px", margin: "6px 0 10px" }}>
           (KIN-duh): Old Norse for “to light up”
