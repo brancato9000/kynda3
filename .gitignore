@@ -7,3 +7,4 @@ dist/
 .vercel/
 /wave-a.tsv
 /wave-progress.jsonl
+/spend.jsonl
