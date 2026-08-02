@@ -86,7 +86,7 @@ function FactChip({ attribution }) {
       );
     }
     return (
-      <span title={`Kynda can't verify this work against the ${attribution.source} database and would appreciate confirmation`}
+      <span title={attribution.detail || `Kynda can't verify this work against the ${attribution.source} database and would appreciate confirmation`}
         style={{ ...chipBase, color: "rgba(250,204,21,0.8)", border: "1px solid rgba(250,204,21,0.3)", cursor: "help" }}>
         ⚠
       </span>

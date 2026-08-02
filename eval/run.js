@@ -207,6 +207,11 @@ function testQuoteMatch() {
     creatorNameMatches("Frank Lloyd Wright", "Frank Lloyd Wright", nrm) &&
     !creatorNameMatches("Salvador Dalí", "Pablo Picasso", nrm) &&
     !creatorNameMatches("", "Plato", nrm));
+  check("creatorNameMatches: Latinized variants match, near-names don't (the Andreae lesson)",
+    creatorNameMatches("Johann Valentin Andreae", "Johannes Valentinus Andreae", nrm) &&
+    creatorNameMatches("Vergil", "Vergilius", nrm) &&
+    !creatorNameMatches("Will Smith", "Willa Smith", nrm) &&
+    !creatorNameMatches("Johann Andreae", "Johann Strauss", nrm));
 
   check("videoTitleMatches requires both coverer and song in the title",
     videoTitleMatches("Talking Heads - Take Me To The River (Live from Rome 1980)", "Talking Heads", "Take Me to the River") &&
@@ -271,6 +276,9 @@ async function testLive(subjects) {
   // homonym pool without the medium never falsely convicts.
   const republic = await verifyAttribution({ title: "Republic", creator: "Plato", medium: "literature" });
   check("literature: 'Republic' by Plato verifies through the layered path", republic.status === "verified", republic.detail || republic.reason);
+  const andreae = await verifyAttribution({ title: "The Chymical Wedding of Christian Rosenkreutz", creator: "Johann Valentin Andreae", medium: "literature" });
+  check("literature: Latinized author variant never convicts (Andreae, V3-59)",
+    andreae.status !== "not_found" || !/credits/i.test(andreae.detail || ""), andreae.detail || andreae.status);
   const mobyTrap = await verifyAttribution({ title: "Moby-Dick", creator: "Charles Dickens", medium: "literature" });
   check("literature trap: Moby-Dick/Dickens convicts naming Melville",
     mobyTrap.status === "not_found" && /Melville/.test(mobyTrap.detail || ""), mobyTrap.detail);

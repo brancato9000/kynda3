@@ -271,6 +271,12 @@ export async function verifyAttribution(item) {
       if (wd.found) {
         return { status: "not_found", source: "Wikidata", detail: `Wikidata credits ${wd.actualCreators.join(", ")}`, url: `https://www.wikidata.org/wiki/${wd.qid}` };
       }
+      // Near-name (V3-59, Tony's call): acknowledge the uncertainty without
+      // calling it wrong — "detail" must never contain "credits", which is
+      // the conviction marker the chip reads.
+      if (wd.nearMatch) {
+        return { status: "not_found", source: "Wikidata", detail: `Wikidata lists the near-identical "${wd.nearMatch}" — likely the same creator under a variant form (spelling, initials, or firm name); confirmation welcome` };
+      }
       const pg = await verifyGutenberg(item.title, item.creator).catch(() => ({ verified: false }));
       if (pg.verified) {
         return { status: "verified", source: "Project Gutenberg", url: pg.url, detail: pg.title, method: "gutendex_search" };
@@ -307,6 +313,9 @@ export async function verifyAttribution(item) {
       }
       if (prop.found) {
         return { status: "not_found", source: "Wikidata", detail: `Wikidata credits ${prop.actualCreators.join(", ")}`, url: `https://www.wikidata.org/wiki/${prop.qid}` };
+      }
+      if (prop.nearMatch) {
+        return { status: "not_found", source: "Wikidata", detail: `Wikidata lists the near-identical "${prop.nearMatch}" — likely the same creator under a variant form (spelling, initials, or firm name); confirmation welcome` };
       }
       // Absent from Wikidata's typed claims → fall back to the award-only
       // description check; a miss there stays unchecked, never red.
