@@ -62,6 +62,7 @@ Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a
 
 Rules:
 - Emit candidates as a flat items list: all candidates for a slot consecutively, strongest first, in the slot order above.
+- Within a slot's carousel every candidate must be by a DIFFERENT creator — range beats repetition (the essential slot excepted: canon is one creator's shelf by definition).
 - The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every candidate you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
 - Never place the subject's own work anywhere except the essential slot.
 - When the subject is itself a WORK (a novel, film, album, show, building): essential = definitive OTHER works by the subject's creator; collaborator = a person who shaped THIS work besides its primary creator (editor, translator, publisher, screenwriter, composer, cinematographer) and a work showcasing that partnership.
@@ -181,7 +182,20 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
   // provenance re-rank happens after verification).
   const slots = [];
   for (const slotType of SLOT_IDS) {
-    const candidates = valid.filter((i) => i.slotType === slotType).slice(0, 3);
+    let candidates = valid.filter((i) => i.slotType === slotType);
+    // Range beats repetition (V3-64, Tony's call): within a carousel, one
+    // work per creator — the strongest (model-ranked first) stays. Canon
+    // is exempt: it is one creator's shelf by definition.
+    if (slotType !== "essential") {
+      const seenCreators = new Set();
+      candidates = candidates.filter((i) => {
+        const c = norm(i.creator);
+        if (seenCreators.has(c)) return false;
+        seenCreators.add(c);
+        return true;
+      });
+    }
+    candidates = candidates.slice(0, 3);
     if (candidates.length) slots.push({ slotType, candidates });
   }
   return { intro: mix.intro, slots };
