@@ -56,7 +56,7 @@ Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a
 3. geography — LOCAL ROOTS: a connection rooted in the same city, region, or scene.
 4. culture — BEYOND THE MEDIUM: an influence that crosses the subject's primary domain OR tradition — a reach the audience wouldn't expect. Crossing mediums (film for a musician) always qualifies. Within the same medium, a crossing of TRADITION qualifies — philosophy or scripture into fiction, classical repertoire into jazz, epic poetry into philosophy — but a straight same-genre influence never does (that is titan material).
 5. peer — A contemporary working in a similar orbit during the same era.
-6. essential — FROM THE CANON: a definitive work by the subject themselves (creator = the subject).
+6. essential — FROM THE CANON: a definitive work by the subject themselves (creator = the subject). Given a deep catalog, choose the canon works that most illuminate THIS subject — the pieces of the career that best explain its evolution, themes, or method (Life in Hell for The Simpsons) — never merely the most famous.
 7. legacy — A successor who carries the torch and cites the subject as influence.
 8. collaborator — A key creative partner (producer, co-writer, cinematographer, bandmate); recommend a work that showcases the collaboration or the partner's own craft.
 
@@ -64,7 +64,8 @@ Rules:
 - Emit candidates as a flat items list: all candidates for a slot consecutively, strongest first, in the slot order above.
 - The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every candidate you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
 - Never place the subject's own work anywhere except the essential slot.
-- When the subject is itself a WORK (a novel, film, album, show, building): essential = definitive OTHER works by the subject's creator; collaborator = a person who shaped THIS work besides its primary creator (editor, translator, publisher, screenwriter, composer, cinematographer) and a work showcasing that partnership. The primary creator NEVER appears as collaborator, peer, or legacy — their related works belong in essential, or in titan when one is a true precursor of the subject.
+- When the subject is itself a WORK (a novel, film, album, show, building): essential = definitive OTHER works by the subject's creator; collaborator = a person who shaped THIS work besides its primary creator (editor, translator, publisher, screenwriter, composer, cinematographer) and a work showcasing that partnership.
+- An artist cannot influence themselves in Kynda's model: the same artist appears ONLY in the essential slot, never anywhere else. The canon slot exists precisely because everything an artist makes is presumed to inform everything else in their career — a precursor by the same hand is canon, not influence.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
 - crossing: for culture-slot items ONLY, a terse label of the boundary crossed ("philosophy → fiction", "classical → jazz"); null for every other slot and whenever the item's medium already differs from the subject's domain.
@@ -156,15 +157,17 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
     // influence material mislabeled (The Golem -> Metropolis) — re-slot it
     // rather than let the card contradict its own label.
     if (item.slotType === "culture" && item.medium === subject.domain && !item.crossing) item.slotType = "titan";
+    // An artist cannot influence themselves (V3-63, Tony's axiom): the same
+    // artist appears ONLY in From the Canon — the slot exists because
+    // everything in a career is presumed to inform the rest of it. Same-
+    // creator cards in ANY other slot are re-slotted to canon, not dropped.
     if (!isWorkSubject) {
-      if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) return false;
+      if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) item.slotType = "essential";
       if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
     } else if (creatorNorm) {
       if (norm(item.title) === subjectNorm) return false; // a work never cards itself
+      if (item.slotType !== "essential" && norm(item.creator) === creatorNorm) item.slotType = "essential";
       if (item.slotType === "essential" && norm(item.creator) !== creatorNorm) return false;
-      // The primary creator is not a "collaborator" of their own work —
-      // their related works are canon (the Journey to the East case).
-      if (["collaborator", "peer", "legacy"].includes(item.slotType) && norm(item.creator) === creatorNorm) item.slotType = "essential";
     }
     const key = `${norm(item.title)}|${norm(item.creator)}`;
     if (seen.has(key)) return false;

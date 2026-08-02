@@ -23,7 +23,7 @@ export const MIX_SLOT_TYPES = [
   { id: "geography", label: "Local Roots", emoji: "◈", description: "A connection rooted in shared geography or scene" },
   { id: "culture", label: "Beyond the Medium", emoji: "✦", description: "An influence from outside the subject's primary domain" },
   { id: "peer", label: "Peer", emoji: "◎", description: "A contemporary working in similar creative orbit" },
-  { id: "essential", label: "From the Canon", emoji: "★", description: "A definitive work from the subject themselves" },
+  { id: "essential", label: "From the Canon", emoji: "★", description: "The subject's own canon — the works that most illuminate this one" },
   { id: "legacy", label: "Legacy", emoji: "▹", description: "A successor carrying the creative torch forward" },
   { id: "collaborator", label: "Key Collaborator", emoji: "⊕", description: "A crucial creative partner who shaped the work" },
   // Covers slots (V3-39) are fully machine-sourced: live-show history
