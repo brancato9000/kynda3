@@ -5,6 +5,7 @@ import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIM
 import { experienceLinks, STREAM_SERVICES } from "../../src/lib/experience.js";
 import GraphView from "../graph-view.jsx";
 import { slugify } from "../../src/lib/slug.js";
+import Wordmark from "../../src/design/wordmark.jsx";
 
 const SLOT_BY_ID = Object.fromEntries(MIX_SLOT_TYPES.map((s) => [s.id, s]));
 
@@ -742,7 +743,7 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
 
       <header style={{ marginBottom: "36px" }}>
         {/* Plain text, deliberately: nothing on this page links anywhere. */}
-        <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}>Kynda</h1>
+        <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}><Wordmark /></h1>
         <div style={{ fontFamily: FONTS.display, fontStyle: "italic", color: BASE.gold, fontSize: "15px", margin: "6px 0 10px" }}>
           (KIN-duh): Old Norse for “to light up”
         </div>
