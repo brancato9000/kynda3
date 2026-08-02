@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import GraphView from "../../../graph-view.jsx";
 import { MIX_SLOT_TYPES } from "../../../../src/design/tokens.js";
+import Wordmark from "../../../../src/design/wordmark.jsx";
 
 const SLOT_BY_ID = Object.fromEntries(MIX_SLOT_TYPES.map((s) => [s.id, s]));
 const SERIF = "'Instrument Serif', serif";
@@ -44,7 +45,7 @@ export default function PrintView({ subject, intro, bio, slots, graph, slug }) {
           save as PDF ⤓
         </button>
 
-        <div style={{ fontFamily: SERIF, fontSize: "26px" }}>Kynda</div>
+        <div style={{ fontFamily: SERIF, fontSize: "26px" }}><Wordmark /></div>
         <div style={{ fontFamily: MONO, fontSize: "10px", color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "26px" }}>
           Influence map · every connection with its receipt
         </div>

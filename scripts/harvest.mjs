@@ -57,6 +57,8 @@ try {
     console.log(`\n═══ CORPUS BATCH LEDGER ═══`);
     console.log(`harvested: ${harvested} pages (${skipped} skipped) | confirmed: ${confirmed} / rejected: ${rejected} / shape-dropped: ${dropped}`);
     console.log(`TOTAL: $${totalUsd.toFixed(2)}${confirmed ? ` | $${(totalUsd / confirmed).toFixed(3)} per confirmed citation` : ""}`);
+    const { recordSpend } = await import("../src/lib/spend.js");
+    recordSpend(path.join(path.dirname(fileURLToPath(import.meta.url)), ".."), "harvest", totalUsd, `wikipedia-all: ${harvested} pages, ${confirmed} confirmed`);
     await getPool()?.end();
     process.exit(0);
   }
@@ -106,6 +108,8 @@ try {
     console.log(`  ${label}: ${s.calls} call(s), ${(s.in / 1000).toFixed(1)}k in / ${(s.out / 1000).toFixed(1)}k out → $${s.usd.toFixed(3)}`);
   }
   console.log(`TOTAL: $${totalUsd.toFixed(3)}${confirmed ? ` | $${(totalUsd / confirmed).toFixed(3)} per confirmed citation` : ""}`);
+  const { recordSpend } = await import("../src/lib/spend.js");
+  recordSpend(path.join(path.dirname(fileURLToPath(import.meta.url)), ".."), "harvest", totalUsd, `${sources} source(s), ${confirmed} confirmed`);
 } catch (err) {
   console.error("error:", err.message);
   process.exitCode = 1;

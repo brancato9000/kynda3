@@ -84,9 +84,15 @@ export function experienceLinks(item, { service = "youtube", subjectName = "" } 
       };
     case "art":
     case "design":
-    case "architecture":
       return {
         library: [{ label: "Google Arts & Culture", url: `https://artsandculture.google.com/search?q=${q}` }],
+        stream: null,
+        pickService: false,
+      };
+    case "architecture":
+      // Arts & Culture search rarely matches buildings; plain search does.
+      return {
+        library: [{ label: "Google", url: `https://www.google.com/search?q=${q}` }],
         stream: null,
         pickService: false,
       };

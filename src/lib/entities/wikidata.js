@@ -60,15 +60,23 @@ const CREATOR_PROPS = {
   P287: "designed by", P1809: "choreographer",
 };
 
+/** Token equality with Latinization tolerance (the Andreae lesson): exact,
+ * or one token a prefix of the other with at least five shared characters —
+ * "johann"/"johannes", "valentin"/"valentinus". Five keeps "will"/"willa"
+ * apart. */
+const tokenMatches = (a, b) =>
+  a === b || (Math.min(a.length, b.length) >= 5 && (a.startsWith(b) || b.startsWith(a)));
+
 /** Loose-but-honest name equality: exact normalized match, or every token of
- * the shorter name appearing in the longer ("Picasso" ≈ "Pablo Picasso"). */
+ * the shorter name matching one in the longer ("Picasso" ≈ "Pablo Picasso",
+ * "Johann Valentin Andreae" ≈ "Johannes Valentinus Andreae"). */
 export function creatorNameMatches(a, b, norm) {
   const na = norm(a), nb = norm(b);
   if (!na || !nb) return false;
   if (na === nb) return true;
   const [short, long] = na.length <= nb.length ? [na, nb] : [nb, na];
-  const longTokens = new Set(long.split(" "));
-  return short.split(" ").every((t) => longTokens.has(t));
+  const longTokens = long.split(" ");
+  return short.split(" ").every((t) => longTokens.some((lt) => tokenMatches(t, lt)));
 }
 
 /**
@@ -120,27 +128,35 @@ export async function verifyWorkByCreatorProperty(title, creator, mediumKeywords
   }
   if (!perWork.length) return { found: false };
 
+  // Labels AND aliases (the Andreae lesson): Wikidata's canonical label may
+  // be the Latinized form ("Johannes Valentinus Andreae") while the world
+  // writes "Johann Valentin Andreae" — the aliases carry the variants, so a
+  // claim matching ANY of them verifies.
   const labels = await rateLimited(async () => {
     const url = new URL("https://www.wikidata.org/w/api.php");
     url.searchParams.set("action", "wbgetentities");
     url.searchParams.set("ids", [...allTargets].slice(0, 50).join("|"));
-    url.searchParams.set("props", "labels");
+    url.searchParams.set("props", "labels|aliases");
     url.searchParams.set("languages", "en");
     url.searchParams.set("format", "json");
     const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
     if (!res.ok) throw new Error(`Wikidata ${res.status}`);
     const data = (await res.json()).entities || {};
-    return Object.fromEntries(Object.entries(data).map(([qid, e]) => [qid, e.labels?.en?.value || null]));
+    return Object.fromEntries(Object.entries(data).map(([qid, e]) => {
+      const label = e.labels?.en?.value || null;
+      const aliases = (e.aliases?.en || []).map((a) => a.value).filter(Boolean);
+      return [qid, label ? { label, names: [label, ...aliases] } : null];
+    }));
   });
 
   for (const { work, targets } of perWork) {
     for (const t of targets) {
-      const name = labels[t.qid];
-      if (name && creatorNameMatches(creator, name, norm)) {
+      const entry = labels[t.qid];
+      if (entry && entry.names.some((n) => creatorNameMatches(creator, n, norm))) {
         return {
           verified: true, qid: work.qid,
           url: `https://www.wikidata.org/wiki/${work.qid}`,
-          property: t.propLabel, creatorLabel: name,
+          property: t.propLabel, creatorLabel: entry.label,
           description: work.description,
         };
       }
@@ -157,7 +173,17 @@ export async function verifyWorkByCreatorProperty(title, creator, mediumKeywords
       })
     : perWork;
   if (!convictable.length) return { found: false };
-  const actualCreators = [...new Set(convictable.flatMap(({ targets }) => targets.map((t) => labels[t.qid])).filter(Boolean))].slice(0, 4);
+  // A near-name is never a different person (the Andreae lesson): if the
+  // claimed creator's surname matches a token of ANY credited name, this is
+  // a spelling/Latinization gap, not a misattribution — award-only, never
+  // convict. Moby-Dick/"Dickens" still convicts: dickens ≠ melville.
+  const claimedTokens = norm(creator).split(" ").filter(Boolean);
+  const surname = claimedTokens[claimedTokens.length - 1];
+  const near = surname && convictable.flatMap(({ targets }) => targets.map((t) => labels[t.qid]))
+    .filter(Boolean)
+    .find((entry) => entry.names.some((n) => norm(n).split(" ").some((t) => tokenMatches(surname, t))));
+  if (near) return { found: false, nearMatch: near.label };
+  const actualCreators = [...new Set(convictable.flatMap(({ targets }) => targets.map((t) => labels[t.qid]?.label)).filter(Boolean))].slice(0, 4);
   return { found: true, actualCreators, qid: convictable[0].work.qid };
 }
 

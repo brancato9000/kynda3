@@ -106,4 +106,6 @@ for (const [cat, a] of Object.entries(perCategory)) {
 }
 console.log(`  failures: ${rows.filter((r) => r.status === "failed" || r.status === "no_match").map((r) => r.name).join(", ") || "none"}`);
 console.log(`  TOTAL: $${usageSummary().totalUsd.toFixed(2)}`);
+const { recordSpend } = await import("../src/lib/spend.js");
+recordSpend(ROOT, "wave", usageSummary().totalUsd, `${rows.filter((r) => r.status === "seeded").length} seeded from ${path.basename(listPath)}`);
 await getPool().end();
