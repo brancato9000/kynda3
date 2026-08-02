@@ -52,6 +52,15 @@ const P106_MAP = {
   Q947873: "television", Q578109: "television",    // presenter, TV producer
 };
 
+// Curated domain pins — for people whose Wikidata P106 misrepresents them.
+// Abloh (Louis Vuitton, Off-White) lists composer/architect but NOT fashion
+// designer, so occupation mapping can never place him correctly.
+const DOMAIN_PINS = {
+  Q26703582: "fashion", // Virgil Abloh
+  Q7259: "other",       // Ada Lovelace — P106 says writer; curated into Ideas
+  Q102870: "other",     // Harriet Tubman — same
+};
+
 // Only subjects (mixed entities) — the browsing surface Tony sees.
 const subjects = await q(`
   SELECT DISTINCT e.id, e.name, e.kind, e.domain, e.wikidata_qid
@@ -77,9 +86,14 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
     const newKind = hit.kind;
     let newDomain = hit.domain || row.domain;
     if (newKind === "person" || newKind === "group") {
-      // First mapped occupation wins — Wikidata orders them by primacy.
-      const occ = (claims.P106 || []).map((c) => c.mainsnak?.datavalue?.value?.id).map((qid) => P106_MAP[qid]).find(Boolean);
-      if (occ) newDomain = occ;
+      // Wikidata's P106 order is NOT reliable primacy (Dolly Parton lists
+      // screenwriter before singer; Abloh lists music before fashion). If the
+      // curated domain is supported by ANY mapped occupation, keep it; only
+      // when it's unsupported (MusicBrainz drift: Homer as music) does the
+      // first mapped occupation win.
+      const occs = (claims.P106 || []).map((c) => c.mainsnak?.datavalue?.value?.id).map((qid) => P106_MAP[qid]).filter(Boolean);
+      if (occs.length && !occs.includes(row.domain)) newDomain = occs[0];
+      if (DOMAIN_PINS[row.wikidata_qid]) newDomain = DOMAIN_PINS[row.wikidata_qid];
     }
     if (newKind === row.kind && newDomain === row.domain) continue;
     console.log(`  ${row.name}: ${row.kind}/${row.domain} → ${newKind}/${newDomain}`);
