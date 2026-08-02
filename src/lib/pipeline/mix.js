@@ -64,6 +64,7 @@ Rules:
 - Emit candidates as a flat items list: all candidates for a slot consecutively, strongest first, in the slot order above.
 - The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every candidate you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
 - Never place the subject's own work anywhere except the essential slot.
+- When the subject is itself a WORK (a novel, film, album, show, building): essential = definitive OTHER works by the subject's creator; collaborator = a person who shaped THIS work besides its primary creator (editor, translator, publisher, screenwriter, composer, cinematographer) and a work showcasing that partnership. The primary creator NEVER appears as collaborator, peer, or legacy — their related works belong in essential, or in titan when one is a true precursor of the subject.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
 - crossing: for culture-slot items ONLY, a terse label of the boundary crossed ("philosophy → fiction", "classical → jazz"); null for every other slot and whenever the item's medium already differs from the subject's domain.
@@ -138,6 +139,15 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
       });
 
   // Deterministic slot-rule enforcement (AD-10) — never trust prompt compliance.
+  // Work-subjects (V3-62): a work's "self" is its AUTHOR, not its title —
+  // the old name comparison let Hesse pose as his own novel's collaborator
+  // and silently deleted every From-the-Canon card on work pages. Person
+  // rules compare against the subject's name; work rules against the
+  // subject's creator when known (seeds without one leave canon judgment
+  // to the attribution verifier).
+  const WORK_KINDS = new Set(["work", "film", "tv_show", "book", "release", "recording"]);
+  const isWorkSubject = WORK_KINDS.has(subject.kind);
+  const creatorNorm = norm(subject.creator || subject.metadata?.creator || "");
   const subjectNorm = norm(subject.name);
   const seen = new Set();
   const valid = (mix.items || []).filter((item) => {
@@ -146,8 +156,16 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
     // influence material mislabeled (The Golem -> Metropolis) — re-slot it
     // rather than let the card contradict its own label.
     if (item.slotType === "culture" && item.medium === subject.domain && !item.crossing) item.slotType = "titan";
-    if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) return false;
-    if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
+    if (!isWorkSubject) {
+      if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) return false;
+      if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
+    } else if (creatorNorm) {
+      if (norm(item.title) === subjectNorm) return false; // a work never cards itself
+      if (item.slotType === "essential" && norm(item.creator) !== creatorNorm) return false;
+      // The primary creator is not a "collaborator" of their own work —
+      // their related works are canon (the Journey to the East case).
+      if (["collaborator", "peer", "legacy"].includes(item.slotType) && norm(item.creator) === creatorNorm) item.slotType = "essential";
+    }
     const key = `${norm(item.title)}|${norm(item.creator)}`;
     if (seen.has(key)) return false;
     seen.add(key);
