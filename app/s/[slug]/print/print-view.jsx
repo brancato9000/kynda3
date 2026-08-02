@@ -78,7 +78,7 @@ export default function PrintView({ subject, intro, bio, slots, graph, slug }) {
                     {c.item.contributed && <span style={{ fontFamily: MONO, fontSize: "9px", color: "#8a6d00", textTransform: "uppercase", marginLeft: "8px" }}>community</span>}
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: "11px", color: "#6b7280", marginBottom: "6px" }}>
-                    {[c.item.creator, c.item.year, c.item.medium !== "music" ? c.item.medium : null].filter(Boolean).join(" · ")}
+                    {[c.item.creator, c.item.year, c.item.crossing || (c.item.medium !== "music" ? c.item.medium : null)].filter(Boolean).join(" · ")}
                   </div>
                   <p style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#374151", margin: "0 0 7px" }}>{c.item.reason}</p>
                   {(c.verification?.citations || []).slice(0, 2).map((cit, k) => (

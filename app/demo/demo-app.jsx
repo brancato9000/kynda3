@@ -540,7 +540,7 @@ function SlotCard({ slot, index, subject }) {
       {/* The fact chip sits with the facts it checks: title, creator, year */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
         <span style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.75)" }}>
-          {item.creator}{item.year ? ` · ${item.year}` : ""}{item.medium && item.medium !== "music" ? ` · ${item.medium}` : ""}
+          {item.creator}{item.year ? ` · ${item.year}` : ""}{item.crossing ? ` · ${item.crossing}` : item.medium && item.medium !== "music" ? ` · ${item.medium}` : ""}
         </span>
         <FactChip attribution={attribution} />
         {item.contributed && (

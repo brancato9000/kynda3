@@ -28,13 +28,14 @@ const MIX_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["slotType", "title", "creator", "year", "medium", "reason", "via"],
+        required: ["slotType", "title", "creator", "year", "medium", "reason", "via", "crossing"],
         properties: {
           slotType: { type: "string", enum: SLOT_IDS },
           title: { type: "string" },
           creator: { type: "string" },
           year: { type: "string" },
           via: { anyOf: [{ type: "string" }, { type: "null" }] },
+          crossing: { anyOf: [{ type: "string" }, { type: "null" }] },
           medium: {
             type: "string",
             enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"],
@@ -53,7 +54,7 @@ Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a
 1. titan — The KEY influence: a foundational work or artist the subject is documented to have drawn on.
 2. ghost — The HIDDEN thread: an obscure, avant-garde, or under-documented influence most people wouldn't know. The most important slot for discovery.
 3. geography — LOCAL ROOTS: a connection rooted in the same city, region, or scene.
-4. culture — BEYOND THE MEDIUM: an influence from OUTSIDE the subject's primary domain (if the subject is music, this must be film, literature, art, etc.). Must cross mediums.
+4. culture — BEYOND THE MEDIUM: an influence that crosses the subject's primary domain OR tradition — a reach the audience wouldn't expect. Crossing mediums (film for a musician) always qualifies. Within the same medium, a crossing of TRADITION qualifies — philosophy or scripture into fiction, classical repertoire into jazz, epic poetry into philosophy — but a straight same-genre influence never does (that is titan material).
 5. peer — A contemporary working in a similar orbit during the same era.
 6. essential — FROM THE CANON: a definitive work by the subject themselves (creator = the subject).
 7. legacy — A successor who carries the torch and cites the subject as influence.
@@ -65,6 +66,7 @@ Rules:
 - Never place the subject's own work anywhere except the essential slot.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
+- crossing: for culture-slot items ONLY, a terse label of the boundary crossed ("philosophy → fiction", "classical → jazz"); null for every other slot and whenever the item's medium already differs from the subject's domain.
 - via: when the connection runs through an intermediate person — most often a band member's work outside the band, or a collaborator's other projects — put that person's name in via. Otherwise null. Only name a via when the intermediate link is real: both hops (subject↔via and via↔work) are machine-checked against databases and encyclopedias.
 - intro: 2-3 sentences contextualizing the mix.
 - If a connection is rumored or vibes-based, choose something better documented.`;
@@ -139,6 +141,11 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
   const subjectNorm = norm(subject.name);
   const seen = new Set();
   const valid = (mix.items || []).filter((item) => {
+    // Beyond-the-medium guard (V3-61): the slot means a crossing of domain
+    // or tradition. A same-medium candidate with no stated crossing is key-
+    // influence material mislabeled (The Golem -> Metropolis) — re-slot it
+    // rather than let the card contradict its own label.
+    if (item.slotType === "culture" && item.medium === subject.domain && !item.crossing) item.slotType = "titan";
     if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) return false;
     if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
     const key = `${norm(item.title)}|${norm(item.creator)}`;
