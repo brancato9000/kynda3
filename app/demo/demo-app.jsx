@@ -734,12 +734,6 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
   const [bioDone, setBioDone] = useState(false);
   const subj = { ...subject, bio };
 
-  const allVerifs = slots.flatMap((s) => (s?.candidates || []).map((c) => c?.verification)).filter(Boolean);
-  const candidateCount = slots.reduce((n, s) => n + (s?.candidates?.length || 0), 0);
-  const factCheckedCount = allVerifs.filter((v) => v?.attribution?.status === "verified").length;
-  const documentedCount = allVerifs.filter((v) => v?.connection?.status === "documented" || v?.connection?.status === "documented_via").length;
-  const citedCount = allVerifs.filter((v) => v?.citations?.length > 0).length;
-
   return (
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
       <style>{`
@@ -788,13 +782,7 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
       )}
 
       <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
-        The connections are Kynda’s synthesis — no database can produce them.
-        The databases fact-check the synthesis: across {candidateCount} candidates
-        in {slots.length} slots, {factCheckedCount} attributions confirmed against open
-        catalogs (MusicBrainz, Open Library, Wikidata), {documentedCount} connection{documentedCount === 1 ? "" : "s"} independently
-        documented{citedCount > 0 ? `, and ${citedCount} backed by primary-source citations from the research corpus` : ""}.
-        Each slot’s carousel is ordered by evidence strength, not by the model’s preference.
-        All badges are machine-earned — the model cannot assign them to itself.
+        Copyright 2026 Kynda LLC
       </div>
     </main>
   );
