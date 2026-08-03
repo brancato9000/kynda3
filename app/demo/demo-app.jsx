@@ -754,7 +754,7 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
         <div style={{ fontFamily: FONTS.display, fontStyle: "italic", color: BASE.gold, fontSize: "15px", margin: "6px 0 10px" }}>
           (KIN-duh): Old Norse for “to light up”
         </div>
-        <p style={{ fontSize: "14px", color: "rgba(148,163,184,0.8)", margin: 0, maxWidth: "460px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: "14px", color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.6 }}>
           Discover the connections between your favorite works of culture, and the creators behind them.
         </p>
       </header>
@@ -763,6 +763,9 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
 
       {intro && (
         <div style={{ marginBottom: "28px" }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "8px", opacity: bioDone ? 1 : 0, transition: "opacity 0.5s" }}>
+            About this mix
+          </div>
           <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={REVEAL_TIMING.intro.delayMs}
             start={bioDone}
             style={{ fontFamily: FONTS.display, fontSize: "19px", fontStyle: "italic", lineHeight: 1.6, color: "rgba(226,232,240,0.9)" }} />
