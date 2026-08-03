@@ -5,7 +5,10 @@
 // The site password middleware exempts /demo — these links work bare.
 
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { createHash } from "node:crypto";
 import DemoApp from "../demo-app.jsx";
+import { q } from "../../../src/lib/db.js";
 import { listSubjects, getStoredMix, getGraphForSubject, getCitationsForItem } from "../../../src/lib/store.js";
 import { slugify } from "../../../src/lib/slug.js";
 import { getIntroExtract } from "../../../src/lib/entities/wikipedia.js";
@@ -30,6 +33,20 @@ export default async function DemoPage({ params }) {
   const subjects = await listSubjects();
   const subject = subjects.find((s) => slugify(s.name) === slug) || null;
   if (!subject) notFound();
+
+  // Visit log (V3-66): these pages are the outward-facing share links —
+  // record the serve, best-effort, never blocking the render. IP is
+  // one-way hashed for rough unique-visitor counting; nothing else kept.
+  try {
+    const h = await headers();
+    const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+    q(`INSERT INTO page_views (path, user_agent, referer, ip_hash) VALUES ($1, $2, $3, $4)`, [
+      `/demo/${slug}`,
+      h.get("user-agent")?.slice(0, 300) || null,
+      h.get("referer")?.slice(0, 300) || null,
+      ip ? createHash("sha256").update(ip).digest("hex").slice(0, 16) : null,
+    ]).catch(() => {});
+  } catch { /* logging must never break the page */ }
 
   const [mix, graph, bio] = await Promise.all([
     getStoredMix(subject),

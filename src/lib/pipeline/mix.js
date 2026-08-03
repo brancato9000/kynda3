@@ -66,6 +66,7 @@ Rules:
 - The title must be a real work actually created by the entity in the creator field. Accuracy over impressiveness: every candidate you propose is automatically checked against music databases, and failed checks are shown to the user as unverified — a correct, slightly less flashy pick beats an incorrect one.
 - Never place the subject's own work anywhere except the essential slot.
 - When the subject is itself a WORK (a novel, film, album, show, building): essential = definitive OTHER works by the subject's creator; collaborator = a person who shaped THIS work besides its primary creator (editor, translator, publisher, screenwriter, composer, cinematographer) and a work showcasing that partnership.
+- When the subject is a CONCEPT or practice: essential = landmark realized works OF the practice itself, by its practitioners (a practice's canon is its defining realizations).
 - An artist cannot influence themselves in Kynda's model: the same artist appears ONLY in the essential slot, never anywhere else. The canon slot exists precisely because everything an artist makes is presumed to inform everything else in their career — a precursor by the same hand is canon, not influence.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
 - medium: the domain of the recommended work itself (not the subject).
@@ -162,7 +163,11 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
     // artist appears ONLY in From the Canon — the slot exists because
     // everything in a career is presumed to inform the rest of it. Same-
     // creator cards in ANY other slot are re-slotted to canon, not dropped.
-    if (!isWorkSubject) {
+    if (subject.kind === "concept") {
+      // A practice's canon (V3-65 follow-up, Tony's ruling) = landmark
+      // realized works OF the practice, by its practitioners — the
+      // creator-match rules below are person/work-shaped and don't apply.
+    } else if (!isWorkSubject) {
       if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) item.slotType = "essential";
       if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
     } else if (creatorNorm) {
