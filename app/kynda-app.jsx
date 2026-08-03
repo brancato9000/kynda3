@@ -748,6 +748,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
   // Sequenced load (V3-54): the Wikipedia bio reveals first; the mix intro
   // waits for it. One thing at a time — the eye needs a single track.
   const [bioDone, setBioDone] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const [slots, setSlots] = useState([]);
   const [done, setDone] = useState(false);
   const [tab, setTab] = useState("mix");
@@ -868,7 +869,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     setAlternatives([]);
     setTier("certain");
     setPhase("mixing");
-    setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false);
+    setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false); setIntroDone(false);
     setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     fireMix(subj, run);
   }, [fireMix]);
@@ -890,7 +891,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     const run = ++runRef.current;
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
-    setIntro(null); setSlots([]); setDone(false); setBioDone(false);
+    setIntro(null); setSlots([]); setDone(false); setBioDone(false); setIntroDone(false);
     setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     try {
       const res = await fetch("/api/disambiguate", {
@@ -1113,8 +1114,11 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
                 About this mix
               </div>
               <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={REVEAL_TIMING.intro.delayMs}
-                start={bioDone}
+                start={bioDone} onDone={() => setIntroDone(true)}
                 style={{ fontFamily: FONTS.display, fontSize: "19px", fontStyle: "italic", lineHeight: 1.6, color: "rgba(226,232,240,0.9)" }} />
+              <div style={{ marginTop: "10px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.6, opacity: introDone ? 1 : 0, transition: "opacity 0.5s" }}>
+                Note that there are multiple types of cards in the Kynda mix, with multiple cards in each stack.
+              </div>
             </div>
           )}
 

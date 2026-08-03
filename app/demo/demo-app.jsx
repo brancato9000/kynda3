@@ -732,6 +732,7 @@ const DEMO = {
 // (Tony's call); this file may diverge freely from kynda-app.jsx.
 export default function DemoApp({ subject, bio, intro, slots, graph }) {
   const [bioDone, setBioDone] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const subj = { ...subject, bio };
 
   return (
@@ -761,8 +762,11 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
             About this mix
           </div>
           <RevealText text={intro} msPerWord={REVEAL_TIMING.intro.msPerWord} delayMs={REVEAL_TIMING.intro.delayMs}
-            start={bioDone}
+            start={bioDone} onDone={() => setIntroDone(true)}
             style={{ fontFamily: FONTS.display, fontSize: "19px", fontStyle: "italic", lineHeight: 1.6, color: "rgba(226,232,240,0.9)" }} />
+          <div style={{ marginTop: "10px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.6, opacity: introDone ? 1 : 0, transition: "opacity 0.5s" }}>
+            Note that there are multiple types of cards in the Kynda mix, with multiple cards in each stack.
+          </div>
         </div>
       )}
 
