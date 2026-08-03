@@ -45,7 +45,9 @@ export default async function SubjectPage({ params }) {
         domain: subject.domain,
         mbid: subject.mbid,
         wikidata_qid: subject.wikidata_qid,
-        bio: bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" } : null,
+        // No true encyclopedia entry -> a labeled Kynda synthesis (V3-65).
+        bio: bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" }
+          : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null,
       }}
     />
   );

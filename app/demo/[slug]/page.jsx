@@ -54,7 +54,8 @@ export default async function DemoPage({ params }) {
   return (
     <DemoApp
       subject={{ name: subject.name, kind: subject.kind, domain: subject.domain, yearsActive: null, description: null }}
-      bio={bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" } : null}
+      bio={bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" }
+        : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null}
       intro={mix.intro || subject.intro || ""}
       slots={hydrated}
       graph={graph}

@@ -28,6 +28,19 @@ const YT = (q) => `https://www.youtube.com/results?search_query=${q}`;
  * preference applies (music) so the UI can offer the switcher there.
  */
 export function experienceLinks(item, { service = "youtube", subjectName = "" } = {}) {
+  const base = defaultExperienceLinks(item, { service, subjectName });
+  // Curated primary destination (V3-65): an admin-set URL replaces the
+  // default first link (Jacob's Pillow proved unreliable for dance — the
+  // Trisha Brown Company's own repertory page is the real front door).
+  // Set via scripts/override-experience.mjs; survives re-renders because
+  // it lives on the stored card.
+  if (item.experienceUrl) {
+    base.library = [{ label: item.experienceLabel || "official page", url: item.experienceUrl }, ...base.library.slice(1)];
+  }
+  return base;
+}
+
+function defaultExperienceLinks(item, { service = "youtube", subjectName = "" } = {}) {
   const q = enc(item);
   if (!q) return { library: [], stream: null, pickService: false };
   const svc = STREAM_SERVICES.find((s) => s.id === service) || STREAM_SERVICES[2];

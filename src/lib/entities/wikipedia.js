@@ -67,7 +67,17 @@ export async function findArticleTitle({ name, qid = null }) {
     srsearch: name,
     srlimit: "1",
   });
-  return data.query?.search?.[0]?.title || null;
+  const title = data.query?.search?.[0]?.title || null;
+  if (!title) return null;
+  // Title-match guard (V3-65, Tony's catch on the microgravity page): a
+  // name-search fallback lands on the nearest-SOUNDING article — "Live Art
+  // in Microgravity" and Kitsou Dubois both resolved to "Space art", whose
+  // subject (art depicting space) is not ours (art enabled by spaceflight).
+  // Quote nothing whose title doesn't contain or match the subject's name.
+  // QID sitelinks above are authoritative and skip this check.
+  const canon = (x) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const a = canon(title), b = canon(name);
+  return a === b || a.includes(b) || b.includes(a) ? title : null;
 }
 
 /**

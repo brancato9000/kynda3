@@ -625,7 +625,8 @@ export async function listSubjects() {
   const r = await q(
     `SELECT DISTINCT ON (e.id) e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid,
             e.year_start, e.year_end,
-            e.metadata->>'creator' AS creator, m.payload->>'intro' AS intro
+            e.metadata->>'creator' AS creator, e.metadata->>'synthesis_bio' AS synthesis_bio,
+            m.payload->>'intro' AS intro
      FROM entities e JOIN mixes m ON m.subject_entity_id = e.id
      ORDER BY e.id, m.created_at DESC`
   );

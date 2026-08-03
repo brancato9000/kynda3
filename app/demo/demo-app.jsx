@@ -649,10 +649,17 @@ function SubjectCard({ subject, onBioDone }) {
             onDone={onBioDone}
             style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.8)" }} />
           <div style={{ marginTop: "10px" }}>
-            <a href={subject.bio.url} target="_blank" rel="noreferrer"
-              style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
-              — Wikipedia: {subject.bio.articleTitle} ↗
-            </a>
+            {subject.bio.source === "Kynda" ? (
+              <span title="No encyclopedia entry exists for this subject — this definition is Kynda's own synthesis, labeled as such (bios are otherwise always quoted)."
+                style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.6)" }}>
+                — Kynda’s synthesis (no encyclopedia entry exists)
+              </span>
+            ) : (
+              <a href={subject.bio.url} target="_blank" rel="noreferrer"
+                style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
+                — Wikipedia: {subject.bio.articleTitle} ↗
+              </a>
+            )}
           </div>
         </>
       ) : (
