@@ -1,3 +1,5 @@
+import { Analytics } from "@vercel/analytics/react";
+
 export const metadata = {
   title: "Kynda",
   description: "Discover the connections between your favorite works of culture, and the creators behind them.",
@@ -16,6 +18,7 @@ export default function RootLayout({ children }) {
       </head>
       <body style={{ margin: 0, background: "#0f1016", color: "#e2e8f0", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh" }}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
