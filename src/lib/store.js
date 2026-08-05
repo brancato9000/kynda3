@@ -31,15 +31,16 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
     if (r.rows[0]) return r.rows[0].id;
   }
   // Name matching ignores domain (V3-25) and treats creator-shaped kinds
-  // (person/group/other) as ONE identity pool (V3-33 — three Frank Sinatras
-  // taught us kind guesses differ per pipeline). Works stay separate from
+  // (person/group/other/concept) as ONE identity pool (V3-33 — three Frank
+  // Sinatras taught us kind guesses differ per pipeline; excluding 'concept'
+  // spawned four Live Art in Microgravity rows). Works stay separate from
   // people unless the work carries no creator (harvest artist-targets),
   // since real name collisions exist (Cake's song "Frank Sinatra").
   const creator = metadata?.creator || null;
   const k = kindOf(kind);
   const kindClause = k === "work" && creator
     ? "kind = 'work'"
-    : "kind IN ('person','group','other','work')";
+    : "kind IN ('person','group','other','concept','work')";
   const r0 = await q(
     `SELECT id, mbid, wikidata_qid FROM entities
      WHERE lower(name) = lower($1) AND ${kindClause}
