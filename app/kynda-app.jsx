@@ -424,6 +424,144 @@ function CoversTab({ data, subject }) {
 // hands us a URL containing the evidence; Kynda fetches, extracts, and
 // machine-verifies — then a curator publishes. The fan solves discovery,
 // the machine does the trusting.
+// ─── Ask Kynda (V3-67): the interrogative mode ─────────────────
+// A reader's hunch, answered in layers: graph edges and Wikipedia
+// cross-mention can award "documented"; the model may only say
+// likely/plausible/unlikely and point at where a receipt would live.
+function AskCard({ subject }) {
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [hunch, setHunch] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function ask() {
+    if (!hunch.trim() || asking) return;
+    setAsking(true); setError(null); setResult(null);
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, candidate: hunch }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "ask failed");
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAsking(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: "16px", padding: "18px 22px", background: BASE.surface, border: "1px dashed rgba(250,204,21,0.25)", borderRadius: "10px" }}>
+      <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", cursor: "pointer", color: BASE.gold, fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", padding: 0 }}>
+        ? Ask Kynda — have a hunch about an influence?
+      </button>
+      {open && (
+        <div style={{ marginTop: "14px" }}>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input value={hunch} onChange={(e) => setHunch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()}
+              placeholder={`Was ${subject.name} influenced by…`}
+              style={{ flex: 1, background: BASE.surfaceRaised, border: "1px solid rgba(255,255,255,0.12)", borderRadius: "6px", padding: "10px 14px", fontSize: "14px", color: "#e2e8f0", fontFamily: FONTS.body, outline: "none" }} />
+            <button onClick={ask} disabled={asking} style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold, borderRadius: "6px", padding: "0 20px", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", cursor: "pointer", textTransform: "uppercase" }}>
+              {asking ? <Spinner size={13} /> : "Ask"}
+            </button>
+          </div>
+          {error && <div style={{ marginTop: "10px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.85)" }}>{error}</div>}
+          {result && (
+            <div style={{ marginTop: "16px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                {result.documented ? (
+                  <span style={{ ...chipBase, color: BASE.gold, border: "1px solid rgba(250,204,21,0.3)" }}>◆ documented</span>
+                ) : (
+                  <span style={{ ...chipBase, color: "rgba(148,163,184,0.6)", border: "1px solid rgba(148,163,184,0.2)" }}>
+                    Kynda’s synthesis — {result.verdict?.assessment}
+                  </span>
+                )}
+                {result.candidate && (
+                  <span style={{ fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.7)" }}>
+                    {result.candidate.name}{result.candidate.description ? ` — ${result.candidate.description}` : ""}
+                  </span>
+                )}
+              </div>
+              {result.mentions?.map((m, i) => (
+                <div key={i} style={{ marginTop: "10px", paddingLeft: "14px", borderLeft: "2px solid rgba(250,204,21,0.4)" }}>
+                  <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.8)" }}>“{m.sentence}”</div>
+                  <a href={m.url} target="_blank" rel="noreferrer" style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
+                    Wikipedia: {m.articleTitle} ↗
+                  </a>
+                </div>
+              ))}
+              {result.edges?.map((e, i) => (
+                <div key={i} style={{ marginTop: "8px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.7)" }}>
+                  Already in the graph: {e.summary || e.claim_type}
+                </div>
+              ))}
+              {result.verdict?.reasoning && (
+                <div style={{ marginTop: "12px", fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.85)" }}>{result.verdict.reasoning}</div>
+              )}
+              {result.verdict?.transmission_note && (
+                <div style={{ marginTop: "8px", fontSize: "13px", lineHeight: 1.6, fontStyle: "italic", color: "rgba(226,232,240,0.7)" }}>{result.verdict.transmission_note}</div>
+              )}
+              {result.verdict?.evidence_suggestions?.length > 0 && !result.documented && (
+                <div style={{ marginTop: "12px" }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "6px" }}>
+                    Where a receipt would live
+                  </div>
+                  {result.verdict.evidence_suggestions.map((sug, i) => (
+                    <div key={i} style={{ fontSize: "12.5px", lineHeight: 1.6, color: "rgba(148,163,184,0.85)" }}>· {sug.source} — {sug.rationale}</div>
+                  ))}
+                </div>
+              )}
+              <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.5)", lineHeight: 1.6 }}>
+                Found a source that settles it? Add it below — confirmed hunches join the map.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Proposed by readers (V3-67): approved contributions, collapsed ──
+function ProposedSection({ subject }) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/contributions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject }),
+    }).then((r) => r.json()).then((d) => setItems(d.contributions || [])).catch(() => setItems([]));
+  }, [subject?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!items?.length) return null;
+  return (
+    <div style={{ marginTop: "16px", padding: "18px 22px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px" }}>
+      <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.7)", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", padding: 0 }}>
+        {open ? "▾" : "▸"} Proposed by readers — {items.length} approved
+      </button>
+      {open && items.map((c, i) => (
+        <div key={i} style={{ marginTop: "14px", paddingLeft: "14px", borderLeft: "2px solid rgba(148,163,184,0.25)" }}>
+          <div style={{ fontSize: "14px", color: "rgba(226,232,240,0.85)" }}>
+            {c.item_title}{c.item_creator ? ` — ${c.item_creator}` : ""}
+          </div>
+          {c.quote && (
+            <div style={{ marginTop: "4px", fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13px", lineHeight: 1.6, color: "rgba(226,232,240,0.7)" }}>“{c.quote.slice(0, 240)}”</div>
+          )}
+          <div style={{ marginTop: "4px", fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.55)" }}>
+            {c.contributor || "anonymous"}{c.url ? <> · <a href={c.url} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.7)" }}>source ↗</a></> : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AddConnectionCard({ subject }) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -1136,6 +1274,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
           </div>
           )}
 
+          {tab === "mix" && done && subject && <AskCard subject={subject} />}
+          {tab === "mix" && done && subject && <ProposedSection subject={subject} />}
           {tab === "mix" && done && subject && <AddConnectionCard subject={subject} />}
 
           {tab === "mix" && done && (

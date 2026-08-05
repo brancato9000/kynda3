@@ -633,6 +633,21 @@ export async function listSubjects() {
   return r.rows;
 }
 
+/** Approved reader contributions for a subject (V3-67): the collapsed
+ * "proposed" section on mix pages. resolved/confirmed = the approved
+ * bucket; pending and rejected stay in the admin queue only. */
+export async function listApprovedContributions(subjectName) {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT kind, item_title, item_creator, url, quote, contributor, created_at
+     FROM contributions
+     WHERE lower(subject_name) = lower($1) AND status IN ('resolved', 'confirmed')
+     ORDER BY created_at DESC LIMIT 20`,
+    [subjectName]
+  );
+  return r.rows;
+}
+
 // ─── Admin (V3-27): founder dashboard queries ───────────────────────────
 
 export async function getAdminOverview() {
