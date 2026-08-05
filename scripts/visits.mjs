@@ -24,11 +24,13 @@ if (!rows.length) { console.log("no visits logged yet"); }
 else {
   const byPath = {};
   for (const r of rows) (byPath[r.path] ||= []).push(r);
+  const isTooling = (x) => /bot|crawler|spider|preview|facebookexternalhit|slack|whatsapp|^node$|kynda-.*-check/i.test(x.user_agent || "");
   for (const [p, xs] of Object.entries(byPath)) {
-    const visitors = new Set(xs.map((x) => x.ip_hash).filter(Boolean)).size;
-    console.log(`\n${p} — ${xs.length} view(s), ~${visitors} distinct visitor(s)`);
+    const humans = xs.filter((x) => !isTooling(x));
+    const visitors = new Set(humans.map((x) => x.ip_hash).filter(Boolean)).size;
+    console.log(`\n${p} — ${humans.length} human view(s) (+${xs.length - humans.length} bot/tooling), ~${visitors} distinct visitor(s)`);
     for (const x of xs.slice(0, 10)) {
-      const device = /mobile|iphone|android/i.test(x.user_agent || "") ? "mobile" : /bot|crawler|spider|preview|facebookexternalhit|slack|whatsapp/i.test(x.user_agent || "") ? "BOT/preview" : "desktop";
+      const device = /mobile|iphone|android/i.test(x.user_agent || "") ? "mobile" : /bot|crawler|spider|preview|facebookexternalhit|slack|whatsapp|^node$|kynda-.*-check/i.test(x.user_agent || "") ? "BOT/preview" : "desktop";
       console.log(`  ${x.ts.toISOString().replace("T", " ").slice(0, 16)}  ${device}  visitor:${x.ip_hash || "?"}${x.referer ? `  via ${x.referer}` : ""}`);
     }
   }
