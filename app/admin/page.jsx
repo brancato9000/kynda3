@@ -147,9 +147,9 @@ export default function Admin() {
           {pending.length === 0 && <div style={{ ...mono("12px"), marginBottom: "24px" }}>nothing pending — the queue is clear</div>}
           <div style={{ display: "grid", gap: "10px", marginBottom: "40px" }}>
             {pending.map((c) => (
-              <div key={c.id} style={{ background: BASE.surface, border: `1px solid ${c.kind === "flag" ? "rgba(248,113,113,0.25)" : "rgba(52,211,153,0.25)"}`, borderRadius: "8px", padding: "14px 18px", overflowWrap: "anywhere" }}>
+              <div key={c.id} style={{ background: BASE.surface, border: `1px solid ${c.kind === "flag" ? "rgba(248,113,113,0.25)" : c.kind === "hunch" ? "rgba(250,204,21,0.25)" : "rgba(52,211,153,0.25)"}`, borderRadius: "8px", padding: "14px 18px", overflowWrap: "anywhere" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
-                  <span style={mono("11px", c.kind === "flag" ? "rgba(248,113,113,0.85)" : "rgba(52,211,153,0.85)")}>
+                  <span style={mono("11px", c.kind === "flag" ? "rgba(248,113,113,0.85)" : c.kind === "hunch" ? "rgba(250,204,21,0.85)" : "rgba(52,211,153,0.85)")}>
                     {c.kind.toUpperCase()} · {c.status} · {c.subject_name}{c.item_title ? ` → ${c.item_title}` : ""}
                   </span>
                   <span style={mono("10px")}>{c.contributor || "anonymous"} · {String(c.created_at).slice(0, 16).replace("T", " ")}</span>
@@ -160,11 +160,11 @@ export default function Admin() {
                 <div style={{ display: "flex", gap: "14px", marginTop: "12px" }}>
                   <button disabled={acting === c.id} onClick={() => act(c.id, "approve")}
                     style={{ ...mono("11px", "rgba(52,211,153,0.9)"), background: "none", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
-                    {c.kind === "flag" ? "mark resolved" : "approve"}
+                    {c.kind === "flag" ? "mark resolved" : c.kind === "hunch" ? "accept — worth pursuing" : "approve"}
                   </button>
                   <button disabled={acting === c.id} onClick={() => act(c.id, "reject")}
                     style={{ ...mono("11px", "rgba(248,113,113,0.9)"), background: "none", border: "1px solid rgba(248,113,113,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
-                    {c.kind === "flag" ? "dismiss" : "reject & pull"}
+                    {c.kind === "flag" || c.kind === "hunch" ? "dismiss" : "reject & pull"}
                   </button>
                   {c.kind === "flag" && c.item_title && (
                     <button disabled={fixing === c.id || acting === c.id} onClick={() => proposeFix(c.id)}

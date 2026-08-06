@@ -434,10 +434,37 @@ function AskCard({ subject }) {
   const [hunch, setHunch] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [proposing, setProposing] = useState(false);
+  const [proposed, setProposed] = useState(false);
+
+  async function propose() {
+    if (proposing || !result) return;
+    setProposing(true);
+    try {
+      const v = result.verdict || {};
+      const trail = (v.evidence_suggestions || []).map((s) => `${s.source}: ${s.rationale}`).join(" | ");
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "hunch",
+          subject,
+          item: { title: result.candidate?.name || hunch, creator: null },
+          comment: `Ask Kynda verdict: ${v.assessment}. ${v.reasoning || ""}${v.transmission_note ? ` Transmission: ${v.transmission_note}` : ""}${trail ? ` Where receipts would live — ${trail}` : ""}`.slice(0, 2000),
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "propose failed");
+      setProposed(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProposing(false);
+    }
+  }
 
   async function ask() {
     if (!hunch.trim() || asking) return;
-    setAsking(true); setError(null); setResult(null);
+    setAsking(true); setError(null); setResult(null); setProposed(false);
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
@@ -513,6 +540,17 @@ function AskCard({ subject }) {
                   {result.verdict.evidence_suggestions.map((sug, i) => (
                     <div key={i} style={{ fontSize: "12.5px", lineHeight: 1.6, color: "rgba(148,163,184,0.85)" }}>· {sug.source} — {sug.rationale}</div>
                   ))}
+                </div>
+              )}
+              {!result.documented && result.verdict?.assessment !== "unlikely" && !proposed && (
+                <button onClick={propose} disabled={proposing}
+                  style={{ marginTop: "12px", ...chipBase, color: BASE.gold, border: "1px solid rgba(250,204,21,0.35)", background: "rgba(250,204,21,0.06)", cursor: "pointer", padding: "6px 14px" }}>
+                  {proposing ? "proposing…" : "→ propose this influence for the map"}
+                </button>
+              )}
+              {proposed && (
+                <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(52,211,153,0.85)" }}>
+                  ✓ proposed — the curator will see your hunch and Kynda’s research trail
                 </div>
               )}
               <div style={{ marginTop: "12px", fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.5)", lineHeight: 1.6 }}>

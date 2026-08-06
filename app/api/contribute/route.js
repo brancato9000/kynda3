@@ -71,6 +71,15 @@ export async function POST(req) {
       });
     }
 
+    // Hunches (V3-69): an Ask Kynda verdict graduating into a submission —
+    // a proposed influence WITHOUT a source yet. The verdict text rides
+    // along in comment as the curator's research trail. Free, no model.
+    if (kind === "hunch") {
+      if (!item?.title) return Response.json({ error: "the proposed influence is required" }, { status: 400 });
+      await recordContribution({ kind: "hunch", ...base });
+      return Response.json({ ok: true, message: "Proposed — the curator will see your hunch and the trail Kynda suggested." });
+    }
+
     if (kind === "new_card") {
       // Lane 2 (V3-35): fan names an influence + a URL; Kynda builds the card.
       // Influence optional (V3-43): a bare URL is a MAP SUBMISSION — every
