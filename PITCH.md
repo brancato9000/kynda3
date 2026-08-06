@@ -212,35 +212,43 @@ definitive version — but it holds things the conversations missed.
 - Still open from the 2024 list: edu-product pricing ("or should we give
   it away?") — now a Brown-partnership question rather than a pricing one.
 
-### Divergences to DISCUSS (2024 vs the 2026 vision)
+### Divergences — RESOLVED (Tony, 2026-08-06)
 
-1. **Multi-product vs focused core.** 2024: "several products will emerge
-   from this data structure" — a four-phase ladder to API licensing,
-   predictive analytics, media company. 2026: "I don't want to stray from
-   the contextual recommendation engine as the core value prop." Is the
-   ladder dead, deferred, or just demoted from pitch-lead to appendix?
-2. **Phase 3 (predictive cultural analytics — A&R, greenlighting,
-   marketing).** The most commercial, B2B-flavored piece; wholly absent
-   from the 2026 dump. Keep, kill, or park?
-3. **Phase 4 (media company — podcasts, documentaries, books).** Also
-   absent in 2026 — yet "tell the untold stories / shine a light on
-   underrepresented influences" is the humanist case wearing media
-   clothes, and pairs naturally with mode #5's whales. Same question.
-4. **The patent application** (2024: "we are applying for a patent") —
-   status? Does it cover anything Kynda v3 does?
-5. **UCLA.** Does the relationship persist, and does the Brown pitch
-   mention it (precedent + multi-institution credibility) or does that
-   complicate the courtship?
-6. **The advisory board** — dormant or live? It's a different instrument
-   than the Brown institutional relationship, and #6 (Johnson) was
-   originally a board seat, not a bridge.
-7. **Naming:** The Influence Project / influenced.it / The O&O / Kynda —
-   the 2024 deck and the 2026 product don't share a name. Which identity
-   goes to Providence?
+1. **Multi-product vs focused core → FOCUS WINS.** "I've learned in the
+   last couple of years that focus is better… even more products than I've
+   thought of could emerge once we get the core right." The ladder lands
+   somewhere between deferred and appendix: ONE deck slide — "Future
+   Applications" — speaks to potential futures; the core carries the pitch.
+2. **Phase 3 (predictive analytics) → PARKED.** Deferred outright.
+3. **Phase 4 (media company) → STAYS IN THE MIX.** Tony has built a
+   COMPLETE VIDEO PILOT EPISODE — an imagined artist modeled on Beyoncé
+   walking through her influence graph, then artists she inspired speaking
+   about her as an influence. "You can tell a biography through the lens of
+   influence." A powerful narrative format — and a pitch asset that exists
+   TODAY (the Phase 4 demo is already made).
+4. **The patent → NOTHING FILED YET; wants to pursue.** Tony would love to
+   figure out how to apply — likely subject matter includes the
+   influence-biography narrative format (the pilot) and possibly Kynda's
+   verification methods. IN THE BACKLOG: patentability groundwork.
+5. **UCLA → relationship persists.** Use as a credibility lever in the
+   Brown pitch; no impediment.
+6. **Advisory board → dormant but wanted.** Tony wants to make it happen
+   and would recruit beyond the 2024 list — potentially former New York
+   Times colleagues. "A lot of places we could take this." (Johnson
+   remains a seat candidate as well as a bridge; Sydney a new-chair
+   candidate.)
+7. **Naming → SETTLED.** **Kynda** is the product going forward. **The
+   Influence Project** is the umbrella for everything that eventually
+   emerges. influenced.it is dormant; The O&O is the shell company. The
+   deck architecture writes itself: The Influence Project (vision) →
+   Kynda (the product, get it right) → Future Applications (one slide).
 
 ## Still to capture
 
 - What Kynda asks for vs. offers in each of the six modes
 - The September meeting's desired outcome (which mode to lead with?)
 - The dilution guardrail as policy: what makes a medium "ready" to enter?
-- Tony's answers to the seven 2024-vs-2026 divergence questions above
+- Patent groundwork (backlogged): what's patentable — the influence-
+  biography format, the verification pipeline, or neither; prior art scan
+- The Beyoncé-modeled pilot episode: where does it live, and does Sydney
+  see it in September?
