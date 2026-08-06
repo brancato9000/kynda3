@@ -11,8 +11,10 @@ export const maxDuration = 60;
 function authorized(req) {
   const token = process.env.KYNDA_ADMIN_TOKEN;
   if (!token) return false;
-  const provided = req.headers.get("x-kynda-admin") || "";
-  return provided.length > 0 && provided === token;
+  // Trim both sides: pasted tokens arrive with invisible trailing
+  // whitespace often enough that exact comparison reads as "broken login".
+  const provided = (req.headers.get("x-kynda-admin") || "").trim();
+  return provided.length > 0 && provided === token.trim();
 }
 
 export async function GET(req) {

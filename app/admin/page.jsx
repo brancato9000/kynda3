@@ -61,7 +61,7 @@ export default function Admin() {
     return (
       <main style={{ maxWidth: "420px", margin: "120px auto", padding: "0 24px" }}>
         <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "32px" }}><Wordmark /> <span style={{ color: BASE.gold }}>admin</span></h1>
-        <form onSubmit={(e) => { e.preventDefault(); setToken(input); }}>
+        <form onSubmit={(e) => { e.preventDefault(); setToken(input.trim()); }}>
           <input type="password" placeholder="admin token" value={input} onChange={(e) => setInput(e.target.value)}
             style={{ width: "100%", boxSizing: "border-box", background: BASE.surfaceRaised, border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "12px 16px", fontSize: "14px", color: "#e2e8f0", outline: "none", margin: "16px 0 10px" }} />
           <button type="submit" style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold, borderRadius: "8px", padding: "10px 22px", fontFamily: FONTS.mono, fontSize: "12px", letterSpacing: "0.08em", cursor: "pointer", textTransform: "uppercase" }}>Enter</button>
