@@ -40,6 +40,46 @@ export default function Admin() {
 
   useEffect(() => { if (token) load(token); }, [token, load]);
 
+  const [fixing, setFixing] = useState(null);   // contribution id being proposed
+  const [proposal, setProposal] = useState(null); // { id, cardTitle, before, after, note, fixable }
+
+  async function proposeFix(id) {
+    setFixing(id); setError(null);
+    try {
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-kynda-admin": token },
+        body: JSON.stringify({ id, action: "fix" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "fix proposal failed");
+      setProposal({ id, ...data });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setFixing(null);
+    }
+  }
+
+  async function applyFix() {
+    if (!proposal) return;
+    setActing(proposal.id);
+    try {
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-kynda-admin": token },
+        body: JSON.stringify({ id: proposal.id, action: "apply_fix", fixed_reason: proposal.after }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "apply failed");
+      setProposal(null);
+      await load(token);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActing(null);
+    }
+  }
+
   async function act(id, action) {
     setActing(id);
     try {
@@ -126,7 +166,38 @@ export default function Admin() {
                     style={{ ...mono("11px", "rgba(248,113,113,0.9)"), background: "none", border: "1px solid rgba(248,113,113,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
                     {c.kind === "flag" ? "dismiss" : "reject & pull"}
                   </button>
+                  {c.kind === "flag" && c.item_title && (
+                    <button disabled={fixing === c.id || acting === c.id} onClick={() => proposeFix(c.id)}
+                      style={{ ...mono("11px", BASE.gold), background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
+                      {fixing === c.id ? "thinking…" : "✦ have Kynda fix it"}
+                    </button>
+                  )}
                 </div>
+                {proposal?.id === c.id && (
+                  <div style={{ marginTop: "14px", padding: "14px 16px", background: "rgba(250,204,21,0.04)", border: "1px solid rgba(250,204,21,0.2)", borderRadius: "8px" }}>
+                    <div style={mono("10px", BASE.gold)}>PROPOSED FIX — {proposal.note}</div>
+                    {proposal.fixable ? (
+                      <>
+                        <div style={{ marginTop: "10px", fontSize: "12.5px", lineHeight: 1.6, color: "rgba(248,113,113,0.75)", textDecoration: "line-through" }}>{proposal.before}</div>
+                        <div style={{ marginTop: "8px", fontSize: "12.5px", lineHeight: 1.6, color: "rgba(52,211,153,0.9)" }}>{proposal.after}</div>
+                        <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                          <button disabled={acting === c.id} onClick={applyFix}
+                            style={{ ...mono("11px", "rgba(52,211,153,0.9)"), background: "none", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
+                            apply fix &amp; resolve
+                          </button>
+                          <button onClick={() => setProposal(null)}
+                            style={{ ...mono("11px"), background: "none", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
+                            cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ marginTop: "8px", fontSize: "12.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.8)" }}>
+                        Kynda declined to auto-fix: {proposal.note}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

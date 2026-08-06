@@ -2,6 +2,7 @@
 // x-kynda-admin matching KYNDA_ADMIN_TOKEN. No token configured → disabled.
 
 import { getAdminOverview, actOnContribution } from "../../../src/lib/store.js";
+import { proposeFlagFix, applyFlagFix } from "../../../src/lib/pipeline/fix.js";
 import { appendContributedCard } from "../../../src/lib/pipeline/contribute-card.js";
 import { q } from "../../../src/lib/db.js";
 import { rateLimit, clientIp } from "../../../src/lib/guard.js";
@@ -35,9 +36,19 @@ export async function GET(req) {
 export async function POST(req) {
   if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const { id, action } = await req.json();
-    if (!id || !["approve", "reject"].includes(action)) {
-      return Response.json({ error: "id and action (approve|reject) required" }, { status: 400 });
+    const { id, action, fixed_reason } = await req.json();
+    if (!id || !["approve", "reject", "fix", "apply_fix"].includes(action)) {
+      return Response.json({ error: "id and action (approve|reject|fix|apply_fix) required" }, { status: 400 });
+    }
+    // Flag repair (V3-68): "fix" proposes (model, ~3¢, nothing written);
+    // "apply_fix" writes the curator-approved repair and resolves the flag.
+    if (action === "fix" || action === "apply_fix") {
+      const row = await q("SELECT * FROM contributions WHERE id = $1", [id]);
+      const contribution = row.rows[0];
+      if (!contribution) return Response.json({ error: "contribution not found" }, { status: 404 });
+      if (contribution.kind !== "flag") return Response.json({ error: "only flags can be fixed" }, { status: 400 });
+      if (action === "fix") return Response.json(await proposeFlagFix(contribution));
+      return Response.json(await applyFlagFix(contribution, fixed_reason));
     }
     // Approving a Lane 2 card publishes it: one grounded Fable call for the
     // reason prose, then an append into the subject's stored mix payload.
