@@ -134,8 +134,113 @@ NotebookLM — and perhaps a bridge to Google (another whale).
   argument: dance is the least-cataloged major art form — the domain where
   a closed-corpus partnership pays off first and most visibly.
 
+## From the 2024 deck ("The Influence Project," pitched to Steven Johnson)
+
+Read 2026-08-06. Tony's framing: vision has evolved, so the deck is a *less*
+definitive version — but it holds things the conversations missed.
+
+### Still stands — captured as pitch assets
+
+- **The 2013 origin.** influenced.it, "mapping the currents of culture," the
+  School of Rock chalkboard as founding totem. This is a THIRTEEN-YEAR
+  conviction, not a ChatGPT-era idea — durability is a pitch asset,
+  especially to an institution.
+- **The flagship metaphor:** *influence is the connective tissue of human
+  culture — the equivalent of genes in evolutionary biology, but instead of
+  a one-directional tree, a multi-directional network of ideas.* Phase 4's
+  "23andMe / Finding Your Roots for artists" is the same metaphor as
+  product. (Genes → graph → ancestry-for-art: one metaphor, three uses.)
+- **The humanist case (why it matters):** connecting across cultures,
+  countries, and time; illuminating underrepresented voices; finding common
+  ground; *"an antidote to our fractured scroll culture"*; "the promise of
+  what the internet was meant to be." The 2026 dump's "rooted in humanity"
+  in slide-ready form.
+- **The closing line is the Brown pitch already:** "an unprecedented
+  cross-disciplinary effort, requiring the best efforts of the arts and
+  humanities, computer science, mathematics, anthropology, and data
+  visualization… a living tribute to the best of our humanity." Mode #3's
+  curriculum list (arts, CS, anthropology) is literally this slide.
+- **THE UCLA PRECEDENT (never surfaced in our conversations!):** Tony
+  taught a UCLA class on influence in the history of music, Herb Alpert
+  School of Music, inaugural semester Fall '22, sponsored by the Associate
+  Dean of Musicology; students co-developed the influence taxonomy and
+  used the prototype for final projects; two interns Winter '23; UCLA
+  faculty expressed interest in being a customer. Mode #3 (curriculum) and
+  mode #4 (students as contributors) are not speculative — they are a
+  RERUN of a proven experiment, with a vastly better product.
+- **Meagan, co-founder:** Development Executive at the IRC, $100MM+ raised
+  for refugee causes in six years, 15+ years brand-building at Conde Nast /
+  Hearst / Hachette. Mode #1 (grants) has a professional-grade operator
+  already on the team. The pitch should say so.
+- **Quantitative influence analytics** (the time-series charts): influence /
+  contemporary / collaborator / successor connections plotted per year
+  against born/career-begins markers; artist-vs-artist comparison curves
+  (Dylan's 259, the Beatles' 1960s spike, Beyoncé 222→550 when a second
+  source landed). A whole product surface Kynda v3 doesn't have yet — and
+  exactly the shape of artifact digital-humanities researchers (mode #2/#3)
+  produce papers with. Includes the honest self-note that recency dips are
+  documentation gaps, not waning influence — the yellow-chip ethic, 2024.
+- **Directionality vocabulary:** influence / contemporary / collaborator /
+  successor / anti-influence / "just a friend"; the "Influence Vector"
+  (direction AND magnitude). Inbound AND outbound maps at the work level
+  (the Raiders chart spans film, TV, comics, video games).
+- **The closed-web shopping list** (2024's "next source targets"): Library
+  of Congress, NYT culture archive, ProQuest (Rolling Stone/Spin/EW
+  archives), NPR radio archives, targeted (auto)biographies (Keith
+  Richards' *Life*), Oxford History of Western Music. Modes #2 and #5,
+  itemized two years early.
+- **The advisory board design** — "a peer-progressive network in miniature"
+  (note: that's Steven Johnson's own coinage, aimed at him): science writer
+  (Johnson), connector (Dean Baquet pursued), librarian (Story Bellows),
+  musician (Lizzo/RZA), filmmaker (Kathleen Kennedy), information designer
+  (Tufte), data scientist (Hinton), voice of industry (Linda Perry),
+  musicologist (Bob Fink), anthropologist (Genevieve Bell), graph engineer
+  (???). Sydney plausibly fills a seat the 2024 list didn't have:
+  performance/embodiment scholar.
+
+### Questions the 2024 deck asked that Kynda v3 has since ANSWERED
+
+- "Can we extract contextual relationship signals from large corpora?" —
+  yes: the harvest pipeline, 3,500+ quote-confirmed citations at $0.008.
+- "How much human classification is needed to train the model?" — the
+  premise dissolved; frontier models + deterministic verifiers replaced
+  the train-an-algorithm plan entirely.
+- "Do multiple sources increase signal quality?" — yes, measured (badge
+  rates by domain, V3-45).
+- "Music vs diversifying?" — answered by the wave discipline: breadth to
+  ten domains under verification gates, dilution guardrail articulated.
+- Still open from the 2024 list: edu-product pricing ("or should we give
+  it away?") — now a Brown-partnership question rather than a pricing one.
+
+### Divergences to DISCUSS (2024 vs the 2026 vision)
+
+1. **Multi-product vs focused core.** 2024: "several products will emerge
+   from this data structure" — a four-phase ladder to API licensing,
+   predictive analytics, media company. 2026: "I don't want to stray from
+   the contextual recommendation engine as the core value prop." Is the
+   ladder dead, deferred, or just demoted from pitch-lead to appendix?
+2. **Phase 3 (predictive cultural analytics — A&R, greenlighting,
+   marketing).** The most commercial, B2B-flavored piece; wholly absent
+   from the 2026 dump. Keep, kill, or park?
+3. **Phase 4 (media company — podcasts, documentaries, books).** Also
+   absent in 2026 — yet "tell the untold stories / shine a light on
+   underrepresented influences" is the humanist case wearing media
+   clothes, and pairs naturally with mode #5's whales. Same question.
+4. **The patent application** (2024: "we are applying for a patent") —
+   status? Does it cover anything Kynda v3 does?
+5. **UCLA.** Does the relationship persist, and does the Brown pitch
+   mention it (precedent + multi-institution credibility) or does that
+   complicate the courtship?
+6. **The advisory board** — dormant or live? It's a different instrument
+   than the Brown institutional relationship, and #6 (Johnson) was
+   originally a board seat, not a bridge.
+7. **Naming:** The Influence Project / influenced.it / The O&O / Kynda —
+   the 2024 deck and the 2026 product don't share a name. Which identity
+   goes to Providence?
+
 ## Still to capture
 
 - What Kynda asks for vs. offers in each of the six modes
 - The September meeting's desired outcome (which mode to lead with?)
 - The dilution guardrail as policy: what makes a medium "ready" to enter?
+- Tony's answers to the seven 2024-vs-2026 divergence questions above
