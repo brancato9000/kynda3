@@ -9,13 +9,65 @@ later (Cowork, product-management toolkit). Tony's phrasing preserved.
 Lay out the vision for the future of the product, then connect the dots for
 the ways a relationship with Brown could work.
 
-## Vision (to be articulated)
+## Vision (Tony's dump, 2026-08-06 — phrasing preserved)
 
-The standing articulation (memory, V3-49): *if you understand an artist's
-inspirations and influences, it deepens your appreciation for that work of
-art, and provides pathways of discovery to new art and artists you may also
-love. A contextual recommendation engine.* The pitch needs the FUTURE tense
-of this — where the influence graph goes at scale. (Tony: dump this next.)
+**The unchanging core:** the contextual recommendation engine is the value
+prop and stays it. *"You give me something you love, I give you five things
+you'll also love."* Everything else is in service of that.
+
+**The direction of travel:** Kynda will never be "finished." The vision is
+agnosticism not only of medium but of **language, culture, device, and form
+of creation**. The pizza page didn't invent that — it accelerated something
+notionally there: of course recipes are inspired by other food and a rich
+panoply of cultural inputs.
+
+**The sequencing discipline:** the risk is getting diluted too quickly.
+Music is where we started and is arguably "easier" to document — get a few
+mediums RIGHT first. Film next: a lot harder, potentially more rewarding —
+the offshoots could point you to a cinematographer and their nature
+photography, a poet-turned-screenwriter, a heart-shattering theatrical
+performance. (Depth before breadth, deliberately.)
+
+**The emergent layers (later, not built first):** the more you input what
+you love, and the more people do that, and the more contributors we get —
+a **social graph built on top of the influence graph**; **emergent field
+experts** on particular topics; **conversations that burst from the page**
+— with the requisite double-edged sword of user contributions and
+necessary curatorial overhead.
+> Connects: the hunch queue + "Proposed by readers" sections are the
+> embryonic form of all three; the curatorial-overhead cost is already
+> visible and priced in the admin flow.
+
+**The engine underneath:** with Fable we've reached a new edge of the
+adjacent possible and are capitalizing on it immediately. The key is a
+continued feedback loop leveraging the latest AI advances **while keeping
+the experience rooted in humanity**.
+> (His own frame — the adjacent possible — is Steven Johnson's term. The
+> #6 bridge and the vision share a vocabulary.)
+
+**Experience-it, much richer:** ideally Kynda HOUSES media so you don't
+leave to experience the thing; where you do leave, be structured and
+helpful about routing to the Spotify or streaming service you already pay
+for, if that's the most convenient angle.
+> Connects: the curated-doors mechanism (V3-65) is v0 of this; the
+> streaming-service picker exists; licensing/embedding is the #5 whale
+> conversation wearing product clothes.
+
+**Source-signal strength, smarter:** a direct live 1:1 interview with Rick
+Riordan must signal as much stronger than a critical observation, a fan
+contribution, or even a web-sourced older interview.
+> Connects: the citation-degree ladder (artist's own words > critical >
+> fan) exists; this adds an APEX tier above "artist's own words, archived":
+> **artist's own words, elicited** — which is exactly what the
+> agent-outreach design (V3-67 notes) produces. The ladder gains a rung.
+
+**The dream at the top:** artists themselves curate their own influence
+maps.
+> Connects: compatible with the canon axiom (they curate what shaped them,
+> not themselves); the ultimate first-degree source; and note the September
+> opportunity hiding here — Sydney Skybetter is an artist-scholar with a
+> live concept page. He could be the FIRST artist to curate his own
+> influence map. The pitch could end by handing him the pen.
 
 ## Ways a Brown relationship could work (no particular order)
 
@@ -84,6 +136,6 @@ NotebookLM — and perhaps a bridge to Google (another whale).
 
 ## Still to capture
 
-- The product vision at future tense (Tony's next dump)
-- What Kynda asks for vs. offers in each mode
-- The September meeting's desired outcome (which of the five to lead with?)
+- What Kynda asks for vs. offers in each of the six modes
+- The September meeting's desired outcome (which mode to lead with?)
+- The dilution guardrail as policy: what makes a medium "ready" to enter?
