@@ -59,6 +59,20 @@ Times, NPR, BBC, and international sources of culture data.
 > closed data. Brown's letterhead converts cold outreach into institutional
 > conversation.
 
+**6. Brown helps us build a bridge back to Steven Johnson** — fellow alum,
+who almost became a Kynda board member but then got distracted building
+NotebookLM — and perhaps a bridge to Google (another whale).
+> Connects: Johnson's entire oeuvre is Kynda's thesis in book form — *Where
+> Good Ideas Come From* is about ideas having lineages, the adjacent
+> possible, innovation as network. He didn't drift to something unrelated:
+> NotebookLM is source-grounded AI — the same religion as quote-confirmed
+> citations, practiced at Google scale. The re-approach pitch writes
+> itself: "the influence graph is the book you kept writing." Google as
+> whale: YouTube (performance footage — half our curated Experience-it
+> links), Google Books, and Arts & Culture (already a default door on art
+> cards) are the distribution/data trifecta. Note this is a SIXTH distinct
+> mechanism: Brown as alumni network hub, not Brown as institution.
+
 ## Observations across the five (Kynda's notes, not Tony's)
 
 - The five aren't parallel options — they compound: 3 feeds 4, 4 feeds the
