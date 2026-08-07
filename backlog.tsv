@@ -7,11 +7,8 @@
 # (V3-55/56: live-art thread resolved BOTH ways — Kitsou Dubois seeded
 # 2026-07-31, and /s/live-art-in-microgravity built as the first concept
 # subject. Remaining practitioner candidates for depth, when wanted:)
-Dance	Frank Pietronigro
-Dance	Dragan Zivadinov
+# (Pietronigro + Zivadinov seeded 2026-08-07 — microgravity neighborhood
+# deepened for September.)
 #
-# OPEN THREAD (V3-56): Wikipedia name-resolution falls back to the nearest
-# article when a subject has no English page (Dubois harvest read "Space
-# art"; concept bio quotes it). Edges stay real; attribution is fuzzy.
-# Fix: an article-title-vs-subject guard in loadSubjectArticle /
-# harvestSubjectWikipedia.
+# (V3-56 article-resolution thread: BUILT as the title-match guard in
+# V3-65 — a name-search article must match the subject or return nothing.)
