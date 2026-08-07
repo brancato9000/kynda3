@@ -251,7 +251,8 @@ definitive version — but it holds things the conversations missed.
   visualization… a living tribute to the best of our humanity." Mode #3's
   curriculum list (arts, CS, anthropology) is literally this slide.
 - **THE UCLA PRECEDENT (never surfaced in our conversations!):** Tony
-  taught a UCLA class on influence in the history of music, Herb Alpert
+  AND MEAGAN taught a UCLA class TOGETHER on influence in the history of
+  music, Herb Alpert
   School of Music, inaugural semester Fall '22, sponsored by the Associate
   Dean of Musicology; students co-developed the influence taxonomy and
   used the prototype for final projects; two interns Winter '23; UCLA
