@@ -194,6 +194,34 @@ Standing note: Sydney's own world (choreorobotics, CRCI, BAI) sits exactly
 where the pilot pays off first — dance is the least-cataloged major art
 form, so Turn 1's evidence is maximally vivid in his own field.
 
+### The UCLA playbook (Tony, 2026-08-06 — how the class ACTUALLY happened)
+
+During COVID, Tony and Meagan wrote the first version of the SBJ deck, and
+its first line said *we are using the Influence Graph to teach a class at
+UCLA* — before they knew anyone at UCLA. "As soon as I wrote that line, I
+was like: oh, that sounds really good. Now I want to make that happen."
+(Write the line, then make it true — a founding method.)
+
+Then: significant networking → friend-of-a-friend → the Dean of Music →
+**a biweekly conversation about influence and what it means, mostly
+musing, for six months** → at the end of which THE DEAN suggested teaching
+a class. It was Tony's intent from the first line, but he never proposed
+it himself. It arrived organically — which is why it was owned inside UCLA
+from birth.
+
+**Translation for Brown:** the co-develop-it-slowly-inside-the-institution
+approach has precedent and it WORKS — but Tony doesn't want to wait six
+months this time; more structured, more intentional. The synthesis: be
+intentional about the CADENCE, patient about the CONCLUSION. Which
+suggests a **Turn 0 before Turn 1**: the September ask may not be the
+pilot itself but the *recurring conversation* — a standing Tony↔Sydney
+session about influence in embodied practice — inside which the pilot gets
+co-authored (in weeks, not months, because unlike 2021 there's a working
+product, live pages, and evidence on the table from day one). Sydney has
+effectively already said yes to Turn 0: "Looking forward to talking this
+through." The pilot proposal should be built so that by the time it's
+formal, it feels like it was partly his idea — because it will be.
+
 ## From the 2024 deck ("The Influence Project," pitched to Steven Johnson)
 
 Read 2026-08-06. Tony's framing: vision has evolved, so the deck is a *less*
