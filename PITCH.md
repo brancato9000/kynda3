@@ -156,14 +156,43 @@ resources), let the evidence accumulate, and let the expensive yeses
 evidence rather than requested cold. September's anchor ask should be
 sized to what Sydney can personally say yes to.
 
-## Observations across the six ways (Kynda's notes, not Tony's)
+## THE FLYWHEEL — structured by adoption (Tony's call, 2026-08-06)
 
-- The five aren't parallel options — they compound: 3 feeds 4, 4 feeds the
-  graph, the graph's gaps justify 2 and 5, and 1 underwrites the loop.
-  A pitch structure could present them as one flywheel rather than a menu.
-- Sydney's own world (choreorobotics, CRCI) sits squarely in the #2
-  argument: dance is the least-cataloged major art form — the domain where
-  a closed-corpus partnership pays off first and most visibly.
+Each turn is sized to who can grant it, and each turn's output is the
+evidence that justifies the next. Ratified structure:
+
+**Turn 1 — the solo yes (September's anchor).** An inexpensive pilot / proof
+of concept scoped to the Brown Arts Institute — a yes Sydney alone can
+make, in the room. (Candidate shape: a BAI-curated corpus — performance,
+choreography, the microgravity neighborhood — built with Kynda's existing
+pipeline; Sydney as first artist-curator of his own map.)
+
+**Turn 2 — the adjacent accelerant.** Modest funding or Anthropic token
+subsidization to speed the pilot — dean-discretionary money, still cheap
+in friction. (Tony: "accelerated by funding or token subsidization as the
+adjacent possible.")
+
+**Turn 3 — evidence accumulates.** The pilot yields verifiable artifacts:
+documented maps of under-cataloged fields, quote-confirmed citations,
+badge-rate numbers, perhaps a co-authored artifact with BAI. This is the
+internal case — made BY insiders, not requested cold.
+
+**Turn 4 — the bridges open.** The Johnson/Google introduction (cheap at
+any time, stronger carried with pilot evidence and the shared adjacent-
+possible vocabulary).
+
+**Turn 5 — the committee yeses, argued from evidence.** Scoped research
+partnership deepens toward the closed corpus (#2); curriculum integration
+(#3); student-body contribution (#4) — each now justified to committees by
+Turn 3's artifacts and championed internally.
+
+**Turn 6 — the letterhead.** With institutional adoption real, Brown's
+name opens the whale data conversations (NYT, NPR, BBC, international
+sources) (#5).
+
+Standing note: Sydney's own world (choreorobotics, CRCI, BAI) sits exactly
+where the pilot pays off first — dance is the least-cataloged major art
+form, so Turn 1's evidence is maximally vivid in his own field.
 
 ## From the 2024 deck ("The Influence Project," pitched to Steven Johnson)
 
@@ -280,8 +309,9 @@ definitive version — but it holds things the conversations missed.
 
 - For each of the six ways a Brown relationship could work: what exactly
   would we be asking Brown for, and what does Brown get in return?
-- The September meeting's desired outcome: of the six ways, which one do we
-  open with and anchor the conversation on? (Can't pitch all six equally.)
+- ~~Which way opens the conversation~~ → RESOLVED: Turn 1 of the flywheel —
+  the pilot Sydney can green-light alone. Remaining: define the pilot's
+  concrete shape, cost, and duration for the September ask.
 - The dilution guardrail as policy: what makes a medium "ready" to enter?
 - Patent groundwork (backlogged): what's patentable — the influence-
   biography format, the verification pipeline, or neither; prior art scan
