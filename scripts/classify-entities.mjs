@@ -190,4 +190,61 @@ for (let i = 0; i < subjects.rows.length; i += 40) {
   await new Promise((r) => setTimeout(r, 700));
 }
 console.log(`${DRY ? "would fix" : "fixed"}: ${fixed}`);
+
+// Citer-year backfill (V3-70, Tony's call): influence-over-time analytics
+// need the CITING entity's generation, and claim-connected non-subjects
+// never got years. People and groups only — works are homonym-prone and
+// usually carry their mix-item year already. Conservative: exact label
+// match, type-gated (human -> birth/death, group -> formed/dissolved);
+// a miss is stamped in metadata so it is never retried every run.
+const citers = await q(`
+  SELECT e.id, e.name, e.kind FROM entities e
+  WHERE e.year_start IS NULL AND e.wikidata_qid IS NULL
+    AND e.kind IN ('person', 'group')
+    AND COALESCE(e.metadata->>'year_lookup', '') <> 'miss'
+    AND EXISTS (SELECT 1 FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id)`);
+console.log(`\nciter years: ${citers.rows.length} claim-connected people/groups undated`);
+let dated = 0, missed = 0;
+for (const row of citers.rows) {
+  let result = null;
+  try {
+    const exact = (await searchEntity(row.name, 5)).filter((h) => (h.label || "").toLowerCase() === row.name.toLowerCase());
+    if (exact.length) {
+      const url = new URL("https://www.wikidata.org/w/api.php");
+      url.searchParams.set("action", "wbgetentities");
+      url.searchParams.set("ids", exact.map((h) => h.qid).join("|"));
+      url.searchParams.set("props", "claims");
+      url.searchParams.set("format", "json");
+      const res = await fetchWithRetry(url, { headers: { "User-Agent": "Kynda/3.0 (brancato@gmail.com)" } });
+      const cand = (await res.json()).entities || {};
+      const yearOf = (c, pid) => {
+        const t = (c[pid] || [])[0]?.mainsnak?.datavalue?.value?.time;
+        const m = t?.match(/^([+-]\d{1,6})/);
+        return m ? parseInt(m[1], 10) : null;
+      };
+      for (const h of exact) {
+        const c = cand[h.qid]?.claims || {};
+        const p31 = (c.P31 || []).map((x) => x.mainsnak?.datavalue?.value?.id);
+        if (row.kind === "person" && p31.includes("Q5")) {
+          const ys = yearOf(c, "P569");
+          if (ys) { result = { ys, ye: yearOf(c, "P570") }; break; }
+        }
+        if (row.kind === "group" && p31.some((x) => ["Q215380", "Q105756498", "Q2088357"].includes(x))) {
+          const ys = yearOf(c, "P571");
+          if (ys) { result = { ys, ye: yearOf(c, "P576") }; break; }
+        }
+      }
+    }
+  } catch { /* transient — leave unstamped so a future run retries */ result = undefined; }
+  if (result) {
+    dated += 1;
+    if (!DRY) await q("UPDATE entities SET year_start = $2, year_end = $3 WHERE id = $1", [row.id, result.ys, result.ye]);
+    if (dated <= 20 || DRY) console.log(`  ${row.name} (${row.kind}): ${result.ys}–${result.ye ?? ""}`);
+  } else if (result === null) {
+    missed += 1;
+    if (!DRY) await q(`UPDATE entities SET metadata = metadata || '{"year_lookup":"miss"}'::jsonb WHERE id = $1`, [row.id]);
+  }
+  await new Promise((r) => setTimeout(r, 250));
+}
+console.log(`citer years ${DRY ? "(dry) " : ""}dated: ${dated}, stamped miss: ${missed}`);
 await getPool().end();
