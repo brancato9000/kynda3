@@ -1099,6 +1099,12 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     }
   }
 
+  // Covers only exists for musicians — setlist.fm data is meaningless on a
+  // film or concept page. Kind can be missing (DEMO) or "unknown" (wikidata
+  // candidates), so exclude non-performer kinds rather than require person/group.
+  const isMusician = subject?.domain === "music" &&
+    !["work", "release", "recording", "concept", "place", "book", "film", "tv_show"].includes(subject?.kind);
+
   return (
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
       <style>{`
@@ -1239,7 +1245,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
 
           {/* MIX | COVERS | GRAPH tabs (covers and graph are lazy and token-free) */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            {[["mix", "Mix"], ["covers", "Covers"], ["graph", "Graph"]].map(([id, label]) => (
+            {[["mix", "Mix"], ...(isMusician ? [["covers", "Covers"]] : []), ["graph", "Graph"]].map(([id, label]) => (
               <button key={id}
                 onClick={() => (id === "graph" ? openGraphTab(subject) : id === "covers" ? openCoversTab(subject) : setTab("mix"))}
                 style={{

@@ -29,16 +29,16 @@ function conflicts(a, b) {
 }
 
 try {
-  // Pass 2 rule (V3-33): creator-shaped kinds (person/group/other) are one
-  // identity pool, and creator-less "work" rows (harvest artist-targets)
-  // join it. Works WITH a creator stay separate — real collisions exist
-  // (Cake's song "Frank Sinatra").
+  // Pass 2 rule (V3-33): creator-shaped kinds (person/group/other/concept)
+  // are one identity pool, and creator-less "work" rows (harvest
+  // artist-targets) join it. Works WITH a creator stay separate — real
+  // collisions exist (Cake's song "Frank Sinatra").
   const groups = await client.query(`
     SELECT lower(name) AS lname, json_agg(json_build_object(
       'id', id, 'name', name, 'kind', kind, 'mbid', mbid, 'wikidata_qid', wikidata_qid, 'created_at', created_at)
       ORDER BY (kind IN ('person','group')) DESC, (mbid IS NOT NULL OR wikidata_qid IS NOT NULL) DESC, created_at) AS members
     FROM entities
-    WHERE kind IN ('person','group','other')
+    WHERE kind IN ('person','group','other','concept')
        OR (kind = 'work' AND COALESCE(metadata->>'creator', '') = '')
     GROUP BY 1 HAVING count(*) > 1`);
 
