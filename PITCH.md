@@ -147,14 +147,15 @@ yes on the list. Repriced, cheapest institutional yes first:
 6. **Student-body access** — security/privacy review, FERPA questions,
    comms, monitoring. The most expensive yes, per Tony.
 
-**The strategic consequence:** the VALUE flywheel runs curriculum →
-students → graph → research → whales. But the ADOPTION path likely runs
-the REVERSE of the friction ladder: start with the yeses Sydney can give
-alone or nearly alone (an intro; a BAI-scoped pilot; maybe discretionary
-resources), let the evidence accumulate, and let the expensive yeses
-(curriculum, student body, letterhead) be justified to committees BY that
-evidence rather than requested cold. September's anchor ask should be
-sized to what Sydney can personally say yes to.
+**What this ladder is — and is not (Tony's second correction, 2026-08-07):**
+this is a COST table, not an ask sequence. Cheap does not mean early: an
+introduction costs Brown nothing in governance, but asking for it before
+anything is proven spends unearned relationship capital. The ask order is
+governed by EARNED TRUST, not friction: partnership with Sydney → proof
+of concept → partnership with Brown → and only then the outward-facing
+asks (letterhead, the Johnson/Google bridge). The ladder's job is sizing
+each ask to who can grant it when its moment comes — September's anchor
+stays the pilot Sydney can green-light alone.
 
 ## THE FLYWHEEL — structured by adoption (Tony's call, 2026-08-06)
 
@@ -177,18 +178,19 @@ documented maps of under-cataloged fields, quote-confirmed citations,
 badge-rate numbers, perhaps a co-authored artifact with BAI. This is the
 internal case — made BY insiders, not requested cold.
 
-**Turn 4 — the bridges open.** The Johnson/Google introduction (cheap at
-any time, stronger carried with pilot evidence and the shared adjacent-
-possible vocabulary).
+**Turn 4 — the partnership deepens, argued from evidence.** Scoped
+research partnership grows toward the closed corpus (#2); curriculum
+integration (#3); student-body contribution (#4) — each justified to
+committees by Turn 3's artifacts and championed internally. The Sydney
+partnership becomes a BROWN partnership.
 
-**Turn 5 — the committee yeses, argued from evidence.** Scoped research
-partnership deepens toward the closed corpus (#2); curriculum integration
-(#3); student-body contribution (#4) — each now justified to committees by
-Turn 3's artifacts and championed internally.
-
-**Turn 6 — the letterhead.** With institutional adoption real, Brown's
-name opens the whale data conversations (NYT, NPR, BBC, international
-sources) (#5).
+**Turn 5 — the outward turn (earned, never early).** Only with the
+partnership real do the external-facing asks come: Brown's name for the
+whale data conversations (NYT, NPR, BBC, international sources) (#5), and
+the Johnson/Google bridge (#6) — cheap to grant at any time, but asked
+only once there is proof to carry across it. (Tony, 2026-08-07: establish
+the partnership and the proof of concept BEFORE asking to use Brown's
+name or network outward.)
 
 Standing note: Sydney's own world (choreorobotics, CRCI, BAI) sits exactly
 where the pilot pays off first — dance is the least-cataloged major art
