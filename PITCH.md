@@ -125,7 +125,7 @@ NotebookLM — and perhaps a bridge to Google (another whale).
 > cards) are the distribution/data trifecta. Note this is a SIXTH distinct
 > mechanism: Brown as alumni network hub, not Brown as institution.
 
-## Observations across the five (Kynda's notes, not Tony's)
+## Observations across the six ways (Kynda's notes, not Tony's)
 
 - The five aren't parallel options — they compound: 3 feeds 4, 4 feeds the
   graph, the graph's gaps justify 2 and 5, and 1 underwrites the loop.
@@ -220,12 +220,14 @@ definitive version — but it holds things the conversations missed.
    somewhere between deferred and appendix: ONE deck slide — "Future
    Applications" — speaks to potential futures; the core carries the pitch.
 2. **Phase 3 (predictive analytics) → PARKED.** Deferred outright.
-3. **Phase 4 (media company) → STAYS IN THE MIX.** Tony has built a
-   COMPLETE VIDEO PILOT EPISODE — an imagined artist modeled on Beyoncé
-   walking through her influence graph, then artists she inspired speaking
-   about her as an influence. "You can tell a biography through the lens of
-   influence." A powerful narrative format — and a pitch asset that exists
-   TODAY (the Phase 4 demo is already made).
+3. **Phase 4 (media company) → STAYS IN THE MIX.** Tony has made a ~7
+   minute pilot video — ENTIRELY AI-GENERATED, with a MADE-UP artist
+   (modeled on Beyoncé) — walking through her influence graph, then artists
+   she inspired speaking about her as an influence. Built purely to
+   demonstrate the concept: "you can tell a biography through the lens of
+   influence." Could be brought to the Sydney meeting, but always framed
+   for exactly what it is — an AI-generated concept demo, not a produced
+   episode and not a real artist.
 4. **The patent → NOTHING FILED YET; wants to pursue.** Tony would love to
    figure out how to apply — likely subject matter includes the
    influence-biography narrative format (the pilot) and possibly Kynda's
@@ -245,10 +247,12 @@ definitive version — but it holds things the conversations missed.
 
 ## Still to capture
 
-- What Kynda asks for vs. offers in each of the six modes
-- The September meeting's desired outcome (which mode to lead with?)
+- For each of the six ways a Brown relationship could work: what exactly
+  would we be asking Brown for, and what does Brown get in return?
+- The September meeting's desired outcome: of the six ways, which one do we
+  open with and anchor the conversation on? (Can't pitch all six equally.)
 - The dilution guardrail as policy: what makes a medium "ready" to enter?
 - Patent groundwork (backlogged): what's patentable — the influence-
   biography format, the verification pipeline, or neither; prior art scan
-- The Beyoncé-modeled pilot episode: where does it live, and does Sydney
-  see it in September?
+- The pilot video (7 min, AI-generated, fictional artist): does Sydney see
+  it in September, and with what framing?
