@@ -198,12 +198,13 @@ console.log(`${DRY ? "would fix" : "fixed"}: ${fixed}`);
 // match, type-gated (human -> birth/death, group -> formed/dissolved);
 // a miss is stamped in metadata so it is never retried every run.
 const citers = await q(`
-  SELECT e.id, e.name, e.kind FROM entities e
-  WHERE e.year_start IS NULL AND e.wikidata_qid IS NULL
+  SELECT e.id, e.name, e.kind, e.year_start, e.wikidata_qid FROM entities e
+  WHERE ((e.year_start IS NULL AND COALESCE(e.metadata->>'year_lookup', '') <> 'miss')
+      OR (e.active_from IS NULL AND COALESCE(e.metadata->>'active_lookup', '') <> 'miss'))
     AND e.kind IN ('person', 'group')
     AND COALESCE(e.metadata->>'year_lookup', '') <> 'miss'
     AND EXISTS (SELECT 1 FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id)`);
-console.log(`\nciter years: ${citers.rows.length} claim-connected people/groups undated`);
+console.log(`\nciter years: ${citers.rows.length} claim-connected people/groups missing years or active_from`);
 let dated = 0, missed = 0;
 for (const row of citers.rows) {
   let result = null;
@@ -227,19 +228,29 @@ for (const row of citers.rows) {
         const p31 = (c.P31 || []).map((x) => x.mainsnak?.datavalue?.value?.id);
         if (row.kind === "person" && p31.includes("Q5")) {
           const ys = yearOf(c, "P569");
-          if (ys) { result = { ys, ye: yearOf(c, "P570") }; break; }
+          // active_from = career start (P2031) ONLY — never birth (V3-70).
+          if (ys || yearOf(c, "P2031")) { result = { ys, ye: yearOf(c, "P570"), af: yearOf(c, "P2031") }; break; }
         }
         if (row.kind === "group" && p31.some((x) => ["Q215380", "Q105756498", "Q2088357"].includes(x))) {
           const ys = yearOf(c, "P571");
-          if (ys) { result = { ys, ye: yearOf(c, "P576") }; break; }
+          // a group's formation IS its career start
+          if (ys) { result = { ys, ye: yearOf(c, "P576"), af: ys }; break; }
         }
       }
     }
   } catch { /* transient — leave unstamped so a future run retries */ result = undefined; }
   if (result) {
     dated += 1;
-    if (!DRY) await q("UPDATE entities SET year_start = $2, year_end = $3 WHERE id = $1", [row.id, result.ys, result.ye]);
-    if (dated <= 20 || DRY) console.log(`  ${row.name} (${row.kind}): ${result.ys}–${result.ye ?? ""}`);
+    if (!DRY) await q(
+      "UPDATE entities SET year_start = COALESCE(year_start, $2), year_end = COALESCE(year_end, $3), active_from = COALESCE(active_from, $4) WHERE id = $1",
+      [row.id, result.ys, result.ye, result.af ?? null]
+    );
+    if (dated <= 20 || DRY) console.log(`  ${row.name} (${row.kind}): ${result.ys ?? "?"}–${result.ye ?? ""} active:${result.af ?? "—"}`);
+    // resolved person with no documented career start: stamp so we never
+    // re-query — and never fall back to birth (V3-70, Tony's rule).
+    if (!DRY && row.kind === "person" && !result.af) {
+      await q(`UPDATE entities SET metadata = metadata || '{"active_lookup":"miss"}'::jsonb WHERE id = $1`, [row.id]);
+    }
   } else if (result === null) {
     missed += 1;
     if (!DRY) await q(`UPDATE entities SET metadata = metadata || '{"year_lookup":"miss"}'::jsonb WHERE id = $1`, [row.id]);
