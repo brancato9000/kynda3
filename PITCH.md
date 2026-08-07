@@ -333,6 +333,53 @@ definitive version — but it holds things the conversations missed.
    deck architecture writes itself: The Influence Project (vision) →
    Kynda (the product, get it right) → Future Applications (one slide).
 
+## The density program (designed 2026-08-07 — PARKED, not run)
+
+**The question:** the Beyoncé spreadsheet (593 hand-labeled connections,
+2022 — now in the repo as beyonce-connections-2022.xlsx) proves supernova
+density. How to get it at scale? Tony's manual process maps step-for-step
+onto automated machinery:
+
+1. *"Ingest 17k musician pages"* → query Wikipedia's backlinks index
+   instead: 7,471 articles link to Beyoncé, 10k+ each to Dylan and the
+   Beatles, 1,715 to Kraftwerk (measured, free).
+2. *"Hunt any reference"* → the existing cross-mention machinery pulls the
+   exact sentences; deterministic, free, overnight polite crawl.
+3. *"Hand categorize"* → a small model classifies each mention into the
+   claim taxonomy with structured outputs — the step LLMs made cheap.
+
+**The golden-set move:** Tony's 593 hand labels ARE the eval ground truth.
+The first experiment is not "sweep and trust" — it is "sweep Beyoncé and
+SCORE the classifier against Tony-2022," per-category precision/recall,
+before any edge enters the corpus. The 2022 labor becomes the instrument
+that proves its own replacement.
+
+**Honest two-tier cost** (after Tony challenged the first estimate):
+- First supernova: ~$100–200 tokens (classifier tuning against the golden
+  set dominates) + a few sessions of pipeline build. Budget $250 to be
+  safely honest (Wave B ran 1.5x its estimate).
+- Each subsequent supernova: ~$20–50 marginal. The ask funds the
+  INSTRUMENT; per-artist cost after that is lunch money.
+- Signal-type portfolio: covers=Setlist.fm (adapter exists), collaborators=
+  Discogs/MB credits, samples=needs a new source + claim type, influence
+  prose=backlink sweep; the ceiling above Wikipedia is the closed archives
+  (the whales, flywheel turns 5-6).
+
+**Tony's call (2026-08-07): PARKED.** $250 is steep for what isn't needed
+at this stage — Sydney expects nothing like it, and the manual 2022 run is
+already speakable in the room (arguably better: "I did this by hand once;
+here is what the machine now does for $30" is a stronger line WITH the
+spreadsheet as the artifact). The design is captured here for when density
+becomes the bottleneck; new claim types it surfaced (sample, toured_with,
+anti_influence) wait with it.
+
+**Also captured from the density discussion — the IA answer at hundreds of
+signals:** the mix stays eight slots (the argument, not the archive);
+generation flips from model-first to graph-first when density exists;
+per-slot "MORE" drawers hold the evidence-ranked long tail; covers stay in
+their own tabs; the analytics view earns tab status. The claims graph is
+the archive; the mix is the front page.
+
 ## Still to capture
 
 - For each of the six ways a Brown relationship could work: what exactly
