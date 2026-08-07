@@ -125,6 +125,37 @@ NotebookLM — and perhaps a bridge to Google (another whale).
 > cards) are the distribution/data trifecta. Note this is a SIXTH distinct
 > mechanism: Brown as alumni network hub, not Brown as institution.
 
+## Pricing a "yes" in institutional currency (Tony's correction, 2026-08-06)
+
+Kynda's first read had curriculum/students as the cheapest yes — priced in
+dollars and effort. Tony's correction: for an institution the currency is
+FRICTION — curriculum change means faculty hearts-and-minds campaigns;
+opening anything to students means security overhang, marketing, and
+monitoring. Under that pricing, curriculum/students is the MOST expensive
+yes on the list. Repriced, cheapest institutional yes first:
+
+1. **The Johnson/Google bridge** — an introduction. Costs a phone call;
+   zero governance.
+2. **A small grant / subsidized resources** — routine machinery; deans
+   hold discretionary funds.
+3. **A scoped research collaboration with ONE lab or center** — a single
+   director's discretion. And Sydney RUNS one (Brown Arts Institute): a
+   BAI-scoped pilot may need nobody's approval but his.
+4. **Letterhead for external data conversations** — reputationally
+   expensive; lending the name invites brand-risk review.
+5. **Curriculum integration** — curriculum committees + faculty adoption.
+6. **Student-body access** — security/privacy review, FERPA questions,
+   comms, monitoring. The most expensive yes, per Tony.
+
+**The strategic consequence:** the VALUE flywheel runs curriculum →
+students → graph → research → whales. But the ADOPTION path likely runs
+the REVERSE of the friction ladder: start with the yeses Sydney can give
+alone or nearly alone (an intro; a BAI-scoped pilot; maybe discretionary
+resources), let the evidence accumulate, and let the expensive yeses
+(curriculum, student body, letterhead) be justified to committees BY that
+evidence rather than requested cold. September's anchor ask should be
+sized to what Sydney can personally say yes to.
+
 ## Observations across the six ways (Kynda's notes, not Tony's)
 
 - The five aren't parallel options — they compound: 3 feeds 4, 4 feeds the
