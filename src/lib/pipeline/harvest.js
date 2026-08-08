@@ -111,7 +111,20 @@ export async function harvestSubjectWikipedia(subject, { model = SONNET, log = (
 export async function harvestSource(url, { model = SONNET, log = console.log } = {}) {
   const page = await fetchPageText(url);
   if (!page.ok) return { url, error: `fetch failed (${page.status || page.error})` };
-  const text = page.text.slice(0, 60_000);
+  const archivedUrl = await waybackSnapshot(url).catch(() => null);
+  return harvestText({ url, text: page.text, archivedUrl, model, log });
+}
+
+/**
+ * Harvest core over text already in hand — the extraction call, the shape
+ * gates, the quote wall, the store loop. harvestSource feeds it fetched web
+ * pages; harvest-loc.mjs feeds it Chronicling America OCR. When the caller
+ * KNOWS publication/publishedDate (e.g. from a library API), pass them —
+ * deterministic metadata beats model-extracted. sourceNote is prepended to
+ * the user message for source-class context (e.g. "this is newspaper OCR").
+ */
+export async function harvestText({ url, text: rawText, model = SONNET, log = console.log, archivedUrl = null, publication: knownPublication = null, publishedDate: knownDate = null, sourceNote = "" }) {
+  const text = rawText.slice(0, 60_000);
 
   // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.
   // But thinking draws from the same budget, and dense pages can think most
@@ -121,7 +134,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
     try {
       extraction = await callModel(model, {
         system: HARVEST_SYSTEM,
-        user: `Source URL: ${url}\n\nPAGE TEXT:\n${text}`,
+        user: `${sourceNote ? `${sourceNote}\n\n` : ""}Source URL: ${url}\n\nPAGE TEXT:\n${text}`,
         schema: HARVEST_SCHEMA,
         maxTokens,
         effort: "medium",
@@ -134,8 +147,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
     }
   }
 
-  const archivedUrl = await waybackSnapshot(url).catch(() => null);
-  const publication = extraction.publication || new URL(url).hostname.replace(/^www\./, "");
+  const publication = knownPublication || extraction.publication || new URL(url).hostname.replace(/^www\./, "");
   const runId = `harvest_${Date.now().toString(36)}`;
   const summary = { url, publication, extracted: extraction.claims.length, confirmed: 0, rejected: 0, subjects: new Set() };
 
@@ -175,7 +187,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
         speaker: c.speaker || "",
         sourceDegree: c.sourceDegree,
         publication,
-        publishedDate: extraction.publishedDate || "",
+        publishedDate: knownDate || extraction.publishedDate || "",
         note: c.note || "",
       },
       verification,

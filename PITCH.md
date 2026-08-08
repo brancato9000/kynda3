@@ -311,6 +311,23 @@ The 2024 shopping list had LoC as an aspiration; a same-day API probe
 3. **Catalog/finding-aid metadata** — 58,978 Dunham items; tells the ask
    feature's evidence_suggestions WHERE receipts physically live.
 
+**Prototype run (same day, 2026-08-08):** scripts/harvest-loc.mjs feeds
+ChronAm OCR through the standard harvest core (shape gates + quote wall);
+publication and date come from the API deterministically, so every
+citation lands dated. Four subjects (Dunham, Graham, Billie Holiday,
+Frank Lloyd Wright), 14 newspaper pages, **64 quote-confirmed dated
+citations for $0.85** (~$0.013 each — Wikipedia-harvest territory).
+Standouts: Martha Graham's whole lineage from a 1933 Springfield
+Republican profile (studied under Ruth St. Denis, Denishawn, "greatly
+influenced by... the dances of the Indians of the Southwest," Stark Young
+comparing her to Diego Rivera); Stravinsky citing Mozart in a 1932
+interview; Dunham's OUTBOUND teaching lineage (Syvilla Fort 1943,
+Jacqueline Danois 1962). The quote wall held against OCR noise — quotes
+verify against the same OCR the model read, errors and all. Read-once
+economics worked as designed: a Graham search enriched Stravinsky. The
+control case confirmed the thesis: Wright (web-saturated) yielded least;
+the dance subjects and the Black press yielded most.
+
 Why it advances the mission (the articulation for Sydney): the citation
 ladder's scarcest rung is the artist's own words, and the older and less
 white the artist, the thinner the web is. LoC's newspaper corpus is dated
