@@ -332,9 +332,16 @@ export async function recordFinding({ subjectEntityId, finding, verification, ru
   return { claimId, confirmed: verification.status === "quote_confirmed" };
 }
 
-/** Confirmed primary-source citations for a subject↔work pair (serve-time). */
+/** Confirmed primary-source citations for a subject↔work pair (serve-time).
+ * Matches the card's WORK TITLE and its CREATOR — a receipt tying the
+ * subject to the card's artist supports the card's argument even when it
+ * doesn't name the specific work ("Graham studied under St. Denis" belongs
+ * on the Radha card). Name comparison is punctuation-insensitive: harvested
+ * sources (esp. newspaper OCR) drop periods ("Ruth St Denis"). */
 export async function getCitationsForItem(subject, item) {
   if (!dbConfigured()) return [];
+  const creator = (item.creator || "").trim();
+  const sameCreator = creator && creator.toLowerCase() === subject.name.toLowerCase();
   const r = await q(
     `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date, p.speaker, p.source_degree, p.notes
      FROM provenance p
@@ -344,10 +351,15 @@ export async function getCitationsForItem(subject, item) {
      WHERE p.verification_status = 'quote_confirmed'
        AND p.verification_method = 'primary_source_quote_match'
        AND (s.mbid = $1 OR s.wikidata_qid = $2 OR lower(s.name) = lower($3))
-       AND lower(o.name) = lower($4)
-     ORDER BY (CASE p.source_degree WHEN 'first' THEN 0 WHEN 'second' THEN 1 WHEN 'third' THEN 2 ELSE 1 END), p.created_at DESC
+       AND regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') IN
+           (regexp_replace(lower($4), '[^a-z0-9]', '', 'g'),
+            regexp_replace(lower($5), '[^a-z0-9]', '', 'g'))
+     ORDER BY (CASE WHEN regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($4), '[^a-z0-9]', '', 'g') THEN 0 ELSE 1 END),
+              (CASE p.source_degree WHEN 'first' THEN 0 WHEN 'second' THEN 1 WHEN 'third' THEN 2 ELSE 1 END), p.created_at DESC
      LIMIT 3`,
-    [subject.mbid || null, subject.wikidata_qid || null, subject.name, item.title]
+    // Canon cards (creator = the subject) fall back to title-only matching —
+    // a subject↔subject claim can't exist, and $5 must never equal $4's slot.
+    [subject.mbid || null, subject.wikidata_qid || null, subject.name, item.title, sameCreator ? "" : creator]
   );
   return r.rows.map((row) => ({
     url: row.source_url,
