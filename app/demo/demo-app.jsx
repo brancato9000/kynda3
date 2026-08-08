@@ -189,6 +189,13 @@ function CitationBlock({ citations }) {
               archive ↗
             </a>
           )}
+          {/* Watchable receipts (inline media v1): when the citation's source
+              IS media with an official embed (AAPB broadcasts), the receipt
+              stops being a footnote and becomes footage. */}
+          {parseEmbed(c.url) && (
+            <InlineMedia url={c.url} cta="watch the source"
+              title={`${c.publication}${c.date ? `, ${c.date}` : ""}`} />
+          )}
         </div>
       ))}
     </div>
@@ -284,10 +291,15 @@ function parseEmbed(url) {
   }
   m = url.match(/vimeo\.com\/(\d+)\b/);
   if (m) return { provider: "Vimeo", src: `https://player.vimeo.com/video/${m[1]}?autoplay=1`, credit: "watch on Vimeo" };
+  // AAPB (LoC + GBH) publishes its own embed endpoint — archive-official
+  // media, the cleanest rung of the media-provenance ladder. Catalog URLs
+  // are what harvest-aapb stores as provenance, so RECEIPTS become playable.
+  m = url.match(/americanarchive\.org\/(?:catalog|embed)\/([\w-]+)/);
+  if (m) return { provider: "AAPB", src: `https://americanarchive.org/embed/${m[1]}`, credit: "watch at AAPB" };
   return null;
 }
 
-function InlineMedia({ url, title }) {
+function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   // One player at a time: starting any embed announces itself on the same
   // in-page event bus the service picker uses; every OTHER playing instance
@@ -317,7 +329,7 @@ function InlineMedia({ url, title }) {
           fontFamily: FONTS.mono, fontSize: "10.5px", letterSpacing: "0.06em",
           textTransform: "uppercase", color: "rgba(52,211,153,0.9)",
         }}>
-        ▶ watch here <span style={{ color: "rgba(148,163,184,0.5)", textTransform: "none" }}>· plays via {embed.provider}, views credit the source</span>
+        ▶ {cta} <span style={{ color: "rgba(148,163,184,0.5)", textTransform: "none" }}>· plays via {embed.provider}, views credit the source</span>
       </button>
     );
   }
