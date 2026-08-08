@@ -289,11 +289,26 @@ function parseEmbed(url) {
 
 function InlineMedia({ url, title }) {
   const [playing, setPlaying] = useState(false);
+  // One player at a time: starting any embed announces itself on the same
+  // in-page event bus the service picker uses; every OTHER playing instance
+  // collapses (unmounting the iframe stops its audio).
+  const idRef = useRef(null);
+  if (idRef.current === null) idRef.current = `media_${Math.random().toString(36).slice(2)}`;
+  useEffect(() => {
+    if (!playing) return;
+    const onOtherPlay = (e) => { if (e.detail !== idRef.current) setPlaying(false); };
+    window.addEventListener("kynda-media-play", onOtherPlay);
+    return () => window.removeEventListener("kynda-media-play", onOtherPlay);
+  }, [playing]);
   const embed = parseEmbed(url);
   if (!embed) return null;
+  function start() {
+    window.dispatchEvent(new CustomEvent("kynda-media-play", { detail: idRef.current }));
+    setPlaying(true);
+  }
   if (!playing) {
     return (
-      <button onClick={() => setPlaying(true)}
+      <button onClick={start}
         aria-label={`Play ${title} inline via ${embed.provider}`}
         style={{
           marginTop: "12px", display: "inline-flex", alignItems: "center", gap: "8px",
