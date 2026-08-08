@@ -2,6 +2,29 @@
 # format wave.mjs reads, so a wave can be cut straight from this file
 # (comment lines have no tab and are filtered out by the roster parser).
 #
+# ═══ LISTENABLE / WATCHABLE MIX (Tony's musing, 2026-08-08 — "feels
+# possible in a way it didn't just an hour ago") ═══
+# The mix as a PODCAST you play in the car; ultimately a generated SHOW.
+# Phases:
+#   (a) Drivable influence playlist: the music mix's songs + TTS-read
+#       interstitials of the card text we already generate. Card copy IS
+#       the script; the mix IS the running order. Nearest-term.
+#   (b) Media-agnostic rich podcast: original research narration + CITED
+#       AUDIO QUOTES stitched end-to-end — the watchable-receipts idea
+#       becoming hearable (play the 1978 Dunham clip inside the episode).
+#   (c) Dynamically generated video show: the influence mix as a watchable
+#       multimedia episode; cards as scenes.
+# THE RIGHTS LINE THAT SHAPES ALL THREE: embeds are page-level permission —
+# a platform lets you EMBED in a page; it does NOT let you stitch its
+# audio/video into a generated artifact. Stitchable inputs are exactly the
+# three clean storage cases from the inline-media contemplation: public
+# domain (LoC/AAPB-era material), first-party (agent-outreach recordings,
+# artist-curated audio), licensed. So (a) works today as app-played
+# playlist w/ TTS between PLATFORM-STREAMED songs (nothing stitched);
+# (b)/(c) grow with the PD + first-party archive. The tech is near
+# (transcripts, TTS, timestamps all exist in-house); rights is the design
+# constraint, not capability.
+#
 # ═══ TOP ITEM (Tony, 2026-08-08): INLINE MEDIA v0 on a demo page ═══
 # Watch Cunningham's influences embedded IN the cards; hear Jarrett's
 # predecessors. v0 = render existing curated Experience-it doors (many are
