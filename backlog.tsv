@@ -12,3 +12,21 @@
 #
 # (V3-56 article-resolution thread: BUILT as the title-match guard in
 # V3-65 — a name-search article must match the subject or return nothing.)
+#
+# AAPB wiring session — TEED UP 2026-08-08, every endpoint validated live:
+#   1. search: americanarchive.org/api.json?q="<name>"&fq=access_types:online
+#      (Solr JSON; docs carry guid + PBCore xml with broadcast_date)
+#   2. transcript: server-rendered INLINE in the item page html
+#      (americanarchive.org/catalog/<guid>, div.transcript-content) —
+#      fetchPageText/harvestSource reads it with zero new code
+#   3. wrapper worth ~60 lines (mirror harvest-loc.mjs): search → skip
+#      already-harvested urls → skip pages with no transcript-content →
+#      harvestText with publication + broadcast_date passed DETERMINISTICALLY
+#      from the PBCore metadata (dated citations, like LoC)
+#   Validation case: cpb-aacip-529-pc2t43kf46 = 1988 Longhorn Radio "Forum"
+#   Cunningham special, full transcript inline. 46 online Cunningham items.
+#
+# Fresh Air at scale — after the 5-transcript pilot (51 confirmed, $0.59,
+# first-degree cited_as_influence in 4/5 mediums): the guests index
+# (freshairarchive.org/guests/<a-z>) crossed against the corpus roster is
+# the batch driver; segment pages harvest via harvestSource as-is.

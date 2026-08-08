@@ -338,6 +338,38 @@ influence-over-time methodology directly. This is the pattern each new
 source should follow — not "more data" but "which rung of the ladder does
 it strengthen, for whom, with what dates."
 
+### Audio as a source form (probed live, 2026-08-08)
+
+The citation ladder's top rung — the artist speaking — mostly lives in
+AUDIO, not text. Probe results, ranked:
+
+1. **Fresh Air Archive (freshairarchive.org)** — the headline: full
+   interview transcripts inline as ordinary HTML back to 1975, with a
+   browsable guests index. harvestSource() reads it TODAY, zero new code.
+   ~45 years of long-form artist interviews = first-degree, artist's-own-
+   words receipts, the scarcest rung. Newspapers yield collaborations;
+   interviews are where artists NAME their influences.
+2. **AAPB — American Archive of Public Broadcasting** (LoC + GBH): search
+   API works (335 Merce Cunningham items, public TV/radio back decades),
+   transcripts exist for a large subset, but retrieval endpoints are
+   quirky — needs one wiring session. Pitch symmetry: it's an LoC project.
+3. **Podcasts** — no central transcript archive, but self-transcription
+   economics are absurd: Whisper-class ≈ $0.006/min → a 90-min WTF episode
+   costs ~$0.55 to transcribe + $0.06 to harvest. **~60¢ converts an
+   artist-interview into quote-confirmed graph receipts** (quote wall
+   verifies against the transcript we hold, same as OCR). Maron alone:
+   1,400+ episodes.
+4. **TV closed captions** — weak/parked: IA TV News is 2009+ news-heavy;
+   YouTube caption scraping is TOS-gray (out); historical talk-show
+   archives (Cavett) are rights conversations, not APIs.
+5. **Radio beyond NPR** — Pacifica (1949+, extraordinary interviews, no
+   public transcript layer), BBC (closed): letterhead conversations.
+
+Combined source map after today: text archives 1830–1990 (ChronAm, MHDL,
+ProQuest-behind-Brown), audio 1975–present (Fresh Air, AAPB, podcasts).
+The top rung stops being scarce. Sequencing: Fresh Air → AAPB → Whisper
+podcast tier.
+
 ### How big is the mountain (sizing session, 2026-08-08)
 
 If the ambition is the last ~200 years of culture, globally, all mediums —
