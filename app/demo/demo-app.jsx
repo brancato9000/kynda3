@@ -308,6 +308,17 @@ function InlineMedia({ url, title }) {
   }
   return (
     <div style={{ marginTop: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "6px" }}>
+        <button onClick={() => setPlaying(false)}
+          aria-label={`Collapse the ${embed.provider} player`}
+          style={{
+            background: "none", border: "none", cursor: "pointer", padding: "2px 4px",
+            fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.06em",
+            textTransform: "uppercase", color: "rgba(148,163,184,0.55)",
+          }}>
+          ✕ collapse
+        </button>
+      </div>
       <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)", background: "#000" }}>
         <iframe src={embed.src} title={title} loading="lazy"
           allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen
