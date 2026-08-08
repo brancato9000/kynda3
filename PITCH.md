@@ -338,6 +338,43 @@ influence-over-time methodology directly. This is the pattern each new
 source should follow — not "more data" but "which rung of the ladder does
 it strengthen, for whom, with what dates."
 
+### How big is the mountain (sizing session, 2026-08-08)
+
+If the ambition is the last ~200 years of culture, globally, all mediums —
+anchored to the big reference catalogs (MusicBrainz ~2.5M artists, IMDb
+~700k films, Google Books ~130M volumes, Getty ULAN, Wikidata):
+
+**~100 million entities, and 1–2 BILLION documented connections.** Music
+and literature dominate raw counts (each: 1.5–2.5M creators, tens of
+millions of works); film/TV/art sit in the single-digit millions;
+architecture, theater, fashion in the hundreds of thousands. Today's graph
+is 6,350 entities / ~7k claims / ~5k quote-confirmed citations — 0.006% of
+the mountain. Three punchlines:
+
+1. **Culture is scale-free, so 0.006% is on schedule.** Influence follows
+   power laws: the first ~100k subjects (the modern canon, all mediums)
+   deliver ~80% of what any reader will ever search. Phase-1 target is
+   ~500× today's corpus, not ~500,000×.
+2. **The canon layer is shockingly affordable.** At proven unit costs
+   (~$0.30/subject generation, ~$0.01/confirmed citation, ~30 each), the
+   100k-subject canon spine is **$50–100k in tokens** — less than one
+   engineer-year. The other 99.9M entities enter free, as the far end of
+   someone else's receipt (Judy Garland arrived today via Fred Astaire's
+   newspaper pages). The billion-edge outer graph is what the flywheel,
+   contributors, and institutional partners are FOR.
+3. **Dance is the strategic anomaly.** Every other row has a giant
+   incumbent catalog; dance has NO IMDb, no MusicBrainz — maybe 50k
+   documented people ever. It's the one category where Kynda isn't the
+   connective layer over existing documentation but becomes the PRIMARY
+   RECORD. Said to a choreographer-director: in nine rows Kynda organizes
+   the archive; in his row it IS the archive. (Today's proof gesture:
+   Dunham's teaching lineage pulled from newspapers unread for 80 years.)
+
+Corollary for sources: the open web covers ~the last 30 years. For 85% of
+the 200-year span, the closed-or-scanned archives (ChronAm to the 1830s,
+MHDL trades from 1900, ProQuest music press) are the only road in. The
+archive strategy is not a side quest.
+
 ### Questions the 2024 deck asked that Kynda v3 has since ANSWERED
 
 - "Can we extract contextual relationship signals from large corpora?" —
