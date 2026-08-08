@@ -289,6 +289,38 @@ definitive version — but it holds things the conversations missed.
   (???). Sydney plausibly fills a seat the 2024 list didn't have:
   performance/embodiment scholar.
 
+### Library of Congress: verified reachable (live probe, 2026-08-07)
+
+Tony's framing: building out new data sources — and articulating how each
+one advances the mission — could be an important part of the Sydney story.
+The 2024 shopping list had LoC as an aspiration; a same-day API probe
+(free, no key, no partnership required) found three open doors:
+
+1. **Chronicling America** — full-text-searchable OCR of digitized
+   historic US newspapers, JSON API. Probe: 976 pages mentioning
+   "Katherine Dunham," correctly dated to her era, heavily from the
+   historic Black press. The very first page pulled (Twin City Observer,
+   Oct 6 1944) contained Dunham praising Mary Lou Williams as "one of the
+   most outstanding artists in the country today" — a dated, cross-domain
+   (dance→music) admiration signal in the artist's own reported words,
+   findable nowhere on Wikipedia. One probe, one receipt.
+2. **Digitized special collections** — the Katherine Dunham Collection
+   (1920–2006) itself is at LoC, with streamable film of her teaching
+   Dunham Technique: Experience-it doors for exactly the performance
+   material that is hardest to link.
+3. **Catalog/finding-aid metadata** — 58,978 Dunham items; tells the ask
+   feature's evidence_suggestions WHERE receipts physically live.
+
+Why it advances the mission (the articulation for Sydney): the citation
+ladder's scarcest rung is the artist's own words, and the older and less
+white the artist, the thinner the web is. LoC's newspaper corpus is dated
+primary-source coverage of precisely the artists the open web undersells —
+and dance, the least-documented art form, is one of LoC's strongest
+archival suits. Also: every hit carries a publication DATE, feeding the
+influence-over-time methodology directly. This is the pattern each new
+source should follow — not "more data" but "which rung of the ladder does
+it strengthen, for whom, with what dates."
+
 ### Questions the 2024 deck asked that Kynda v3 has since ANSWERED
 
 - "Can we extract contextual relationship signals from large corpora?" —
