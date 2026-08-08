@@ -106,7 +106,15 @@ try {
 
   for (const name of subjects) {
     console.log(`\n▸ ${name} — searching Chronicling America`);
-    const { total, results } = await searchPages(name, pagesPer * 4);
+    // One subject's dead search must not kill a 55-subject run — log and
+    // move on; re-running the same roster resumes (harvested URLs skip).
+    let total, results;
+    try {
+      ({ total, results } = await searchPages(name, pagesPer * 4));
+    } catch (err) {
+      console.log(`  ✗ search failed: ${err.message}`);
+      continue;
+    }
     console.log(`  ${total} newspaper page(s) mention the phrase; trying top ${Math.min(results.length, pagesPer * 4)} for ${pagesPer} harvest(s)`);
 
     let done = 0;
@@ -133,7 +141,9 @@ try {
 
       const publication = cleanPublication(r.partof_title?.[0]);
       console.log(`  ▸ ${publication} — ${r.date} (${(text.length / 1000).toFixed(0)}k chars OCR)`);
-      const s = await harvestText({
+      let s;
+      try {
+        s = await harvestText({
         url,
         text,
         model,
@@ -142,7 +152,11 @@ try {
         sourceNote:
           "This is OCR text of ONE full historic newspaper page (many unrelated articles and ads; OCR errors are possible). Extract only explicitly stated cultural connections. Quotes must be VERBATIM from this OCR text, including any OCR errors — they are machine-checked against it.",
         log: console.log,
-      });
+        });
+      } catch (err) {
+        console.log(`  ✗ harvest failed: ${err.message}`);
+        continue;
+      }
       done += 1;
       harvested += 1;
       confirmed += s.confirmed; rejected += s.rejected; dropped += s.dropped || 0;
