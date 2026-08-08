@@ -270,6 +270,53 @@ function ContributeRow({ subject, item, hasCitations }) {
   );
 }
 
+// Inline media v0 (backlog top item, 2026-08-08): curated Experience-it
+// doors that point at YouTube/Vimeo render as OFFICIAL embed players —
+// embed ≠ host: plays and views accrue to the source channel. Click-to-
+// load so no third-party scripts touch the page until the reader opts in,
+// and the outbound door stays visible (inline preview, outbound credit).
+function parseEmbed(url) {
+  if (!url) return null;
+  let m = url.match(/(?:youtube\.com\/(?:watch\?[^#]*v=|embed\/)|youtu\.be\/)([\w-]{6,20})/);
+  if (m) {
+    const t = url.match(/[?&](?:t|start)=(\d+)/)?.[1];
+    return { provider: "YouTube", src: `https://www.youtube-nocookie.com/embed/${m[1]}?${t ? `start=${t}&` : ""}autoplay=1`, credit: "watch on YouTube" };
+  }
+  m = url.match(/vimeo\.com\/(\d+)\b/);
+  if (m) return { provider: "Vimeo", src: `https://player.vimeo.com/video/${m[1]}?autoplay=1`, credit: "watch on Vimeo" };
+  return null;
+}
+
+function InlineMedia({ url, title }) {
+  const [playing, setPlaying] = useState(false);
+  const embed = parseEmbed(url);
+  if (!embed) return null;
+  if (!playing) {
+    return (
+      <button onClick={() => setPlaying(true)}
+        aria-label={`Play ${title} inline via ${embed.provider}`}
+        style={{
+          marginTop: "12px", display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.3)",
+          borderRadius: "6px", padding: "7px 14px", cursor: "pointer",
+          fontFamily: FONTS.mono, fontSize: "10.5px", letterSpacing: "0.06em",
+          textTransform: "uppercase", color: "rgba(52,211,153,0.9)",
+        }}>
+        ▶ watch here <span style={{ color: "rgba(148,163,184,0.5)", textTransform: "none" }}>· plays via {embed.provider}, views credit the source</span>
+      </button>
+    );
+  }
+  return (
+    <div style={{ marginTop: "12px" }}>
+      <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)", background: "#000" }}>
+        <iframe src={embed.src} title={title} loading="lazy"
+          allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} />
+      </div>
+    </div>
+  );
+}
+
 // "Where to experience it" (V3-38): library-first links, then the user's own
 // streaming service (preference in localStorage; deep links land in their
 // logged-in player — no accounts on our side, ever).
@@ -291,6 +338,7 @@ function ExperienceRow({ item, subjectName }) {
 
   const linkStyle = { fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none", textTransform: "uppercase" };
   return (
+    <>
     <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
       <span style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(148,163,184,0.45)" }}>
         experience it
@@ -317,6 +365,8 @@ function ExperienceRow({ item, subjectName }) {
         </span>
       )}
     </div>
+    <InlineMedia url={item.experienceUrl} title={item.title} />
+    </>
   );
 }
 
