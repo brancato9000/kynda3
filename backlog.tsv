@@ -1,6 +1,28 @@
 # Backlog — subjects queued for a future wave. Same "Category<TAB>Name"
 # format wave.mjs reads, so a wave can be cut straight from this file
 # (comment lines have no tab and are filtered out by the roster parser).
+#
+# ═══ TOP ITEM (Tony, 2026-08-08): INLINE MEDIA v0 on a demo page ═══
+# Watch Cunningham's influences embedded IN the cards; hear Jarrett's
+# predecessors. v0 = render existing curated Experience-it doors (many are
+# already YouTube/Vimeo urls) as official embed players on ONE demo page
+# (Cunningham candidate). ~an afternoon. Principles from the contemplation:
+#   - embed ≠ host ≠ steal: official embed APIs are the platform's own
+#     distribution; views/ads accrue to the creator. Inline preview,
+#     OUTBOUND CREDIT (keep the "watch on YouTube ↗" door visible).
+#   - MEDIA PROVENANCE = citation ladder applied to embeds: official
+#     channel/archive first-degree, fan upload third. Chip it on the card.
+#   - proprietary storage only in three clean cases: public domain
+#     (pre-1929 = preservation + differentiation, where platforms are
+#     weakest), first-party (agent-outreach recordings, artist-curated
+#     maps — the walled garden you're allowed to build because you grew
+#     it), licensed (the whale conversations wearing product clothes).
+#   - technically an `embed` field on the CLAIM {provider, id, degree,
+#     license, TIMESTAMP} — play the 40 seconds of Sacre that Bausch
+#     reinterpreted. Verification = oEmbed metadata check (dumb check,
+#     no model judgment), tombstone fallback when embeds rot.
+#   - ramp: v0 doors-as-players → v1 harvest-time embed candidates →
+#     v2 PD self-hosting → v3 licensed/first-party.
 # (Keith Jarrett, the first entry, was seeded same-day at Tony's request —
 # 2026-07-31, $0.27 all-in: mix + Wikipedia harvest.)
 #
