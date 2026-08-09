@@ -31,6 +31,25 @@ export function parseEmbed(url) {
   return null;
 }
 
+// Curated Commons image (inline media v0.5): the image renders directly —
+// the license was gated at curation time (override-image.mjs allowlist),
+// and attribution + license + source link always render with the pixels.
+export function CardImage({ item }) {
+  if (!item?.imageUrl) return null;
+  return (
+    <figure style={{ margin: "14px 0 0 0" }}>
+      <img src={item.imageUrl} alt={item.title}
+        style={{ width: "100%", maxHeight: "340px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.18)", display: "block" }} />
+      <figcaption style={{ marginTop: "5px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
+        image: {item.imageCredit} · {item.imageLicense} ·{" "}
+        <a href={item.imagePage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
+          commons ↗
+        </a>
+      </figcaption>
+    </figure>
+  );
+}
+
 export function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   const idRef = useRef(null);

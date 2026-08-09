@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../../src/design/tokens.js";
 import { experienceLinks, STREAM_SERVICES } from "../../src/lib/experience.js";
-import { parseEmbed, InlineMedia } from "../../src/design/inline-media.jsx";
+import { parseEmbed, InlineMedia, CardImage } from "../../src/design/inline-media.jsx";
 import GraphView from "../graph-view.jsx";
 import { slugify } from "../../src/lib/slug.js";
 import Wordmark from "../../src/design/wordmark.jsx";
@@ -564,6 +564,9 @@ function SlotCard({ slot, index, subject }) {
       </div>
       <RevealText text={item.reason} msPerWord={12} delayMs={200}
         style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(226,232,240,0.82)" }} />
+      {/* Curated Commons image (inline media v0.5): the thing itself, with
+          license and attribution carried from the same API call */}
+      <CardImage item={item} />
       {/* T2 citations outrank everything below — show them first when present */}
       {citations.length > 0 && <CitationBlock citations={citations} />}
       {/* The connection chip sits with the claim it describes: the reason prose */}
