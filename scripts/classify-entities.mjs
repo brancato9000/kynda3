@@ -51,6 +51,7 @@ const P106_MAP = {
   Q4964182: "other",                               // philosopher (Ideas)
   Q36834: "music", Q639669: "music", Q177220: "music", // composer, musician, singer
   Q947873: "television", Q578109: "television",    // presenter, TV producer
+  Q245068: "comedy", Q2591461: "comedy",           // comedian, stand-up comedian (V3: comedy category, 2026-08-08)
 };
 
 // V3-51 follow-up: "first mapped occupation wins" drifted — TV creators
@@ -83,6 +84,11 @@ function personDomain(claims, current) {
   const domains = occs.map((qid) => P106_MAP[qid]);
   const absolute = occs.find((qid) => ABSOLUTE_OCCS.has(qid));
   if (absolute) return P106_MAP[absolute];
+  // Comedy (2026-08-08, Tony's category call): a comedian credit wins even
+  // over music and television — Steve Martin's banjo and Eddie Murphy's
+  // singles are sidelines, and the television scan is what mislabeled
+  // Pryor. Comedian is effectively never a secondary credit in this corpus.
+  if (domains.includes("comedy")) return "comedy";
   if (domains.includes("dance") && !domains.includes("music")) return "dance";
   if (domains.includes("fashion") && !domains.includes("music")) return "fashion";
   if (PRIMARY_OCCS.has(occs[0])) return P106_MAP[occs[0]];

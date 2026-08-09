@@ -38,7 +38,7 @@ const MIX_SCHEMA = {
           crossing: { anyOf: [{ type: "string" }, { type: "null" }] },
           medium: {
             type: "string",
-            enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "other"],
+            enum: ["music", "film", "television", "literature", "art", "design", "architecture", "theater", "dance", "fashion", "comedy", "other"],
           },
           reason: { type: "string" },
         },
@@ -268,6 +268,7 @@ const WIKIDATA_KEYWORDS = {
   architecture: ["building", "architecture", "tower", "museum", "house"],
   theater: ["play", "musical", "opera", "ballet"],
   dance: ["ballet", "dance", "choreograph", "dancer", "dance company"],
+  comedy: ["comedy", "stand-up", "comedian", "comedy special", "comedy album"],
   // Used for creator-property conviction gating, not the award-only path.
   literature: ["book", "novel", "poem", "play", "essay", "dialogue", "epic", "poetry", "treatise", "short story", "novella"],
 };
