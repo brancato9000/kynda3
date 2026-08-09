@@ -25,6 +25,25 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# ═══ COMEDY (Tony, 2026-08-08): mine 10 comedians BEFORE SEPTEMBER ═══
+# A category we haven't touched — and unusually well-suited to the current
+# source stack: comedians self-document influence relentlessly (Fresh Air
+# guest depth is deep; AAPB sweep already found Richard Pryor with 132
+# online items — he's in the corpus as television and can anchor the
+# neighborhood). Candidate roster below spans eras/styles — edit freely,
+# then a wave can be cut straight from these rows (~$0.30/subject + the
+# audio-source harvests on top).
+Comedy	Lenny Bruce
+Comedy	Moms Mabley
+Comedy	George Carlin
+Comedy	Joan Rivers
+Comedy	Phyllis Diller
+Comedy	Steve Martin
+Comedy	Eddie Murphy
+Comedy	Dave Chappelle
+Comedy	Ali Wong
+Comedy	Tig Notaro
+#
 # ═══ GROWTH: TIKTOK-LENGTH INFLUENCE TREES (Tony, 2026-08-08) ═══
 # Once Kynda is live/scalable/affordable consumer-facing: generate short
 # vertical videos laying out the influence tree of NEW AND EMERGING bands,
