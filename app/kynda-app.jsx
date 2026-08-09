@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../src/design/tokens.js";
 import Wordmark from "../src/design/wordmark.jsx";
 import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
+import { parseEmbed, InlineMedia } from "../src/design/inline-media.jsx";
 import GraphView from "./graph-view.jsx";
 import { slugify } from "../src/lib/slug.js";
 
@@ -189,6 +190,13 @@ function CitationBlock({ citations }) {
               archive ↗
             </a>
           )}
+          {/* Watchable receipts (inline media v1): when the citation's source
+              IS media with an official embed (AAPB broadcasts), the receipt
+              stops being a footnote and becomes footage. */}
+          {parseEmbed(c.url) && (
+            <InlineMedia url={c.url} cta="watch the source"
+              title={`${c.publication}${c.date ? `, ${c.date}` : ""}`} />
+          )}
         </div>
       ))}
     </div>
@@ -291,6 +299,7 @@ function ExperienceRow({ item, subjectName }) {
 
   const linkStyle = { fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none", textTransform: "uppercase" };
   return (
+    <>
     <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
       <span style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(148,163,184,0.45)" }}>
         experience it
@@ -317,6 +326,10 @@ function ExperienceRow({ item, subjectName }) {
         </span>
       )}
     </div>
+    {/* Inline media v0: curated doors that point at embeddable media play
+        in place — click-to-load, official players, outbound credit kept. */}
+    <InlineMedia url={item.experienceUrl} title={item.title} />
+    </>
   );
 }
 
