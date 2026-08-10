@@ -157,6 +157,11 @@ export default function Admin() {
                 {c.comment && <div style={{ fontSize: "13px", lineHeight: 1.6, color: "rgba(226,232,240,0.85)", marginTop: "8px" }}>{c.comment}</div>}
                 {c.quote && <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13px", lineHeight: 1.6, color: "rgba(226,232,240,0.75)", marginTop: "8px" }}>“{c.quote}”</div>}
                 {c.url && <a href={c.url} target="_blank" rel="noreferrer" style={{ ...mono("10px", "rgba(52,211,153,0.75)"), textDecoration: "none", display: "inline-block", marginTop: "6px" }}>{c.url} ↗</a>}
+                {c.kind === "media_flag" && c.url && (/\.(jpe?g|png|webp|gif)(\?|$)/i.test(c.url) || /upload\.wikimedia\.org/.test(c.url)) && (
+                  <div style={{ ...mono("10px", "rgba(250,204,21,0.85)"), marginTop: "6px" }}>
+                    ⚠ license unverified — applying publishes this image under the fair-use posture (V3-72): card-scoped, visible good-faith caveat, ⚑ as the rights-owner channel
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: "14px", marginTop: "12px" }}>
                   <button disabled={acting === c.id} onClick={() => act(c.id, "approve")}
                     style={{ ...mono("11px", "rgba(52,211,153,0.9)"), background: "none", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>

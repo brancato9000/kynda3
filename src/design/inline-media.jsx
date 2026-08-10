@@ -45,10 +45,13 @@ export function CardImage({ item }) {
       <img src={item.imageUrl} alt={item.title}
         style={{ width: "100%", maxHeight: "380px", objectFit: "contain", borderRadius: "8px", display: "block", background: "rgba(0,0,0,0.25)" }} />
       <figcaption style={{ marginTop: "5px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
-        image: {item.imageCredit} · {item.imageLicense} ·{" "}
-        <a href={item.imagePage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
-          commons ↗
-        </a>
+        {/fair use/i.test(item.imageLicense || "") ? (
+          <>image via {item.imageCredit} — displayed under a good-faith fair-use assessment; rights owner? flag it below and we respond promptly ·{" "}
+          <a href={item.imagePage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>source ↗</a></>
+        ) : (
+          <>image: {item.imageCredit} · {item.imageLicense} ·{" "}
+          <a href={item.imagePage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>commons ↗</a></>
+        )}
       </figcaption>
     </figure>
   );

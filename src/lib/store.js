@@ -441,6 +441,23 @@ export async function applySuggestedMedia(contribution) {
 
   if (mediaKind === "preview") { item.previewUrl = ""; item.previewPage = ""; }
   if (mediaKind === "image") { item.imageUrl = ""; item.imagePage = ""; item.imageCredit = ""; item.imageLicense = ""; }
+
+  // Direct image links publish as the card's image under the fair-use
+  // posture (V3-72): curator approved with the license-unverified alert in
+  // view; CARD-SCOPED only (never mirrored to the entity — a fair-use
+  // rationale is context-specific and must not travel); the card renders
+  // the good-faith caveat with the ⚑ flag as the rights-owner channel.
+  const isDirectImage = /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) || /upload\.wikimedia\.org/.test(url);
+  if (isDirectImage) {
+    item.imageUrl = url;
+    item.imagePage = url;
+    item.imageLicense = "fair use — curator-approved (V3-72)";
+    item.imageCredit = new URL(url).hostname.replace(/^upload\./, "");
+    await q("UPDATE mixes SET payload = $2 WHERE id = $1", [row.id, JSON.stringify(row.payload)]);
+    await actOnContribution(id, "approve");
+    return { applied: true, card: item.title, mode: "fair_use_image", note: "published card-scoped with the fair-use caveat visible" };
+  }
+
   const label = /open\.spotify\.com/.test(url) ? "listen (spotify)"
     : /youtube\.com|youtu\.be/.test(url) ? "watch (youtube)"
     : /vimeo\.com/.test(url) ? "watch (vimeo)"
