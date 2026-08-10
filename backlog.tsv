@@ -25,6 +25,13 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# ADMIN SEARCH LOG DOUBLE-ENTRIES (Tony QA, 2026-08-09): every comedy-wave
+# subject appears twice in Recent searches — one row tier="certain" (the
+# disambiguation moment), one tier-less row ~2 min later (post-mix). The
+# wave path logs twice; diagnose (wave.mjs:61 recordSearch + whatever
+# fires the second tier-less write) and dedupe at the source. Also render
+# the tier legibly ("resolved: certain") — bare "certain" reads as jargon.
+#
 # BROWSE BY CENTURY (Tony, 2026-08-09): the architecture browse list
 # feels impenetrable and staid to a non-expert — organize the browse page
 # by century, most recent on top, so top-of-mind names surface first.
