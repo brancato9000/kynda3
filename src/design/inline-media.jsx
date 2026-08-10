@@ -159,6 +159,67 @@ export function MediaFlag({ subjectName, item, mediaKind }) {
   );
 }
 
+// Suggest-media lane (Tony QA, 2026-08-10, Ronchamp): cards with NO media
+// need an affordance too — "+ suggest media" takes a link (required) and
+// lands in the same curator queue; the admin apply button makes it a door.
+export function SuggestMedia({ subjectName, item }) {
+  const [open, setOpen] = useState(false);
+  const [link, setLink] = useState("");
+  const [state, setState] = useState(null);
+  if (!subjectName) return null;
+
+  async function submit() {
+    if (!/^https?:\/\//.test(link.trim())) return;
+    setState("sending");
+    try {
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "media_flag",
+          subject: { name: subjectName },
+          item: { title: item.title, creator: item.creator, slotType: item.slotType },
+          mediaKind: "embed",
+          specificity: "missing",
+          url: link.trim(),
+        }),
+      });
+      setState(res.ok ? "done" : "error");
+    } catch {
+      setState("error");
+    }
+  }
+
+  const mono = { fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", textTransform: "uppercase" };
+  if (state === "done") {
+    return <div style={{ ...mono, marginTop: "4px", color: "rgba(52,211,153,0.7)" }}>✓ suggestion sent — the curator will review</div>;
+  }
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        style={{ ...mono, background: "none", border: "none", cursor: "pointer", padding: "2px 0", color: "rgba(148,163,184,0.45)", marginTop: "2px" }}>
+        + suggest media for this card
+      </button>
+    );
+  }
+  const valid = /^https?:\/\//.test(link.trim());
+  return (
+    <div style={{ marginTop: "8px", padding: "12px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.25)", background: "rgba(0,0,0,0.35)" }}>
+      <div style={{ ...mono, color: "rgba(226,232,240,0.75)", marginBottom: "8px" }}>link to media for this card (image, video, or track)</div>
+      <input type="url" placeholder="https://..." value={link} onChange={(e) => setLink(e.target.value)}
+        style={{ width: "100%", padding: "6px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.25)", background: "rgba(0,0,0,0.4)", color: "rgba(226,232,240,0.85)", fontFamily: FONTS.mono, fontSize: "11px" }} />
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" }}>
+        <button onClick={submit} disabled={!valid || state === "sending"}
+          style={{ ...mono, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "5px", padding: "5px 12px", cursor: valid ? "pointer" : "default", color: valid ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.4)" }}>
+          {state === "sending" ? "sending..." : "suggest it"}
+        </button>
+        <button onClick={() => setOpen(false)} style={{ ...mono, background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.5)" }}>cancel</button>
+        {state === "error" && <span style={{ ...mono, color: "rgba(248,113,113,0.8)" }}>failed — try again</span>}
+      </div>
+    </div>
+  );
+}
+
 export function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   const idRef = useRef(null);

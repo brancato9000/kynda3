@@ -87,12 +87,16 @@ export async function POST(req) {
         wrong_artist: "wrong artist, right work",
         wrong_work: "wrong work, right artist",
         both_wrong: "both wrong",
+        missing: "suggested media for a card that has none",
       };
       const { mediaKind, specificity } = body;
       if (!item?.title || !SPECIFICITY[specificity] || !["preview", "image", "embed"].includes(mediaKind || "")) {
         return Response.json({ error: "media kind and specificity required" }, { status: 400 });
       }
       const suggested = /^https?:\/\//.test(url || "") ? url.slice(0, 500) : null;
+      if (specificity === "missing" && !suggested) {
+        return Response.json({ error: "suggesting media needs a link to the media" }, { status: 400 });
+      }
       await recordContribution({
         kind: "media_flag",
         ...base,
