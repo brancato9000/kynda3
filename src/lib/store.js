@@ -387,6 +387,12 @@ export async function getCardMedia(item) {
   // photo under a work's title reads as the work, misleadingly. Backfilled
   // media must depict the thing named; curated overrides remain the path
   // for anything else.
+  // Title AND creator must both match (QA 2026-08-10: "Body and Soul" is
+  // a standard — title-only matching put Billie Holiday's preview on the
+  // Ethel Waters card; the three-Frank-Sinatras lesson applies to media).
+  // A card with a creator only takes media from an entity with the SAME
+  // creator; entities without creator metadata don't qualify for it.
+  const creator = (item.creator || "").trim();
   const r = await q(
     `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
             metadata->>'image_license' AS license, metadata->>'image_credit' AS credit,
@@ -394,8 +400,9 @@ export async function getCardMedia(item) {
      FROM entities
      WHERE (metadata->>'image_url' IS NOT NULL OR metadata->>'preview_url' IS NOT NULL)
        AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')
+       AND ($2 = '' OR regexp_replace(lower(COALESCE(metadata->>'creator', '')), '[^a-z0-9]', '', 'g') = regexp_replace(lower($2), '[^a-z0-9]', '', 'g'))
      LIMIT 1`,
-    [item.title || ""]
+    [item.title || "", creator]
   );
   const row = r.rows[0];
   if (!row) return null;
