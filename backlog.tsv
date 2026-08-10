@@ -25,6 +25,21 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# BROWSE BY CENTURY (Tony, 2026-08-09): the architecture browse list
+# feels impenetrable and staid to a non-expert — organize the browse page
+# by century, most recent on top, so top-of-mind names surface first.
+# Tony's own caveat: century is imperfect; open to better. Options when
+# building:
+#   (a) his ask: century subheads, newest first (year_start/active_from
+#       data is ready; unknown-year names sink to a final group);
+#   (b) no subheads, just sort by active-era descending — lighter;
+#   (c) receipts-weight sort (citation count = documented-fame proxy) —
+#       puts Gehry above Richardson without any date logic;
+#   (d) era/movement labels ("Contemporary", "Modernist", "Beaux-Arts") —
+#       richest read, needs curation.
+# Whatever wins should apply per-domain (music's alphabetical list may be
+# fine; architecture/art/literature are where depth intimidates).
+#
 # ═══ AUTOMOTIVE LINEAGE (Tony, 2026-08-09, after Acquired's Ferrari &
 # Porsche episodes on a long drive): cars have a fascinating lineage —
 # an avenue for Kynda. Tony's caveat: unsure the current taxonomy and
