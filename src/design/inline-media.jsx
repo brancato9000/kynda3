@@ -28,6 +28,10 @@ export function parseEmbed(url) {
   // are what harvest-aapb stores as provenance, so RECEIPTS become playable.
   m = url.match(/americanarchive\.org\/(?:catalog|embed)\/([\w-]+)/);
   if (m) return { provider: "AAPB", src: `https://americanarchive.org/embed/${m[1]}`, credit: "watch at AAPB" };
+  // Spotify's official embed: anonymous listeners get a 30s preview,
+  // logged-in users the full track; plays credit the artist on-platform.
+  m = url.match(/open\.spotify\.com\/(track|album|episode)\/([A-Za-z0-9]+)/);
+  if (m) return { provider: "Spotify", src: `https://open.spotify.com/embed/${m[1]}/${m[2]}`, credit: "listen on Spotify", height: m[1] === "track" ? 152 : 352, verb: "listen" };
   return null;
 }
 
@@ -182,7 +186,7 @@ export function InlineMedia({ url, title, cta = "watch here" }) {
           fontFamily: FONTS.mono, fontSize: "10.5px", letterSpacing: "0.06em",
           textTransform: "uppercase", color: "rgba(52,211,153,0.9)",
         }}>
-        ▶ {cta} <span style={{ color: "rgba(148,163,184,0.5)", textTransform: "none" }}>· plays via {embed.provider}, views credit the source</span>
+        ▶ {cta === "watch here" && embed.verb === "listen" ? "listen here" : cta} <span style={{ color: "rgba(148,163,184,0.5)", textTransform: "none" }}>· plays via {embed.provider}, views credit the source</span>
       </button>
     );
   }
@@ -199,10 +203,14 @@ export function InlineMedia({ url, title, cta = "watch here" }) {
           ✕ collapse
         </button>
       </div>
-      <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)", background: "#000" }}>
+      <div style={embed.height
+        ? { borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)" }
+        : { position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)", background: "#000" }}>
         <iframe src={embed.src} title={title} loading="lazy"
           allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} />
+          style={embed.height
+            ? { width: "100%", height: `${embed.height}px`, border: 0, display: "block" }
+            : { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} />
       </div>
     </div>
   );
