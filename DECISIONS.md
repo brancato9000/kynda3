@@ -293,3 +293,16 @@ are commentary and criticism (near the textbook fair-use purpose); the
 project is small enough that enforcement attention is a champagne
 problem; and explicitness on the surface beats quiet risk. The posture is
 a conscious trade Tony owns per-asset in the admin, not a default.
+
+## V3-73: The album-cover class rule — one considered decision, not a thousand
+**Tony's call (2026-08-10), refining V3-72.** Fair use stays per-asset
+human judgment — with ONE class-level exception, decided once, here:
+cover art (album/single), at thumbnail size, on the card for that very
+work, auto-applies under fair use. This is the most settled fair-use
+category on the consumer internet (every music product operates this
+way); the use is transformative commentary on the specific work, at
+reduced resolution, with the work as the card's subject. Class-rule
+covers render with the same V3-72 good-faith caveat and ⚑ response
+channel, stay CARD-SCOPED (no entity mirror), and the rule covers
+nothing but covers: every other non-free image still queues for
+per-asset curator approval via the auto-propose pipeline.
