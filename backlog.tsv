@@ -25,6 +25,24 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# ═══ AUTOMOTIVE LINEAGE (Tony, 2026-08-09, after Acquired's Ferrari &
+# Porsche episodes on a long drive): cars have a fascinating lineage —
+# an avenue for Kynda. Tony's caveat: unsure the current taxonomy and
+# card approach hold up. Notes for when this opens:
+#   - More holds than expected: works = models (Porsche 911), creators =
+#     designers/houses/marques; studied_under ≈ apprenticeship (Pininfarina,
+#     Giugiaro lineages), member_of ≈ worked-at-marque, founded (Ferrari
+#     leaving Alfa; Lamborghini born of a Ferrari grudge), same_scene ≈
+#     racing series as scenes (Le Mans, F1). The pizza page already proved
+#     industrial-object lineage works (blue steel trays = design domain).
+#   - What strains: engineering transfer (platform/engine lineage) is a
+#     claim flavor we don't have; corporate authorship vs individual
+#     designers muddies "creator"; canon = landmark models needs a call.
+#   - Sources: enthusiast press archives, corporate museums, and PODCASTS —
+#     Acquired itself is exactly the Whisper-tier source class (b) in the
+#     listenable-mix plan. The trigger episode could be the first harvest.
+#   - Likely needs an "automotive" domain (migration 015, same pattern).
+#
 # FAVICON (Tony, 2026-08-09): a serif K in the display font — white on
 # black is fine. Implementation: render the wordmark's K (FONTS.display)
 # to a 32/180/512px set (or an SVG favicon with embedded @font-face
