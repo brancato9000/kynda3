@@ -96,6 +96,7 @@ const SPECIFICITY_OPTIONS = [
   ["wrong_artist", "wrong artist, right work"],
   ["wrong_work", "wrong work, right artist"],
   ["both_wrong", "both are wrong"],
+  ["better", "both are right — I have better media to offer"],
 ];
 
 export function MediaFlag({ subjectName, item, mediaKind }) {
@@ -105,8 +106,10 @@ export function MediaFlag({ subjectName, item, mediaKind }) {
   const [state, setState] = useState(null); // null | "sending" | "done" | "error"
   if (!subjectName) return null;
 
+  const linkRequired = specificity === "better";
   async function submit() {
     if (!specificity) return;
+    if (linkRequired && !/^https?:\/\//.test(link.trim())) return;
     setState("sending");
     try {
       const res = await fetch("/api/contribute", {
@@ -148,12 +151,12 @@ export function MediaFlag({ subjectName, item, mediaKind }) {
           {label}
         </label>
       ))}
-      <input type="url" placeholder="link to the correct media (optional)" value={link} onChange={(e) => setLink(e.target.value)}
+      <input type="url" placeholder={linkRequired ? "link to the better media (required)" : "link to the correct media (optional)"} value={link} onChange={(e) => setLink(e.target.value)}
         style={{ width: "100%", marginTop: "6px", padding: "6px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.25)", background: "rgba(0,0,0,0.4)", color: "rgba(226,232,240,0.85)", fontFamily: FONTS.mono, fontSize: "11px" }} />
       <div style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" }}>
-        <button onClick={submit} disabled={!specificity || state === "sending"}
-          style={{ ...mono, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "5px", padding: "5px 12px", cursor: specificity ? "pointer" : "default", color: specificity ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.4)" }}>
-          {state === "sending" ? "sending..." : "flag it"}
+        <button onClick={submit} disabled={!specificity || state === "sending" || (linkRequired && !/^https?:\/\//.test(link.trim()))}
+          style={{ ...mono, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "5px", padding: "5px 12px", cursor: specificity && (!linkRequired || /^https?:\/\//.test(link.trim())) ? "pointer" : "default", color: specificity && (!linkRequired || /^https?:\/\//.test(link.trim())) ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.4)" }}>
+          {state === "sending" ? "sending..." : specificity === "better" ? "offer it" : "flag it"}
         </button>
         <button onClick={() => setOpen(false)} style={{ ...mono, background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.5)" }}>cancel</button>
         {state === "error" && <span style={{ ...mono, color: "rgba(248,113,113,0.8)" }}>failed — try again</span>}

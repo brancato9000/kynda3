@@ -124,12 +124,16 @@ export async function POST(req) {
         both_wrong: "both wrong",
         missing: "suggested media for a card that has none",
         timestamp: "timestamp report",
+        better: "both right — better media offered",
       };
       const { mediaKind, specificity } = body;
       if (!item?.title || !SPECIFICITY[specificity] || !["preview", "image", "embed"].includes(mediaKind || "")) {
         return Response.json({ error: "media kind and specificity required" }, { status: 400 });
       }
       const suggested = /^https?:\/\//.test(url || "") ? url.slice(0, 500) : null;
+      if (specificity === "better" && !suggested) {
+        return Response.json({ error: "offering better media needs a link to it" }, { status: 400 });
+      }
       if (specificity === "missing" && !suggested) {
         return Response.json({ error: "suggesting media needs a link to the media" }, { status: 400 });
       }
