@@ -50,6 +50,35 @@ export function CardImage({ item }) {
   );
 }
 
+// iTunes 30-second preview (inline media v0.6): Apple provides preview
+// URLs explicitly for this purpose — official snippet, outbound credit to
+// the store page. Joins the one-player-at-a-time bus: starting any other
+// media pauses it.
+export function PreviewAudio({ item }) {
+  const audioRef = useRef(null);
+  const idRef = useRef(null);
+  if (idRef.current === null) idRef.current = `media_${Math.random().toString(36).slice(2)}`;
+  useEffect(() => {
+    const onOtherPlay = (e) => { if (e.detail !== idRef.current) audioRef.current?.pause(); };
+    window.addEventListener("kynda-media-play", onOtherPlay);
+    return () => window.removeEventListener("kynda-media-play", onOtherPlay);
+  }, []);
+  if (!item?.previewUrl) return null;
+  return (
+    <div style={{ marginTop: "12px" }}>
+      <audio ref={audioRef} controls preload="none" src={item.previewUrl}
+        onPlay={() => window.dispatchEvent(new CustomEvent("kynda-media-play", { detail: idRef.current }))}
+        style={{ width: "100%", height: "34px" }} />
+      <div style={{ marginTop: "4px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
+        30-second preview · plays via Apple ·{" "}
+        <a href={item.previewPage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
+          apple music ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   const idRef = useRef(null);

@@ -9,7 +9,7 @@
 //   {type:"done"}
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
-import { persistMixRun, getStoredMix, getCitationsForItem } from "../../../src/lib/store.js";
+import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 
@@ -59,6 +59,10 @@ export async function POST(req) {
               // after a mix is cached, and new primary sources must surface
               // (and can re-rank the carousel).
               const citations = await getCitationsForItem(subject, entry.item).catch(() => entry.verification?.citations || []);
+              // Backfilled media (P18 image / iTunes preview) attaches the
+              // same way — curated fields already on the card always win.
+              const media = await getCardMedia(entry.item).catch(() => null);
+              if (media) for (const [k, v] of Object.entries(media)) if (entry.item[k] == null) entry.item[k] = v;
               const verification = { ...entry.verification, citations };
               verifications.push(verification);
               send({ type: "item", s, c, slotType: slot.slotType, item: entry.item });

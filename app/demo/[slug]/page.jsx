@@ -9,7 +9,7 @@ import { headers } from "next/headers";
 import { createHash } from "node:crypto";
 import DemoApp from "../demo-app.jsx";
 import { q } from "../../../src/lib/db.js";
-import { listSubjects, getStoredMix, getGraphForSubject, getCitationsForItem } from "../../../src/lib/store.js";
+import { listSubjects, getStoredMix, getGraphForSubject, getCitationsForItem, getCardMedia } from "../../../src/lib/store.js";
 import { slugify } from "../../../src/lib/slug.js";
 import { getIntroExtract } from "../../../src/lib/entities/wikipedia.js";
 
@@ -63,7 +63,9 @@ export default async function DemoPage({ params }) {
     for (const c of slot.candidates || []) {
       if (!c?.item) continue;
       const citations = await getCitationsForItem(subject, c.item).catch(() => c.verification?.citations || []);
-      candidates.push({ ...c, verification: { ...c.verification, citations } });
+      const media = await getCardMedia(c.item).catch(() => null);
+      const item = media ? { ...media, ...Object.fromEntries(Object.entries(c.item).filter(([, v]) => v != null)) } : c.item;
+      candidates.push({ ...c, item, verification: { ...c.verification, citations } });
     }
     if (candidates.length) hydrated.push({ slotType: slot.slotType, candidates });
   }

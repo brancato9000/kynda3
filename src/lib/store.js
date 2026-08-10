@@ -373,6 +373,37 @@ export async function getCitationsForItem(subject, item) {
   }));
 }
 
+/** Backfilled entity media for a card (serve-time, inline media v0.6):
+ * P18 Commons image + iTunes 30s preview, identity/license-gated at
+ * backfill time.
+ * The card's WORK entity wins over its CREATOR entity; a curated override
+ * already on the card (item.imageUrl) always wins over both — callers only
+ * ask when the card has no image. Name match is punctuation-insensitive,
+ * same as citations. */
+export async function getCardMedia(item) {
+  if (!dbConfigured()) return null;
+  const creator = (item.creator || "").trim();
+  const r = await q(
+    `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
+            metadata->>'image_license' AS license, metadata->>'image_credit' AS credit,
+            metadata->>'preview_url' AS preview, metadata->>'preview_page' AS preview_page
+     FROM entities
+     WHERE (metadata->>'image_url' IS NOT NULL OR metadata->>'preview_url' IS NOT NULL)
+       AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') IN
+           (regexp_replace(lower($1), '[^a-z0-9]', '', 'g'),
+            regexp_replace(lower($2), '[^a-z0-9]', '', 'g'))
+     ORDER BY (regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')) DESC
+     LIMIT 1`,
+    [item.title || "", creator || " "]
+  );
+  const row = r.rows[0];
+  if (!row) return null;
+  const out = {};
+  if (row.url) Object.assign(out, { imageUrl: row.url, imagePage: row.page, imageLicense: row.license, imageCredit: row.credit });
+  if (row.preview) Object.assign(out, { previewUrl: row.preview, previewPage: row.preview_page });
+  return Object.keys(out).length ? out : null;
+}
+
 // ─── Contributions (V3-26): Lane 1 evidence + hallucination flags ───────
 
 /** Find the claim connecting this subject↔work pair (either direction). */

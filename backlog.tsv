@@ -25,6 +25,13 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# KANOPY DOORS BROKEN (Tony, 2026-08-09, reviewing comedy pages / Ali
+# Wong): almost every Kanopy search link fails to produce results — same
+# disease as Google Arts & Culture (fixed by falling back to a standard
+# google search). Fix in src/lib/experience.js defaultExperienceLinks:
+# replace the Kanopy search-url door with a google search scoped to the
+# title, or drop Kanopy entirely.
+#
 # ═══ COMEDY (Tony, 2026-08-08): mine 10 comedians BEFORE SEPTEMBER ═══
 # A category we haven't touched — and unusually well-suited to the current
 # source stack: comedians self-document influence relentlessly (Fresh Air
