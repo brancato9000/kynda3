@@ -160,12 +160,18 @@ export default function Admin() {
                 <div style={{ display: "flex", gap: "14px", marginTop: "12px" }}>
                   <button disabled={acting === c.id} onClick={() => act(c.id, "approve")}
                     style={{ ...mono("11px", "rgba(52,211,153,0.9)"), background: "none", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
-                    {c.kind === "flag" ? "mark resolved" : c.kind === "hunch" ? "accept — worth pursuing" : "approve"}
+                    {c.kind === "flag" || c.kind === "media_flag" ? "mark resolved" : c.kind === "hunch" ? "accept — worth pursuing" : "approve"}
                   </button>
                   <button disabled={acting === c.id} onClick={() => act(c.id, "reject")}
                     style={{ ...mono("11px", "rgba(248,113,113,0.9)"), background: "none", border: "1px solid rgba(248,113,113,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
-                    {c.kind === "flag" || c.kind === "hunch" ? "dismiss" : "reject & pull"}
+                    {c.kind === "flag" || c.kind === "media_flag" || c.kind === "hunch" ? "dismiss" : "reject & pull"}
                   </button>
+                  {c.kind === "media_flag" && c.url && (
+                    <button disabled={acting === c.id} onClick={() => act(c.id, "apply_media")}
+                      style={{ ...mono("11px", "rgba(96,165,250,0.9)"), background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>
+                      ✦ apply suggested media
+                    </button>
+                  )}
                   {c.kind === "flag" && c.item_title && (
                     <button disabled={fixing === c.id || acting === c.id} onClick={() => proposeFix(c.id)}
                       style={{ ...mono("11px", BASE.gold), background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.35)", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", textTransform: "uppercase" }}>

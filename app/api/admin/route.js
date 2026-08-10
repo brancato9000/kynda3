@@ -1,7 +1,7 @@
 // Founder dashboard API (V3-27). Shared-secret auth: requests must carry
 // x-kynda-admin matching KYNDA_ADMIN_TOKEN. No token configured → disabled.
 
-import { getAdminOverview, actOnContribution } from "../../../src/lib/store.js";
+import { getAdminOverview, actOnContribution, applySuggestedMedia } from "../../../src/lib/store.js";
 import { proposeFlagFix, applyFlagFix } from "../../../src/lib/pipeline/fix.js";
 import { appendContributedCard } from "../../../src/lib/pipeline/contribute-card.js";
 import { q } from "../../../src/lib/db.js";
@@ -37,8 +37,17 @@ export async function POST(req) {
   if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   try {
     const { id, action, fixed_reason } = await req.json();
-    if (!id || !["approve", "reject", "fix", "apply_fix"].includes(action)) {
-      return Response.json({ error: "id and action (approve|reject|fix|apply_fix) required" }, { status: 400 });
+    if (!id || !["approve", "reject", "fix", "apply_fix", "apply_media"].includes(action)) {
+      return Response.json({ error: "id and action (approve|reject|fix|apply_fix|apply_media) required" }, { status: 400 });
+    }
+    // Media-flag apply (2026-08-10): deterministic — suggested link becomes
+    // the curated door, the flagged asset is blanked, flag resolves.
+    if (action === "apply_media") {
+      const row = await q("SELECT * FROM contributions WHERE id = $1", [id]);
+      const contribution = row.rows[0];
+      if (!contribution) return Response.json({ error: "contribution not found" }, { status: 404 });
+      if (contribution.kind !== "media_flag") return Response.json({ error: "only media flags" }, { status: 400 });
+      return Response.json(await applySuggestedMedia(contribution));
     }
     // Flag repair (V3-68): "fix" proposes (model, ~3¢, nothing written);
     // "apply_fix" writes the curator-approved repair and resolves the flag.

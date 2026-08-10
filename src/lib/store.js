@@ -412,6 +412,48 @@ export async function getCardMedia(item) {
   return Object.keys(out).length ? out : null;
 }
 
+/** Apply a media_flag's suggested link (admin, 2026-08-10): deterministic
+ * curation, no model. Blanks the flagged asset on the stored card (empty
+ * string beats the serve-time backfill, which only fills nulls) and sets
+ * the suggested URL as the curated door — embeddable providers render as
+ * inline players via parseEmbed. */
+export async function applySuggestedMedia(contribution) {
+  const { subject_name, item_title, item_creator, url, comment, id } = contribution;
+  if (!/^https:\/\//.test(url || "")) return { applied: false, note: "no https link on this flag" };
+  const mediaKind = (comment || "").match(/^\[(preview|image|embed)/)?.[1] || "embed";
+
+  const row = (await q(
+    `SELECT m.id, m.payload FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
+     WHERE lower(e.name) = lower($1) ORDER BY m.created_at DESC LIMIT 1`,
+    [subject_name]
+  )).rows[0];
+  if (!row) return { applied: false, note: `no mix for "${subject_name}"` };
+
+  const hits = [];
+  for (const slot of row.payload.slots || []) {
+    for (const c of slot.candidates || []) {
+      if ((c?.item?.title || "").toLowerCase() === (item_title || "").toLowerCase()) hits.push(c.item);
+    }
+  }
+  const item = hits.length === 1 ? hits[0]
+    : hits.find((x) => (x.creator || "").toLowerCase() === (item_creator || "").toLowerCase());
+  if (!item) return { applied: false, note: hits.length ? "card ambiguous" : `no card titled "${item_title}"` };
+
+  if (mediaKind === "preview") { item.previewUrl = ""; item.previewPage = ""; }
+  if (mediaKind === "image") { item.imageUrl = ""; item.imagePage = ""; item.imageCredit = ""; item.imageLicense = ""; }
+  const label = /open\.spotify\.com/.test(url) ? "listen (spotify)"
+    : /youtube\.com|youtu\.be/.test(url) ? "watch (youtube)"
+    : /vimeo\.com/.test(url) ? "watch (vimeo)"
+    : /americanarchive\.org/.test(url) ? "watch (aapb)"
+    : "corrected media";
+  item.experienceUrl = url;
+  item.experienceLabel = label;
+
+  await q("UPDATE mixes SET payload = $2 WHERE id = $1", [row.id, JSON.stringify(row.payload)]);
+  await actOnContribution(id, "approve");
+  return { applied: true, card: item.title, label, cleared: mediaKind !== "embed" ? mediaKind : null };
+}
+
 // ─── Contributions (V3-26): Lane 1 evidence + hallucination flags ───────
 
 /** Find the claim connecting this subject↔work pair (either direction). */
