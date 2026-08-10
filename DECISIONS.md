@@ -306,3 +306,15 @@ covers render with the same V3-72 good-faith caveat and ⚑ response
 channel, stay CARD-SCOPED (no entity mirror), and the rule covers
 nothing but covers: every other non-free image still queues for
 per-asset curator approval via the auto-propose pipeline.
+
+## V3-74: The film-poster class rule
+**Tony's call (2026-08-10), same shape as V3-73.** Film posters, at
+thumbnail size, on the card for that very film, auto-apply under fair
+use — the second-most-settled category on the consumer internet after
+cover art. Same conditions as covers: the work's own en-wiki article
+must identify itself as a film; the V3-72 good-faith caveat and ⚑
+response channel render; card-scoped, never entity-mirrored. TV title
+cards, book jackets, and everything else remain per-asset curator
+judgment in the queue. Strengthening context from Tony (ex-GM of
+IMDb): posters are marketing collateral — studio incentive runs TOWARD
+display, and IMDb built a business on exactly this class of use.

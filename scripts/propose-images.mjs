@@ -145,14 +145,21 @@ outer: for (const s of work) {
             [item.title, JSON.stringify({ image_url: info.url, image_page: info.page, image_license: info.license, image_credit: info.credit })]
           );
         }
-      } else if (item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")) {
-        // V3-73 class rule: cover art, thumbnail, card-scoped, caveat renders.
+      } else if (
+        item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")
+        || /is (a|the) [^.]{0,90}?\bfilm\b/i.test(found.extract || "")
+      ) {
+        // Class rules: covers (V3-73) and film posters (V3-74) — the two
+        // settled fair-use categories, decided once by Tony. Posters are
+        // marketing collateral; the rights-holder incentive runs TOWARD
+        // display (Tony, ex-GM of IMDb).
+        const isFilm = !(item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || ""));
         classApplied += 1;
-        console.log(`  ♪ cover (V3-73): ${s.name} → ${item.title}`);
+        console.log(`  ${isFilm ? "🎬 poster (V3-74)" : "♪ cover (V3-73)"}: ${s.name} → ${item.title}`);
         if (!DRY) {
           Object.assign(item, {
             imageUrl: info.url, imagePage: info.page,
-            imageLicense: "fair use — cover art thumbnail (class rule V3-73)",
+            imageLicense: isFilm ? "fair use — film poster thumbnail (class rule V3-74)" : "fair use — cover art thumbnail (class rule V3-73)",
             imageCredit: `en.wikipedia (${found.article})`,
           });
           dirty = true;
