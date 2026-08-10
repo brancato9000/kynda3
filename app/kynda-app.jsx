@@ -1131,7 +1131,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
         @keyframes kyndaSpin { to { transform: rotate(360deg) } }
         @keyframes kyndaRise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
-        input::placeholder { color: rgba(148,163,184,0.45) }
+        input::placeholder, textarea::placeholder { color: rgba(148,163,184,0.4) }
       `}</style>
 
       <header style={{ marginBottom: "36px" }}>
