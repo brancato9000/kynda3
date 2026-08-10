@@ -454,6 +454,51 @@ archive strategy is not a side quest.
    deck architecture writes itself: The Influence Project (vision) →
    Kynda (the product, get it right) → Future Applications (one slide).
 
+## The contributor roleplay (2026-08-09/10) — the student experience, pre-debugged
+
+Tony spent two days QA-ing pages in the ROLE of a future Brown
+student-contributor ("point Kynda to a better version of each page").
+The exercise produced the strongest pitch evidence yet, because every
+wall he hit became a lane the product now has:
+
+**Five contribution lanes born from real friction, in order of discovery:**
+1. **Wrong media** — a Billie Holiday clip on an Ethel Waters card →
+   the ⚑ modal with structured specificity (wrong artist / wrong work /
+   both) + a link to the correct media; one-click curator apply.
+2. **Missing media** — a Gehry card with no image → "+ suggest media"
+   (link required), same queue, same apply button.
+3. **Fair-use media** — the Ronchamp card (France's no-FoP + the
+   Corbusier estate) → the V3-72 posture: allowlist for machines,
+   alerted human approval for fair use, a loud good-faith caveat on the
+   card with ⚑ as the rights-owner channel. Non-free suggestions publish
+   card-scoped only; Commons links auto-take the licensed path.
+4. **Timestamp reports** — watchable receipts start at the top of the
+   broadcast; a position-estimate feature was built, FALSIFIED BY TONY'S
+   GROUND TRUTH within the hour (transcript density ≠ broadcast time),
+   and loudly reverted. Now only human-witnessed timecodes display
+   ("at 50:24"), and "⏱ know the timestamp?" lets any reader supply one.
+5. **Official-page attribution** — big.dk profiles 8 House but has no
+   quotable sentence → attribution evidence as its own epistemic object:
+   a deterministic gate (page must name work AND creator), no quote
+   required, the quote wall untouched. The creator's own page becomes
+   the attribution chip's source.
+
+**The showcase card:** Gehry's Metropolis (Beyond the Medium) —
+curator-WITNESSED. The transcript reads "Fritz Long" [sic] and never
+names the film; Tony identified Metropolis watching the 1997 NewsHour
+tape at 47:56. Wall-verified quote, PD set photograph by the film's own
+set photographer, first-degree, dated, playable. Neither machine nor
+human could have made this card alone.
+
+**Why this is pitch material:** the September story isn't "students
+could contribute someday" — it's "the contributor experience has been
+role-played, its failure modes found and fixed, and the division of
+labor demonstrated: deterministic gates keep the machine honest, human
+judgment handles what gates can't decide, and one curator's observation
+outranks a plausible methodology every time." Also the QA worksheet
+(qa/PAGES.md, 203 pages) is literally a semester's syllabus of
+curation work, pre-formatted.
+
 ## The density program (designed 2026-08-07 — PARKED, not run)
 
 **The question:** the Beyoncé spreadsheet (593 hand-labeled connections,
