@@ -274,3 +274,22 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 
 ## V3-71: Concepts join the identity pool — the four Live Arts collapse
 **The V3-67 loose thread, closed.** The duplicate browse-index key wasn't two entities — it was FOUR "Live Art in Microgravity" rows, each with its own mix and claim set. Root cause: upsertEntity's name-match identity pool (V3-33) read `kind IN ('person','group','other','work')` — 'concept' never matched, so every persistMixRun against a concept subject inserted a fresh row. Fix: 'concept' joins the creator-shaped identity pool in both upsertEntity and dedupe-entities.mjs (the dedupe scan had the same blind spot). Dedupe applied: the four microgravity rows merged into the July 31 original (all mixes and query-log rows repointed, 45 duplicate claims collapsed), plus a same-pool "Platonic Academy" pair swept in the same run. listSubjects now returns 191 subjects, zero duplicate slugs.
+
+## V3-72: The fair-use posture — human-approved, loudly labeled, fast to retract
+**Tony's call (2026-08-10, the Ronchamp card).** The deterministic license
+allowlist (PD/CC0/CC BY/CC BY-SA) stays the machine's only lane — no
+pipeline ever stores non-free media on its own judgment. But when a
+contributor suggests media the allowlist can't clear (the classic case:
+en-wikipedia's local fair-use files, structurally invisible to Commons
+searches), the asset is not auto-refused. Instead: (1) it surfaces in the
+admin queue with an explicit license-unverified alert so the curator
+approves with eyes open; (2) on approval it publishes CARD-SCOPED (never
+mirrored to the entity — fair-use rationale is context-specific, so the
+asset must not travel to other cards via hydration); (3) the card renders
+a visible caveat: displayed under a good-faith fair-use assessment,
+rights owners can flag it and we respond promptly — with the ⚑ media-flag
+control right there as the response channel. Rationale: Kynda's cards
+are commentary and criticism (near the textbook fair-use purpose); the
+project is small enough that enforcement attention is a champagne
+problem; and explicitness on the surface beats quiet risk. The posture is
+a conscious trade Tony owns per-asset in the admin, not a default.
