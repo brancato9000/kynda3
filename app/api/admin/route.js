@@ -1,7 +1,7 @@
 // Founder dashboard API (V3-27). Shared-secret auth: requests must carry
 // x-kynda-admin matching KYNDA_ADMIN_TOKEN. No token configured → disabled.
 
-import { getAdminOverview, actOnContribution, applySuggestedMedia } from "../../../src/lib/store.js";
+import { getAdminOverview, actOnContribution, applySuggestedMedia, applyOfficialPageAttribution } from "../../../src/lib/store.js";
 import { proposeFlagFix, applyFlagFix } from "../../../src/lib/pipeline/fix.js";
 import { appendContributedCard } from "../../../src/lib/pipeline/contribute-card.js";
 import { q } from "../../../src/lib/db.js";
@@ -63,6 +63,12 @@ export async function POST(req) {
     // reason prose, then an append into the subject's stored mix payload.
     if (action === "approve") {
       const row = await q("SELECT * FROM contributions WHERE id = $1", [id]);
+      const v = row.rows[0]?.verification;
+      if (row.rows[0]?.kind === "evidence" && (typeof v === "string" ? v.includes("official_page") : v?.status === "official_page")) {
+        const applied = await applyOfficialPageAttribution(row.rows[0]);
+        const result = await actOnContribution(id, "approve");
+        return Response.json({ ...result, ...applied });
+      }
       if (row.rows[0]?.kind === "new_card") {
         const published = await appendContributedCard(row.rows[0]);
         const result = await actOnContribution(id, "approve");

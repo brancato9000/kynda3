@@ -274,14 +274,14 @@ function ContributeRow({ subject, item, hasCitations }) {
       {mode === "evidence" && (
         <div>
           <input placeholder="Source URL (interview, review, liner notes…)" value={fields.url} onChange={(e) => setFields({ ...fields, url: e.target.value })} style={inputStyle} />
-          <textarea placeholder="Exact quote from that page documenting the connection — copied verbatim; it will be machine-checked against the page" rows={3}
+          <textarea placeholder="Exact quote from that page, copied verbatim (machine-checked) — or leave EMPTY if the URL is the creator's own official page for this work (attribution evidence, no quote needed)" rows={3}
             value={fields.quote} onChange={(e) => setFields({ ...fields, quote: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
           <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
           <div style={{ display: "flex", gap: "12px" }}>
             <button
-              style={{ ...linkStyle, color: fields.url && fields.quote.trim().length >= 20 ? "rgba(52,211,153,0.8)" : "rgba(148,163,184,0.35)" }}
-              disabled={!fields.url || fields.quote.trim().length < 20}
-              title={!fields.url || fields.quote.trim().length < 20 ? "needs a source URL and an exact quote of 20+ characters" : undefined}
+              style={{ ...linkStyle, color: fields.url && (fields.quote.trim().length === 0 || fields.quote.trim().length >= 20) ? "rgba(52,211,153,0.8)" : "rgba(148,163,184,0.35)" }}
+              disabled={!fields.url || (fields.quote.trim().length > 0 && fields.quote.trim().length < 20)}
+              title={!fields.url ? "needs a source URL" : fields.quote.trim().length > 0 && fields.quote.trim().length < 20 ? "quotes must be 20+ characters — or leave the quote empty if this is the creator's own page for the work" : undefined}
               onClick={() => submit("evidence")}>verify & submit</button>
             <button style={linkStyle} onClick={() => setMode(null)}>cancel</button>
           </div>

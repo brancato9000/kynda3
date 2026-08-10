@@ -522,6 +522,37 @@ export async function applySuggestedMedia(contribution) {
   return { applied: true, card: item.title, label, cleared: mediaKind !== "embed" ? mediaKind : null };
 }
 
+/** Approve-path apply for official-page attribution evidence (2026-08-10):
+ * the card's attribution chip becomes verified with the creator's own
+ * page as the source. Deterministic — the gate already confirmed the page
+ * names both work and creator. */
+export async function applyOfficialPageAttribution(contribution) {
+  const { subject_name, item_title, url } = contribution;
+  const row = (await q(
+    `SELECT m.id, m.payload FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
+     WHERE lower(e.name) = lower($1) ORDER BY m.created_at DESC LIMIT 1`,
+    [subject_name]
+  )).rows[0];
+  if (!row) return { applied: false, note: `no mix for "${subject_name}"` };
+  let hit = null;
+  for (const slot of row.payload.slots || []) {
+    for (const c of slot.candidates || []) {
+      if ((c?.item?.title || "").toLowerCase() === (item_title || "").toLowerCase()) hit = c;
+    }
+  }
+  if (!hit) return { applied: false, note: `no card titled "${item_title}"` };
+  hit.verification = hit.verification || {};
+  hit.verification.attribution = {
+    status: "verified",
+    source: new URL(url).hostname.replace(/^www\./, ""),
+    url,
+    method: "official_page",
+    detail: `official project page — names both the work and ${hit.item.creator} (machine-verified; contributor-submitted)`,
+  };
+  await q("UPDATE mixes SET payload = $2 WHERE id = $1", [row.id, JSON.stringify(row.payload)]);
+  return { applied: true, card: hit.item.title, source: new URL(url).hostname };
+}
+
 // ─── Contributions (V3-26): Lane 1 evidence + hallucination flags ───────
 
 /** Find the claim connecting this subject↔work pair (either direction). */

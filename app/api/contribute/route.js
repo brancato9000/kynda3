@@ -2,7 +2,8 @@
 // flags. Zero model calls — evidence passes the same deterministic gate as
 // agent findings (fetch → strip → quote-match → archive lookup).
 
-import { verifyEvidence } from "../../../src/lib/verify/evidence.js";
+import { verifyEvidence, fetchPageText } from "../../../src/lib/verify/evidence.js";
+import { normalizeText } from "../../../src/lib/verify/quoteMatch.js";
 import { q } from "../../../src/lib/db.js";
 import { findClaimForPair, recordContribution, attachFanEvidence, getStoredMix } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, contributionHarvestCapReached } from "../../../src/lib/guard.js";
@@ -38,6 +39,40 @@ export async function POST(req) {
     }
 
     if (kind === "evidence") {
+      // Official-page attribution (Tony QA, 2026-08-10, the 8 House find):
+      // a creator's own project page attests ATTRIBUTION without a
+      // quotable sentence. Different gate, same determinism: the page must
+      // mention the work title AND the creator, verbatim-normalized. No
+      // quote is stored because none exists — this strengthens the
+      // attribution chip, never the influence claim.
+      if (url && (!quote || !quote.trim())) {
+        if (!item?.title || !item?.creator) {
+          return Response.json({ error: "official-page attribution needs the card's work and creator" }, { status: 400 });
+        }
+        const page = await fetchPageText(url);
+        if (!page.ok) {
+          return Response.json({ ok: true, confirmed: false, message: "That URL couldn't be fetched — the page can't be verified." });
+        }
+        const hay = normalizeText(page.text);
+        const hasTitle = hay.includes(normalizeText(item.title));
+        const hasCreator = hay.includes(normalizeText(item.creator));
+        if (!hasTitle || !hasCreator) {
+          return Response.json({
+            ok: true, confirmed: false,
+            message: !hasTitle
+              ? `That page never mentions "${item.title}" — it can't attest this work.`
+              : `That page never names ${item.creator} — the attribution can't be verified there.`,
+          });
+        }
+        await recordContribution({
+          kind: "evidence", url,
+          status: "pending",
+          verification: { status: "official_page", title_found: true, creator_found: true },
+          ...base,
+          comment: `[official page] ${new URL(url).hostname} profiles "${item.title}" and names ${item.creator} — machine-verified in the page text (no quote exists; this is attribution evidence).${base.comment ? ` ${base.comment}` : ""}`,
+        });
+        return Response.json({ ok: true, confirmed: true, message: "Official page verified — the page names both the work and its creator. Held for curator review; on approval it becomes the card's attribution source." });
+      }
       if (!url || !quote || quote.trim().length < 20) {
         return Response.json({ error: "A source URL and an exact quote (20+ characters) are required." }, { status: 400 });
       }
