@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../src/design/tokens.js";
 import Wordmark from "../src/design/wordmark.jsx";
 import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
-import { parseEmbed, InlineMedia, CardImage, PreviewAudio } from "../src/design/inline-media.jsx";
+import { parseEmbed, InlineMedia, CardImage, PreviewAudio, MediaFlag } from "../src/design/inline-media.jsx";
 import GraphView from "./graph-view.jsx";
 import { slugify } from "../src/lib/slug.js";
 
@@ -745,7 +745,9 @@ function SlotCard({ slot, index, subject }) {
       {/* Curated Commons image (inline media v0.5): the thing itself, with
           license and attribution carried from the same API call */}
       <CardImage item={item} />
+      {item.imageUrl && <MediaFlag subjectName={subject?.name} item={item} mediaKind="image" />}
       <PreviewAudio item={item} />
+      {item.previewUrl && <MediaFlag subjectName={subject?.name} item={item} mediaKind="preview" />}
       {/* T2 citations outrank everything below — show them first when present */}
       {citations.length > 0 && <CitationBlock citations={citations} />}
       {/* The connection chip sits with the claim it describes: the reason prose */}

@@ -79,6 +79,82 @@ export function PreviewAudio({ item }) {
   );
 }
 
+// Media-correction lane (Tony's spec, 2026-08-10): an explicit "wrong
+// media?" link under the asset — a DIFFERENT lane than "Know a source?
+// Add it" (that's citations). The modal asks for specificity: wrong
+// artist/right work, wrong work/right artist, or both wrong, plus an
+// optional link to the correct media. Lands in the curator queue as
+// kind=media_flag; assets get re-verified, never prose-patched.
+const SPECIFICITY_OPTIONS = [
+  ["wrong_artist", "wrong artist, right work"],
+  ["wrong_work", "wrong work, right artist"],
+  ["both_wrong", "both are wrong"],
+];
+
+export function MediaFlag({ subjectName, item, mediaKind }) {
+  const [open, setOpen] = useState(false);
+  const [specificity, setSpecificity] = useState(null);
+  const [link, setLink] = useState("");
+  const [state, setState] = useState(null); // null | "sending" | "done" | "error"
+  if (!subjectName) return null;
+
+  async function submit() {
+    if (!specificity) return;
+    setState("sending");
+    try {
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "media_flag",
+          subject: { name: subjectName },
+          item: { title: item.title, creator: item.creator, slotType: item.slotType },
+          mediaKind,
+          specificity,
+          url: link.trim() || undefined,
+        }),
+      });
+      setState(res.ok ? "done" : "error");
+    } catch {
+      setState("error");
+    }
+  }
+
+  const mono = { fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", textTransform: "uppercase" };
+  if (state === "done") {
+    return <div style={{ ...mono, marginTop: "4px", color: "rgba(52,211,153,0.7)" }}>✓ media flagged — the curator will re-verify</div>;
+  }
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        style={{ ...mono, background: "none", border: "none", cursor: "pointer", padding: "2px 0", color: "rgba(148,163,184,0.45)", marginTop: "2px" }}>
+        ⚑ wrong media?
+      </button>
+    );
+  }
+  return (
+    <div style={{ marginTop: "8px", padding: "12px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.25)", background: "rgba(0,0,0,0.35)" }}>
+      <div style={{ ...mono, color: "rgba(226,232,240,0.75)", marginBottom: "8px" }}>what's wrong with this {mediaKind}?</div>
+      {SPECIFICITY_OPTIONS.map(([id, label]) => (
+        <label key={id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", cursor: "pointer", fontFamily: FONTS.mono, fontSize: "11px", color: specificity === id ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.75)" }}>
+          <input type="radio" name={`media-flag-${item.title}`} checked={specificity === id} onChange={() => setSpecificity(id)} />
+          {label}
+        </label>
+      ))}
+      <input type="url" placeholder="link to the correct media (optional)" value={link} onChange={(e) => setLink(e.target.value)}
+        style={{ width: "100%", marginTop: "6px", padding: "6px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.25)", background: "rgba(0,0,0,0.4)", color: "rgba(226,232,240,0.85)", fontFamily: FONTS.mono, fontSize: "11px" }} />
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" }}>
+        <button onClick={submit} disabled={!specificity || state === "sending"}
+          style={{ ...mono, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "5px", padding: "5px 12px", cursor: specificity ? "pointer" : "default", color: specificity ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.4)" }}>
+          {state === "sending" ? "sending..." : "flag it"}
+        </button>
+        <button onClick={() => setOpen(false)} style={{ ...mono, background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.5)" }}>cancel</button>
+        {state === "error" && <span style={{ ...mono, color: "rgba(248,113,113,0.8)" }}>failed — try again</span>}
+      </div>
+    </div>
+  );
+}
+
 export function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   const idRef = useRef(null);

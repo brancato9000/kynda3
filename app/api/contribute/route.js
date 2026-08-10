@@ -80,6 +80,28 @@ export async function POST(req) {
       return Response.json({ ok: true, message: "Proposed — the curator will see your hunch and the trail Kynda suggested." });
     }
 
+    // Media-correction lane (2026-08-10): flagging media ≠ flagging prose.
+    // Structured specificity + optional link to the CORRECT media (url).
+    if (kind === "media_flag") {
+      const SPECIFICITY = {
+        wrong_artist: "wrong artist, right work",
+        wrong_work: "wrong work, right artist",
+        both_wrong: "both wrong",
+      };
+      const { mediaKind, specificity } = body;
+      if (!item?.title || !SPECIFICITY[specificity] || !["preview", "image", "embed"].includes(mediaKind || "")) {
+        return Response.json({ error: "media kind and specificity required" }, { status: 400 });
+      }
+      const suggested = /^https?:\/\//.test(url || "") ? url.slice(0, 500) : null;
+      await recordContribution({
+        kind: "media_flag",
+        ...base,
+        url: suggested,
+        comment: `[${mediaKind} · ${SPECIFICITY[specificity]}]${base.comment ? ` ${base.comment}` : ""}`,
+      });
+      return Response.json({ ok: true, message: "Media flagged — the curator will re-verify the asset." + (suggested ? " Your suggested link rides along." : "") });
+    }
+
     if (kind === "new_card") {
       // Lane 2 (V3-35): fan names an influence + a URL; Kynda builds the card.
       // Influence optional (V3-43): a bare URL is a MAP SUBMISSION — every
