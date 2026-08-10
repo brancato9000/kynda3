@@ -442,6 +442,36 @@ export async function applySuggestedMedia(contribution) {
   if (mediaKind === "preview") { item.previewUrl = ""; item.previewPage = ""; }
   if (mediaKind === "image") { item.imageUrl = ""; item.imagePage = ""; item.imageCredit = ""; item.imageLicense = ""; }
 
+  // Commons files take the LICENSED path (QA 2026-08-10, the Eames House
+  // suggestion): parse the filename, run the same allowlist gate as
+  // override-image, publish with real attribution and mirror to the work
+  // entity. Only if the gate refuses does it fall through to fair-use.
+  const commonsFile = url.match(/commons\.wikimedia\.org\/wiki\/File:(.+?)(?:\?|$)/)?.[1]
+    || url.match(/upload\.wikimedia\.org\/wikipedia\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^\/?]+)/)?.[1];
+  if (commonsFile) {
+    const fileTitle = `File:${decodeURIComponent(commonsFile).replace(/_/g, " ")}`;
+    try {
+      const api = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=960&format=json`;
+      const d = await (await fetch(api, { headers: { "User-Agent": "Kynda/3.0 (brancato@gmail.com)" } })).json();
+      const ii = Object.values(d.query?.pages || {})[0]?.imageinfo?.[0];
+      const license = ii?.extmetadata?.LicenseShortName?.value || "";
+      if (ii && /^(public domain|pd|cc0|cc[ -]by(-sa)?([ -]\d(\.\d)?)?)/i.test(license)) {
+        item.imageUrl = ii.thumburl || ii.url;
+        item.imagePage = ii.descriptionurl;
+        item.imageLicense = license;
+        item.imageCredit = ((ii.extmetadata?.Artist?.value || "").replace(/<[^>]+>/g, "").trim() || "Wikimedia Commons").slice(0, 120);
+        await q(
+          `UPDATE entities SET metadata = metadata || $2::jsonb
+           WHERE kind = 'work' AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')`,
+          [item.title, JSON.stringify({ image_url: item.imageUrl, image_page: item.imagePage, image_license: item.imageLicense, image_credit: item.imageCredit })]
+        );
+        await q("UPDATE mixes SET payload = $2 WHERE id = $1", [row.id, JSON.stringify(row.payload)]);
+        await actOnContribution(id, "approve");
+        return { applied: true, card: item.title, mode: "licensed_image", license, note: "Commons file passed the license gate — published with attribution, mirrored to the entity" };
+      }
+    } catch { /* fall through to fair-use */ }
+  }
+
   // Direct image links publish as the card's image under the fair-use
   // posture (V3-72): curator approved with the license-unverified alert in
   // view; CARD-SCOPED only (never mirrored to the entity — a fair-use
