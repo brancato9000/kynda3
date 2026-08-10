@@ -210,10 +210,12 @@ function CitationBlock({ citations, subjectName, item }) {
 function ContributeRow({ subject, item, hasCitations }) {
   const [mode, setMode] = useState(null); // null | "flag" | "evidence" | "sending"
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
   const [fields, setFields] = useState({ url: "", quote: "", comment: "", contributor: "" });
 
   async function submit(kind) {
     setMode("sending");
+    setError(null);
     try {
       const res = await fetch("/api/contribute", {
         method: "POST",
@@ -226,11 +228,19 @@ function ContributeRow({ subject, item, hasCitations }) {
         }),
       });
       const data = await res.json();
-      setResult(data.message || data.error || "submitted");
+      // Errors keep the form OPEN with everything typed intact (QA
+      // 2026-08-10, the 8 House dead-end): show the problem inline and
+      // let the contributor fix and resubmit — never eat their work.
+      if (!res.ok || data.error) {
+        setError(data.error || `submission failed (${res.status})`);
+        setMode(kind);
+        return;
+      }
+      setResult(data.message || "submitted");
       setMode(null);
     } catch (err) {
-      setResult(err.message);
-      setMode(null);
+      setError(`network error: ${err.message} — your text is still here, try again`);
+      setMode(kind);
     }
   }
 
@@ -246,6 +256,9 @@ function ContributeRow({ subject, item, hasCitations }) {
           <button style={linkStyle} onClick={() => setMode("flag")}>⚑ report an issue</button>
           {!hasCitations && <button style={linkStyle} onClick={() => setMode("evidence")}>+ know a source? add it</button>}
         </div>
+      )}
+      {error && (
+        <div style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(248,113,113,0.85)", marginBottom: "8px", lineHeight: 1.5 }}>{error}</div>
       )}
       {mode === "flag" && (
         <div>
@@ -265,7 +278,11 @@ function ContributeRow({ subject, item, hasCitations }) {
             value={fields.quote} onChange={(e) => setFields({ ...fields, quote: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
           <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
           <div style={{ display: "flex", gap: "12px" }}>
-            <button style={{ ...linkStyle, color: "rgba(52,211,153,0.8)" }} onClick={() => submit("evidence")}>verify & submit</button>
+            <button
+              style={{ ...linkStyle, color: fields.url && fields.quote.trim().length >= 20 ? "rgba(52,211,153,0.8)" : "rgba(148,163,184,0.35)" }}
+              disabled={!fields.url || fields.quote.trim().length < 20}
+              title={!fields.url || fields.quote.trim().length < 20 ? "needs a source URL and an exact quote of 20+ characters" : undefined}
+              onClick={() => submit("evidence")}>verify & submit</button>
             <button style={linkStyle} onClick={() => setMode(null)}>cancel</button>
           </div>
         </div>
