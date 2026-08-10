@@ -157,7 +157,40 @@ function Spinner({ size = 15 }) {
 // the SPEAKER, not the publication (V3-21): "Sidney Lumet, via CinemaTyler".
 const DEGREE_LABELS = { first: "artist’s own words", second: "critical source", third: "fan source" };
 
+
+// Same-source receipts merge for display (Tony QA, 2026-08-10, the
+// Metropolis card): the harvester rightly stores each verified quote as
+// its own row, but three fragments of one conversation should READ as one
+// reference — grouped by source+date+speaker, contained fragments
+// dropped, the rest joined with ellipses. One line, one watch button.
+function mergeCitations(citations) {
+  const nrm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const rank = { first: 0, second: 1, third: 2 };
+  const groups = [];
+  const byKey = new Map();
+  for (const c of citations) {
+    const key = `${c.url}|${c.publication}|${c.date}|${c.speaker || ""}`;
+    if (!byKey.has(key)) {
+      const g = { ...c, quotes: [c.quote] };
+      byKey.set(key, g);
+      groups.push(g);
+    } else {
+      const g = byKey.get(key);
+      g.quotes.push(c.quote);
+      if (!g.timestamp && c.timestamp) g.timestamp = c.timestamp;
+      if ((rank[c.degree] ?? 3) < (rank[g.degree] ?? 3)) g.degree = c.degree;
+    }
+  }
+  for (const g of groups) {
+    const kept = g.quotes.filter((q1, i) =>
+      !g.quotes.some((q2, j) => j !== i && nrm(q2).includes(nrm(q1)) && (nrm(q2) !== nrm(q1) || j < i)));
+    g.quote = kept.join(" … ");
+  }
+  return groups;
+}
+
 function CitationBlock({ citations, subjectName, item }) {
+  const merged = mergeCitations(citations);
   const strongest = citations.some((c) => c.degree === "first") ? "first"
     : citations.some((c) => c.degree === "second") ? "second"
     : citations.some((c) => c.degree === "third") ? "third" : null;
@@ -168,8 +201,8 @@ function CitationBlock({ citations, subjectName, item }) {
           ◆ cited · {strongest ? DEGREE_LABELS[strongest] : "primary source"}
         </span>
       </div>
-      {citations.map((c, i) => (
-        <div key={i} style={{ marginBottom: i < citations.length - 1 ? "10px" : 0 }}>
+      {merged.map((c, i) => (
+        <div key={i} style={{ marginBottom: i < merged.length - 1 ? "10px" : 0 }}>
           <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.8)" }}>
             “{c.quote}”
           </div>
