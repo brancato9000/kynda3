@@ -1007,3 +1007,23 @@ export async function getStoredMix(subject) {
   );
   return r?.rows[0]?.payload || null;
 }
+
+/** Cheap payload fingerprint for the L1 mix cache (2026-08-10, the third
+ * curation-lag foot-gun: Villa Mairea, the Spotify door, Spoonbridge).
+ * One md5 per cached serve lets curation edits show immediately instead
+ * of waiting for an instance recycle. */
+export async function getMixFingerprint(subject) {
+  if (!dbConfigured()) return null;
+  const clauses = [];
+  const params = [];
+  if (subject.mbid) { params.push(subject.mbid); clauses.push(`e.mbid = $${params.length}`); }
+  if (subject.wikidata_qid) { params.push(subject.wikidata_qid); clauses.push(`e.wikidata_qid = $${params.length}`); }
+  if (!clauses.length) { params.push(subject.name); clauses.push(`lower(e.name) = lower($${params.length})`); }
+  const r = await q(
+    `SELECT md5(m.payload::text) AS fp FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
+     WHERE (${clauses.join(" OR ")}) AND m.created_at > now() - interval '180 days'
+     ORDER BY m.created_at DESC LIMIT 1`,
+    params
+  );
+  return r?.rows[0]?.fp || null;
+}

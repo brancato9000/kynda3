@@ -9,7 +9,7 @@
 //   {type:"done"}
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
-import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia } from "../../../src/lib/store.js";
+import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixFingerprint } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 
@@ -39,14 +39,24 @@ export async function POST(req) {
       const send = (obj) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
       try {
         // L1: per-instance memory. L2: the claims store (survives deploys).
+        // Freshness (2026-08-10): curation edits the stored payload out from
+        // under warm instances — one md5 probe per serve invalidates the L1
+        // copy so curated media/doors show immediately, not at next deploy.
         let cached = getCachedMix(subject);
+        if (cached) {
+          const fp = await getMixFingerprint(subject).catch(() => null);
+          if (fp && fp !== cached.__fp) cached = null;
+        }
         if (!cached) {
           const stored = await getStoredMix(subject).catch((err) => {
             console.error("getStoredMix failed:", err.message);
             return null;
           });
           cached = normalizePayload(stored);
-          if (cached) cacheMix(subject, cached);
+          if (cached) {
+            cached.__fp = await getMixFingerprint(subject).catch(() => null);
+            cacheMix(subject, cached);
+          }
         }
         if (cached?.slots) {
           send({ type: "intro", intro: cached.intro, cached: true });
