@@ -57,7 +57,7 @@ async function findArticleImage(title, creator) {
     if (!page || !page.pageimage) continue;
     const titleMatch = nrm(stripParen(page.title)) === nrm(title) || nrm(page.title) === nrm(title);
     const creatorMatch = nrm(page.extract || "").includes(nrm(creator));
-    if (titleMatch && creatorMatch) return { article: page.title, file: page.pageimage };
+    if (titleMatch && creatorMatch) return { article: page.title, file: page.pageimage, extract: page.extract || "" };
     await pause(150);
   }
   return null;
@@ -145,7 +145,7 @@ outer: for (const s of work) {
             [item.title, JSON.stringify({ image_url: info.url, image_page: info.page, image_license: info.license, image_credit: info.credit })]
           );
         }
-      } else if (item.medium === "music") {
+      } else if (item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")) {
         // V3-73 class rule: cover art, thumbnail, card-scoped, caveat renders.
         classApplied += 1;
         console.log(`  ♪ cover (V3-73): ${s.name} → ${item.title}`);
