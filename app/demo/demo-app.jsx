@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIMING } from "../../src/design/tokens.js";
 import { experienceLinks, STREAM_SERVICES } from "../../src/lib/experience.js";
-import { parseEmbed, InlineMedia, CardImage, PreviewAudio } from "../../src/design/inline-media.jsx";
+import { parseEmbed, InlineMedia, CardImage, PreviewAudio, TimestampReport } from "../../src/design/inline-media.jsx";
 import GraphView from "../graph-view.jsx";
 import { slugify } from "../../src/lib/slug.js";
 import Wordmark from "../../src/design/wordmark.jsx";
@@ -157,7 +157,7 @@ function Spinner({ size = 15 }) {
 // the SPEAKER, not the publication (V3-21): "Sidney Lumet, via CinemaTyler".
 const DEGREE_LABELS = { first: "artist’s own words", second: "critical source", third: "fan source" };
 
-function CitationBlock({ citations }) {
+function CitationBlock({ citations, subjectName, item }) {
   const strongest = citations.some((c) => c.degree === "first") ? "first"
     : citations.some((c) => c.degree === "second") ? "second"
     : citations.some((c) => c.degree === "third") ? "third" : null;
@@ -176,8 +176,9 @@ function CitationBlock({ citations }) {
           <a href={c.url} target="_blank" rel="noreferrer"
             title={c.degree ? `${DEGREE_LABELS[c.degree]} — degree classified by the research agent` : undefined}
             style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>
-            — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""} ↗
+            — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""}{c.timestamp ? ` · at ${c.timestamp}` : ""} ↗
           </a>
+          <TimestampReport subjectName={subjectName} item={item} citation={c} />
           {c.fan && (
             <span title="Submitted by a fan and machine-verified against the source; awaiting curator review"
               style={{ fontFamily: FONTS.mono, fontSize: "9px", letterSpacing: "0.05em", color: "rgba(250,204,21,0.6)", marginLeft: "8px", textTransform: "uppercase" }}>
@@ -569,7 +570,7 @@ function SlotCard({ slot, index, subject }) {
       <CardImage item={item} />
       <PreviewAudio item={item} />
       {/* T2 citations outrank everything below — show them first when present */}
-      {citations.length > 0 && <CitationBlock citations={citations} />}
+      {citations.length > 0 && <CitationBlock citations={citations} subjectName={subject?.name} item={item} />}
       {/* The connection chip sits with the claim it describes: the reason prose */}
       {citations.length === 0 && connection?.status !== "not_applicable" && (
         <div style={{ marginTop: "12px" }}>

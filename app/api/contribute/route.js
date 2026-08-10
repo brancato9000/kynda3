@@ -88,6 +88,7 @@ export async function POST(req) {
         wrong_work: "wrong work, right artist",
         both_wrong: "both wrong",
         missing: "suggested media for a card that has none",
+        timestamp: "timestamp report",
       };
       const { mediaKind, specificity } = body;
       if (!item?.title || !SPECIFICITY[specificity] || !["preview", "image", "embed"].includes(mediaKind || "")) {
@@ -96,6 +97,9 @@ export async function POST(req) {
       const suggested = /^https?:\/\//.test(url || "") ? url.slice(0, 500) : null;
       if (specificity === "missing" && !suggested) {
         return Response.json({ error: "suggesting media needs a link to the media" }, { status: 400 });
+      }
+      if (specificity === "timestamp" && (!suggested || !/\d{1,2}:\d{2}/.test(comment || ""))) {
+        return Response.json({ error: "a timestamp report needs the source link and a mm:ss time" }, { status: 400 });
       }
       await recordContribution({
         kind: "media_flag",

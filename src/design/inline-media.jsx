@@ -223,6 +223,60 @@ export function SuggestMedia({ subjectName, item }) {
   );
 }
 
+// Timestamp report (Tony QA, 2026-08-10): estimates were falsified, so
+// timecodes come only from humans who watched the tape. A tiny affordance
+// on playable receipts: "know the timestamp?" → mm:ss → curator queue.
+export function TimestampReport({ subjectName, item, citation }) {
+  const [open, setOpen] = useState(false);
+  const [time, setTime] = useState("");
+  const [state, setState] = useState(null);
+  if (!subjectName || citation.timestamp || !parseEmbed(citation.url)) return null;
+  const valid = /^\d{1,2}:\d{2}(:\d{2})?$/.test(time.trim());
+
+  async function submit() {
+    if (!valid) return;
+    setState("sending");
+    try {
+      const res = await fetch("/api/contribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "media_flag",
+          subject: { name: subjectName },
+          item: { title: item.title, creator: item.creator, slotType: item.slotType },
+          mediaKind: "embed",
+          specificity: "timestamp",
+          url: citation.url,
+          comment: `quote at ${time.trim()}`,
+        }),
+      });
+      setState(res.ok ? "done" : "error");
+    } catch { setState("error"); }
+  }
+
+  const mono = { fontFamily: FONTS.mono, fontSize: "9px", letterSpacing: "0.05em", textTransform: "uppercase" };
+  if (state === "done") return <span style={{ ...mono, marginLeft: "8px", color: "rgba(52,211,153,0.7)" }}>✓ noted — thank you</span>;
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        style={{ ...mono, background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "8px", color: "rgba(148,163,184,0.4)" }}>
+        ⏱ know the timestamp?
+      </button>
+    );
+  }
+  return (
+    <span style={{ marginLeft: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+      <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="mm:ss" size={6}
+        style={{ padding: "2px 6px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.3)", background: "rgba(0,0,0,0.4)", color: "rgba(226,232,240,0.85)", fontFamily: FONTS.mono, fontSize: "10px", width: "56px" }} />
+      <button onClick={submit} disabled={!valid || state === "sending"}
+        style={{ ...mono, background: "none", border: "1px solid rgba(52,211,153,0.35)", borderRadius: "4px", padding: "2px 8px", cursor: valid ? "pointer" : "default", color: valid ? "rgba(52,211,153,0.9)" : "rgba(148,163,184,0.4)" }}>
+        {state === "sending" ? "…" : "send"}
+      </button>
+      <button onClick={() => setOpen(false)} style={{ ...mono, background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.45)" }}>✕</button>
+    </span>
+  );
+}
+
 export function InlineMedia({ url, title, cta = "watch here" }) {
   const [playing, setPlaying] = useState(false);
   const idRef = useRef(null);

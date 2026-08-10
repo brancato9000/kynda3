@@ -368,6 +368,10 @@ export async function getCitationsForItem(subject, item) {
     speaker: row.speaker || null,
     degree: row.source_degree || null,
     fan: /^fan-contributed/.test(row.notes || ""),
+    // Curator/contributor-verified broadcast timestamp ([t@MM:SS] in notes)
+    // — ground truth from watching the tape, never estimated (the estimate
+    // methodology was QA-falsified 2026-08-10).
+    timestamp: (row.notes || "").match(/\[t@(\d{1,2}:\d{2}(?::\d{2})?)\]/)?.[1] || null,
     publication: row.publication || (row.source_url ? new URL(row.source_url).hostname.replace(/^www\./, "") : "source"),
     date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
@@ -421,6 +425,23 @@ export async function applySuggestedMedia(contribution) {
   const { subject_name, item_title, item_creator, url, comment, id } = contribution;
   if (!/^https:\/\//.test(url || "")) return { applied: false, note: "no https link on this flag" };
   const mediaKind = (comment || "").match(/^\[(preview|image|embed)/)?.[1] || "embed";
+
+  // Timestamp report (2026-08-10): a reader watched the tape and tells us
+  // where the quote lives. Stamps [t@MM:SS] onto the provenance rows of
+  // this card's claims at that source — ground truth, never estimated.
+  const reportedTime = /timestamp report\]/.test(comment || "") ? (comment.match(/(\d{1,2}:\d{2}(?::\d{2})?)/)?.[1] || null) : null;
+  if (reportedTime) {
+    const r0 = await q(
+      `UPDATE provenance p SET notes = COALESCE(p.notes, '') || ' [t@' || $4 || ']'
+       FROM claims c, entities s, entities o
+       WHERE p.claim_id = c.id AND s.id IN (c.subject_id, c.object_id) AND o.id IN (c.subject_id, c.object_id) AND s.id <> o.id
+         AND lower(s.name) = lower($1) AND lower(o.name) = lower($2)
+         AND p.source_url = $3 AND COALESCE(p.notes, '') NOT LIKE '%[t@%'`,
+      [subject_name, item_title, url, reportedTime]
+    );
+    await actOnContribution(id, "approve");
+    return { applied: true, mode: "timestamp", stamped: r0.rowCount, at: reportedTime };
+  }
 
   const row = (await q(
     `SELECT m.id, m.payload FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
