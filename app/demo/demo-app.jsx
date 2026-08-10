@@ -755,6 +755,7 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
       <style>{`
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
         @keyframes kyndaSpin { to { transform: rotate(360deg) } }
+        input::placeholder, textarea::placeholder { color: rgba(148,163,184,0.4) }
         @keyframes kyndaRise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
       `}</style>
 
