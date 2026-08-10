@@ -176,7 +176,7 @@ function CitationBlock({ citations }) {
           <a href={c.url} target="_blank" rel="noreferrer"
             title={c.degree ? `${DEGREE_LABELS[c.degree]} — degree classified by the research agent` : undefined}
             style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>
-            — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""}{c.position ? ` · quote ≈${c.position}% in` : ""} ↗
+            — {c.speaker ? `${c.speaker}, via ` : ""}{c.publication}{c.date ? `, ${c.date}` : ""} ↗
           </a>
           {c.fan && (
             <span title="Submitted by a fan and machine-verified against the source; awaiting curator review"

@@ -27,13 +27,15 @@
 #
 # TIMECODED RECEIPTS (Tony QA, 2026-08-10, the Gehry/Serra NewsHour
 # receipt): watchable receipts start at the top of the broadcast. Probed:
-# AAPB's embed player has NO seek param and this item's transcript has
-# paragraph anchors but no timestamps — deep-linking is AAPB's ceiling,
-# not ours. Paths: (a) YouTube-sourced receipts CAN deep-link today
-# (parseEmbed passes ?start=); (b) Whisper forced-alignment (listenable-
-# mix tier) derives quote timecodes deterministically; for AAPB the best
-# achievable is DISPLAYING it ("cited · 1997 · at ~41:20") so the reader
-# drags the scrubber — honest about the player's limits.
+# AAPB's embed player has NO seek param; this item's transcript has
+# paragraph anchors but no timestamps. BUILT-THEN-KILLED same night:
+# transcript-position ≈ broadcast-time was falsified by Tony's ground
+# truth (quote at 43% of transcript text but ~80% of broadcast —
+# transcription density is wildly non-uniform on NewsHour: thin summaries,
+# dense interviews). Feature reverted. Surviving paths only: (a) YouTube
+# receipts CAN deep-link today (parseEmbed passes ?start=); (b) items
+# with real timestamped transcripts (subset of AAPB); (c) Whisper
+# forced-alignment (listenable-mix tier) — the only general answer.
 #
 # ADMIN SEARCH LOG DOUBLE-ENTRIES (Tony QA, 2026-08-09): every comedy-wave
 # subject appears twice in Recent searches — one row tier="certain" (the

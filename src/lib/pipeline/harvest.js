@@ -167,10 +167,7 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
     const verification = match.matched
       ? { status: "quote_confirmed", archivedUrl }
       : { status: "unverifiable", reason: match.reason };
-    // Quote position (timecoded receipts v1, 2026-08-10): the wall already
-    // computed the quote's offset — store the fraction so broadcast
-    // receipts can tell the reader where to drag ("quote ≈47% in").
-    const qpos = match.matched && text.length > 500 ? ` [q@${Math.min(99, Math.max(1, Math.round((match.index / text.length) * 100)))}%]` : "";
+
 
     const subjectEntityId = await upsertEntity({
       name: c.subjectName,
@@ -192,7 +189,7 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
         sourceDegree: c.sourceDegree,
         publication,
         publishedDate: knownDate || extraction.publishedDate || "",
-        note: (c.note || "") + qpos,
+        note: c.note || "",
       },
       verification,
       runId,

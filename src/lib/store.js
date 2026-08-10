@@ -368,7 +368,6 @@ export async function getCitationsForItem(subject, item) {
     speaker: row.speaker || null,
     degree: row.source_degree || null,
     fan: /^fan-contributed/.test(row.notes || ""),
-    position: (row.notes || "").match(/\[q@(\d{1,2})%\]/)?.[1] || null,
     publication: row.publication || (row.source_url ? new URL(row.source_url).hostname.replace(/^www\./, "") : "source"),
     date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
