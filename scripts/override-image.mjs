@@ -80,6 +80,17 @@ if (clear) {
   item.imageCredit = credit.slice(0, 120);
   console.log(`"${item.title}" image → ${fileTitle}`);
   console.log(`  license: ${license} | credit: ${item.imageCredit}`);
+
+  // Mirror onto the work ENTITY: serve-time hydration reads entities every
+  // serve, so the image shows immediately even while the per-instance mix
+  // cache still holds the pre-override card payload.
+  const upd = await q(
+    `UPDATE entities SET metadata = metadata || $2::jsonb
+     WHERE kind = 'work'
+       AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')`,
+    [item.title, JSON.stringify({ image_url: item.imageUrl, image_page: item.imagePage, image_license: item.imageLicense, image_credit: item.imageCredit })]
+  );
+  if (upd.rowCount) console.log(`  (also stored on ${upd.rowCount} matching work entit${upd.rowCount === 1 ? "y" : "ies"} — live immediately)`);
 }
 
 await q("UPDATE mixes SET payload = $2 WHERE id = $1", [row.id, JSON.stringify(row.payload)]);
