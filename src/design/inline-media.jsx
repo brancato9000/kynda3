@@ -39,7 +39,7 @@ export function CardImage({ item }) {
   return (
     <figure style={{ margin: "14px 0 0 0" }}>
       <img src={item.imageUrl} alt={item.title}
-        style={{ width: "100%", maxHeight: "340px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.18)", display: "block" }} />
+        style={{ width: "100%", maxHeight: "380px", objectFit: "contain", borderRadius: "8px", display: "block", background: "rgba(0,0,0,0.25)" }} />
       <figcaption style={{ marginTop: "5px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
         image: {item.imageCredit} · {item.imageLicense} ·{" "}
         <a href={item.imagePage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>

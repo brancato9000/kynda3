@@ -382,19 +382,20 @@ export async function getCitationsForItem(subject, item) {
  * same as citations. */
 export async function getCardMedia(item) {
   if (!dbConfigured()) return null;
-  const creator = (item.creator || "").trim();
+  // WORK entity only (QA 2026-08-09): the creator-entity fallback put
+  // Barnett Newman's portrait on both his canon paintings — a creator
+  // photo under a work's title reads as the work, misleadingly. Backfilled
+  // media must depict the thing named; curated overrides remain the path
+  // for anything else.
   const r = await q(
     `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
             metadata->>'image_license' AS license, metadata->>'image_credit' AS credit,
             metadata->>'preview_url' AS preview, metadata->>'preview_page' AS preview_page
      FROM entities
      WHERE (metadata->>'image_url' IS NOT NULL OR metadata->>'preview_url' IS NOT NULL)
-       AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') IN
-           (regexp_replace(lower($1), '[^a-z0-9]', '', 'g'),
-            regexp_replace(lower($2), '[^a-z0-9]', '', 'g'))
-     ORDER BY (regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')) DESC
+       AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')
      LIMIT 1`,
-    [item.title || "", creator || " "]
+    [item.title || ""]
   );
   const row = r.rows[0];
   if (!row) return null;
