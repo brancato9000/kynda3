@@ -25,6 +25,28 @@
 # (transcripts, TTS, timestamps all exist in-house); rights is the design
 # constraint, not capability.
 #
+# ═══ CONTRIBUTOR FEEDBACK LOOP (Tony, 2026-08-10, triggered by the
+# instant-visibility fix): site registration → contributions auto-carry
+# the contributor's identity → when the admin APPROVES, the contributor
+# gets notified (email/phone on the account) → the notification deep-links
+# BACK to the exact card they improved — "this should be a satisfying
+# loop." Pieces:
+#   - Registration is the gate: today contributor is a free-form handle
+#     by design (V3-26 "no accounts yet"); this entry marks the moment
+#     accounts earn their existence — not auth for auth's sake, but so
+#     approval can find its way back to a human.
+#   - Notification trigger points already exist: every admin action
+#     (approve / apply_media / apply_fix / official-page apply) is one
+#     function — the hook is trivial once there's an address to notify.
+#   - Deep link needs CARD ANCHORS: /s/<slug>#card=<title> plus carousel
+#     auto-cycling to bring cards 2/3/N into view on arrival (Tony's
+#     note). Useful beyond the loop: shareable per-card links generally.
+#   - The satisfying-loop framing is the FLYWHEEL made personal — and the
+#     strongest version of pitch mechanism #4: a Brown student flags a
+#     card between classes, gets a ping at dinner that their photo now
+#     sits on the Gehry page with their name in the caption. That feeling
+#     is the retention mechanic for the whole contributor economy.
+#
 # TIMECODED RECEIPTS (Tony QA, 2026-08-10, the Gehry/Serra NewsHour
 # receipt): watchable receipts start at the top of the broadcast. Probed:
 # AAPB's embed player has NO seek param; this item's transcript has
