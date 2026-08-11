@@ -351,9 +351,16 @@ export async function getCitationsForItem(subject, item) {
      WHERE p.verification_status = 'quote_confirmed'
        AND p.verification_method = 'primary_source_quote_match'
        AND (s.mbid = $1 OR s.wikidata_qid = $2 OR lower(s.name) = lower($3))
-       AND regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') IN
-           (regexp_replace(lower($4), '[^a-z0-9]', '', 'g'),
-            regexp_replace(lower($5), '[^a-z0-9]', '', 'g'))
+       AND (
+         -- Title match requires creator congruence (QA 2026-08-11: Chris
+         -- Thile's receipt for the DIXIE CHICKS' "Home" attached to the
+         -- BILLY STRINGS' "Home" card — the Body-and-Soul lesson applies
+         -- to citations too). Entities without creator metadata don't
+         -- title-match creator-bearing cards.
+         (regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($4), '[^a-z0-9]', '', 'g')
+          AND ($5 = ' ' OR regexp_replace(lower(COALESCE(o.metadata->>'creator', '')), '[^a-z0-9]', '', 'g') = regexp_replace(lower($5), '[^a-z0-9]', '', 'g')))
+         OR regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($5), '[^a-z0-9]', '', 'g')
+       )
      ORDER BY (CASE WHEN regexp_replace(lower(o.name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($4), '[^a-z0-9]', '', 'g') THEN 0 ELSE 1 END),
               (CASE p.source_degree WHEN 'first' THEN 0 WHEN 'second' THEN 1 WHEN 'third' THEN 2 ELSE 1 END), p.created_at DESC
      LIMIT 3`,
