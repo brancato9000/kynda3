@@ -950,8 +950,12 @@ export async function getGraphForSubject(subject) {
     [entity.id]
   );
 
-  // Same-name rows MERGE their evidence (duplicate entities from earlier
-  // pipeline runs must pool their citations, not shadow each other).
+  // Same-WORK rows merge their evidence (duplicate entities from earlier
+  // pipeline runs must pool their citations, not shadow each other) — but
+  // same-NAME different-CREATOR works stay separate (QA 2026-08-11: the
+  // Dixie Chicks' "Home" evidence pooled under Billy Strings' "Home"
+  // node). Creator-less rows fold into a same-named node only when that
+  // resolution is unambiguous.
   const byName = new Map();
   for (const row of r.rows) {
     let role = null;
@@ -960,7 +964,15 @@ export async function getGraphForSubject(subject) {
     if (!role) continue;
 
     const evidence = typeof row.evidence === "string" ? JSON.parse(row.evidence) : row.evidence;
-    const key = norm(row.name);
+    let key = `${norm(row.name)}|${norm(row.creator || "")}`;
+    if (!row.creator) {
+      const sameName = [...byName.keys()].filter((k) => k.startsWith(`${norm(row.name)}|`));
+      if (sameName.length === 1) key = sameName[0];
+    } else if (byName.has(`${norm(row.name)}|`)) {
+      // A creator-less node arrived first — claim it for this creator.
+      byName.set(key, byName.get(`${norm(row.name)}|`));
+      byName.delete(`${norm(row.name)}|`);
+    }
     const existing = byName.get(key);
     if (existing) {
       existing.evidence.push(...evidence);
