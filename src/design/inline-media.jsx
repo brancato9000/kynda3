@@ -77,9 +77,9 @@ export function PreviewAudio({ item }) {
         onPlay={() => window.dispatchEvent(new CustomEvent("kynda-media-play", { detail: idRef.current }))}
         style={{ width: "100%", height: "34px" }} />
       <div style={{ marginTop: "4px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
-        30-second preview · plays via Apple ·{" "}
+        30-second preview · plays via {item.previewSource || "Apple"} ·{" "}
         <a href={item.previewPage} target="_blank" rel="noreferrer" style={{ color: "rgba(148,163,184,0.6)", textDecoration: "none" }}>
-          apple music ↗
+          {(item.previewSource || "Apple") === "Deezer" ? "deezer" : "apple music"} ↗
         </a>
       </div>
     </div>
