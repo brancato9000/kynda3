@@ -52,6 +52,16 @@ export default async function DemoPage({ params }) {
     ]).catch(() => {});
   } catch { /* logging must never break the page */ }
 
+  // Bio portrait (Tony, 2026-08-11): the subject's P18/Commons image,
+  // license-gated at backfill time, beside the intro bio.
+  const pr = await q(
+    `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
+            metadata->>'image_license' AS license, metadata->>'image_credit' AS credit
+     FROM entities WHERE lower(name) = lower($1) AND kind IN ('person','group') AND metadata->>'image_url' IS NOT NULL LIMIT 1`,
+    [subject.name]
+  ).catch(() => ({ rows: [] }));
+  const portrait = pr.rows[0]?.url ? { url: pr.rows[0].url, page: pr.rows[0].page, license: pr.rows[0].license, credit: pr.rows[0].credit } : null;
+
   const [mix, graph, bio] = await Promise.all([
     getStoredMix(subject),
     getGraphForSubject(subject).catch(() => null),
@@ -76,7 +86,7 @@ export default async function DemoPage({ params }) {
 
   return (
     <DemoApp
-      subject={{ name: subject.name, kind: subject.kind, domain: subject.domain, yearsActive: null, description: null }}
+      subject={{ name: subject.name, kind: subject.kind, domain: subject.domain, yearsActive: null, description: null, portrait }}
       bio={bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" }
         : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null}
       intro={mix.intro || subject.intro || ""}

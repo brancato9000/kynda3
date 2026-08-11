@@ -684,6 +684,17 @@ function SubjectCard({ subject, onBioDone }) {
   }
   return (
     <div style={{ padding: "26px 28px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", marginBottom: "24px" }}>
+      {/* Bio portrait (2026-08-11): the artist beside their bio — Commons,
+          license-gated, credited on hover, linked to the source file. */}
+      <div style={{ display: "flex", gap: "22px", alignItems: "flex-start" }}>
+        {subject.portrait?.url && (
+          <a href={subject.portrait.page} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}
+            title={`image: ${subject.portrait.credit} · ${subject.portrait.license} — via Wikimedia Commons`}>
+            <img src={subject.portrait.url} alt={subject.name}
+              style={{ width: "104px", height: "104px", objectFit: "cover", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.12)", display: "block" }} />
+          </a>
+        )}
+        <div style={{ minWidth: 0, flex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
         <div style={{ fontFamily: FONTS.display, fontSize: "38px", lineHeight: 1.05, marginBottom: "6px" }}>{subject.name}</div>
         {/* No share/pdf buttons on demo pages — those routes live behind
@@ -716,6 +727,8 @@ function SubjectCard({ subject, onBioDone }) {
           No encyclopedia entry found — showing catalog metadata only. Kynda quotes bios rather than generating them.
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
