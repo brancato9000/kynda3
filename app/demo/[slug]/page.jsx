@@ -89,11 +89,14 @@ export default async function DemoPage({ params }) {
   // license-gated at backfill time, beside the intro bio.
   const pr = await q(
     `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
-            metadata->>'image_license' AS license, metadata->>'image_credit' AS credit
-     FROM entities WHERE lower(name) = lower($1) AND kind IN ('person','group') AND metadata->>'image_url' IS NOT NULL LIMIT 1`,
+            metadata->>'image_license' AS license, metadata->>'image_credit' AS credit,
+            metadata->>'vibe_url' AS vibe_url, metadata->>'vibe_page' AS vibe_page, metadata->>'vibe_track' AS vibe_track
+     FROM entities WHERE lower(name) = lower($1) AND kind IN ('person','group')
+       AND (metadata->>'image_url' IS NOT NULL OR metadata->>'vibe_url' IS NOT NULL) LIMIT 1`,
     [subject.name]
   ).catch(() => ({ rows: [] }));
   const portrait = pr.rows[0]?.url ? { url: pr.rows[0].url, page: pr.rows[0].page, license: pr.rows[0].license, credit: pr.rows[0].credit } : null;
+  const vibe = pr.rows[0]?.vibe_url ? { url: pr.rows[0].vibe_url, page: pr.rows[0].vibe_page, track: pr.rows[0].vibe_track } : null;
 
   const [mix, graph, bio] = await Promise.all([
     getStoredMix(subject),
@@ -119,7 +122,7 @@ export default async function DemoPage({ params }) {
 
   return (
     <DemoApp
-      subject={{ name: subject.name, kind: subject.kind, domain: subject.domain, yearsActive: null, description: null, portrait }}
+      subject={{ name: subject.name, kind: subject.kind, domain: subject.domain, yearsActive: null, description: null, portrait, vibe }}
       bio={bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" }
         : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null}
       intro={mix.intro || subject.intro || ""}
