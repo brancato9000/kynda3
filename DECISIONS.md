@@ -318,3 +318,13 @@ cards, book jackets, and everything else remain per-asset curator
 judgment in the queue. Strengthening context from Tony (ex-GM of
 IMDb): posters are marketing collateral — studio incentive runs TOWARD
 display, and IMDb built a business on exactly this class of use.
+
+## V3-75: The TV title-card class rule
+**Tony's call (2026-08-10), completing the marketing-collateral trilogy
+with V3-73 (covers) and V3-74 (posters).** Television title cards and key
+art, at thumbnail size, on the card for that very series, auto-apply
+under fair use — same conditions: the work's own en-wiki article must
+identify itself as a television series/program, the V3-72 caveat and ⚑
+channel render, card-scoped, never entity-mirrored. Same rights-holder
+logic as posters (networks market their key art everywhere). Book
+jackets, artwork photos, and the rest remain per-asset curator judgment.

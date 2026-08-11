@@ -148,18 +148,21 @@ outer: for (const s of work) {
       } else if (
         item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")
         || /is (a|the) [^.]{0,90}?\bfilm\b/i.test(found.extract || "")
+        || /is (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries)\b/i.test(found.extract || "")
       ) {
         // Class rules: covers (V3-73) and film posters (V3-74) — the two
         // settled fair-use categories, decided once by Tony. Posters are
         // marketing collateral; the rights-holder incentive runs TOWARD
         // display (Tony, ex-GM of IMDb).
-        const isFilm = !(item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || ""));
+        const isCover = item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "");
+        const isTv = !isCover && /is (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries)\b/i.test(found.extract || "");
+        const isFilm = !isCover && !isTv;
         classApplied += 1;
-        console.log(`  ${isFilm ? "🎬 poster (V3-74)" : "♪ cover (V3-73)"}: ${s.name} → ${item.title}`);
+        console.log(`  ${isCover ? "♪ cover (V3-73)" : isTv ? "📺 title card (V3-75)" : "🎬 poster (V3-74)"}: ${s.name} → ${item.title}`);
         if (!DRY) {
           Object.assign(item, {
             imageUrl: info.url, imagePage: info.page,
-            imageLicense: isFilm ? "fair use — film poster thumbnail (class rule V3-74)" : "fair use — cover art thumbnail (class rule V3-73)",
+            imageLicense: isCover ? "fair use — cover art thumbnail (class rule V3-73)" : isTv ? "fair use — TV title card thumbnail (class rule V3-75)" : "fair use — film poster thumbnail (class rule V3-74)",
             imageCredit: `en.wikipedia (${found.article})`,
           });
           dirty = true;

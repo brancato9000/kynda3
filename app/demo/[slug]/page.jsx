@@ -20,6 +20,10 @@ const DEMO_SLUGS = new Set([
   "the-glass-bead-game",
   "detroit-style-pizza",
   "live-art-in-microgravity",
+  // Gregg (Nonesuch Records, 2026-08-10): three artists he asked about.
+  "mary-halvorson",
+  "chris-thile",
+  "molly-tuttle",
 ]);
 
 export async function generateMetadata({ params }) {
