@@ -727,6 +727,13 @@ function SubjectCard({ subject, onBioDone }) {
           No encyclopedia entry found — showing catalog metadata only. Kynda quotes bios rather than generating them.
         </div>
       )}
+      {/* Artist vibe (2026-08-11): the map assumes you know the artist —
+          a 30s sample of their top track fixes the cold start. */}
+      {subject.vibe?.url && (
+        <PreviewAudio
+          label={`hear the artist — "${subject.vibe.track}"`}
+          item={{ previewUrl: subject.vibe.url, previewPage: subject.vibe.page }} />
+      )}
         </div>
       </div>
     </div>

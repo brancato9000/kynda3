@@ -61,20 +61,42 @@ export function CardImage({ item }) {
 // URLs explicitly for this purpose — official snippet, outbound credit to
 // the store page. Joins the one-player-at-a-time bus: starting any other
 // media pauses it.
-export function PreviewAudio({ item }) {
+export function PreviewAudio({ item, label }) {
   const audioRef = useRef(null);
   const idRef = useRef(null);
+  const fadeRef = useRef(null);
   if (idRef.current === null) idRef.current = `media_${Math.random().toString(36).slice(2)}`;
   useEffect(() => {
     const onOtherPlay = (e) => { if (e.detail !== idRef.current) audioRef.current?.pause(); };
     window.addEventListener("kynda-media-play", onOtherPlay);
-    return () => window.removeEventListener("kynda-media-play", onOtherPlay);
+    return () => { window.removeEventListener("kynda-media-play", onOtherPlay); clearInterval(fadeRef.current); };
   }, []);
   if (!item?.previewUrl) return null;
+
+  // Gentle edges (Tony, 2026-08-11): previews cut off abruptly — ramp
+  // volume in over ~1.2s and out over the final ~2.5s. Pure element
+  // volume; cancels cleanly on pause/seek.
+  function startFades() {
+    const a = audioRef.current;
+    if (!a) return;
+    clearInterval(fadeRef.current);
+    a.volume = 0;
+    fadeRef.current = setInterval(() => {
+      if (!a || a.paused) { clearInterval(fadeRef.current); if (a) a.volume = 1; return; }
+      const remaining = (a.duration || 30) - a.currentTime;
+      const target = Math.min(a.currentTime / 1.2, remaining / 2.5, 1);
+      a.volume = Math.max(0, Math.min(1, target));
+    }, 80);
+  }
   return (
     <div style={{ marginTop: "12px" }}>
+      {label && (
+        <div style={{ marginBottom: "5px", fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", textTransform: "uppercase", color: "rgba(148,163,184,0.6)" }}>
+          {label}
+        </div>
+      )}
       <audio ref={audioRef} controls preload="none" src={item.previewUrl}
-        onPlay={() => window.dispatchEvent(new CustomEvent("kynda-media-play", { detail: idRef.current }))}
+        onPlay={() => { window.dispatchEvent(new CustomEvent("kynda-media-play", { detail: idRef.current })); startFades(); }}
         style={{ width: "100%", height: "34px" }} />
       <div style={{ marginTop: "4px", fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.04em", color: "rgba(148,163,184,0.5)" }}>
         30-second preview · plays via {item.previewSource || "Apple"} ·{" "}
