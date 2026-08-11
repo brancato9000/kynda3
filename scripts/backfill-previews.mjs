@@ -55,9 +55,27 @@ for (const [i, r] of rows.entries()) {
     missed += 1;
     continue;
   }
-  const hit = (d.results || []).find(
+  let hit = (d.results || []).find(
     (x) => x.previewUrl && norm(x.trackName) === norm(r.name) && (norm(x.artistName) === norm(r.creator) || norm(x.artistName).includes(norm(r.creator)) || norm(r.creator).includes(norm(x.artistName)))
   );
+  // Album fallback (2026-08-11, "more playable samples"): albums carry no
+  // preview themselves — match the ALBUM under the same identity gates,
+  // then sample its opening track.
+  if (!hit) {
+    await pause(3400);
+    try {
+      const ad = await (await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(`${r.name} ${r.creator}`)}&media=music&entity=album&limit=5`, { headers: UA })).json();
+      const album = (ad.results || []).find(
+        (x) => norm(x.collectionName) === norm(r.name) && (norm(x.artistName) === norm(r.creator) || norm(x.artistName).includes(norm(r.creator)) || norm(r.creator).includes(norm(x.artistName)))
+      );
+      if (album) {
+        await pause(3400);
+        const td = await (await fetch(`https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song&limit=6`, { headers: UA })).json();
+        const track = (td.results || []).find((x) => x.wrapperType === "track" && x.previewUrl);
+        if (track) hit = { previewUrl: track.previewUrl, trackViewUrl: album.collectionViewUrl || track.trackViewUrl, trackName: track.trackName, artistName: album.artistName };
+      }
+    } catch { /* fall through */ }
+  }
   if (!hit) {
     (d.results || []).length ? (gated += 1) : (missed += 1);
     continue;
