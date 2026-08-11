@@ -407,7 +407,8 @@ export async function getCardMedia(item) {
   const r = await q(
     `SELECT metadata->>'image_url' AS url, metadata->>'image_page' AS page,
             metadata->>'image_license' AS license, metadata->>'image_credit' AS credit,
-            metadata->>'preview_url' AS preview, metadata->>'preview_page' AS preview_page
+            metadata->>'preview_url' AS preview, metadata->>'preview_page' AS preview_page,
+            metadata->>'preview_source' AS preview_source
      FROM entities
      WHERE (metadata->>'image_url' IS NOT NULL OR metadata->>'preview_url' IS NOT NULL)
        AND regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = regexp_replace(lower($1), '[^a-z0-9]', '', 'g')
@@ -419,7 +420,7 @@ export async function getCardMedia(item) {
   if (!row) return null;
   const out = {};
   if (row.url) Object.assign(out, { imageUrl: row.url, imagePage: row.page, imageLicense: row.license, imageCredit: row.credit });
-  if (row.preview) Object.assign(out, { previewUrl: row.preview, previewPage: row.preview_page });
+  if (row.preview) Object.assign(out, { previewUrl: row.preview, previewPage: row.preview_page, previewSource: row.preview_source || null });
   return Object.keys(out).length ? out : null;
 }
 
