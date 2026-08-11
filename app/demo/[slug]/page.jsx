@@ -27,8 +27,41 @@ const DEMO_SLUGS = new Set([
 ]);
 
 export async function generateMetadata({ params }) {
+  // Share previews (Tony, 2026-08-11, urgent): without OG metadata,
+  // messengers scraped the first large image — a card's album cover
+  // (fair-use assets must never be the page's ambassador). Declare the
+  // subject's own Commons-licensed portrait, or no image at all, and the
+  // proper share copy.
   const { slug } = await params;
-  return { title: "Kynda — influence map", robots: { index: false, follow: false } };
+  if (!DEMO_SLUGS.has(slug)) return { title: "Kynda", robots: { index: false, follow: false } };
+  let name = null, portraitUrl = null;
+  try {
+    const subjects = await listSubjects();
+    const subject = subjects.find((s) => slugify(s.name) === slug) || null;
+    if (subject) {
+      name = subject.name;
+      const pr = await q(
+        `SELECT metadata->>'image_url' AS url FROM entities
+         WHERE lower(name) = lower($1) AND metadata->>'image_url' IS NOT NULL
+           AND metadata->>'image_license' NOT ILIKE '%fair use%' LIMIT 1`,
+        [subject.name]
+      );
+      portraitUrl = pr.rows[0]?.url || null;
+    }
+  } catch { /* metadata must never break the page */ }
+  const title = name ? `${name}'s Influence Map on Kynda` : "Kynda — influence map";
+  return {
+    title,
+    description: name ? `The documented influences behind ${name} — every connection quote-verified against its source.` : undefined,
+    robots: { index: false, follow: false },
+    openGraph: {
+      title,
+      description: name ? `The documented influences behind ${name}, mapped and verified by Kynda.` : undefined,
+      siteName: "Kynda",
+      ...(portraitUrl ? { images: [{ url: portraitUrl }] } : {}),
+    },
+    twitter: { card: portraitUrl ? "summary" : "summary", title },
+  };
 }
 
 export default async function DemoPage({ params }) {
