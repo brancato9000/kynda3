@@ -25,7 +25,7 @@ const MOUNTAIN = {
 const fmt = (n) => Number(n).toLocaleString("en-US");
 
 export default async function AboutPage() {
-  let s = null, sources = [], domains = [];
+  let s = null, sources = [], domains = [], otherHosts = [];
   try {
     s = (await q(`SELECT
       (SELECT count(*) FROM entities) AS entities,
@@ -48,6 +48,14 @@ export default async function AboutPage() {
         count(*) FILTER (WHERE source_degree = 'first') AS first
       FROM provenance WHERE verification_status = 'quote_confirmed'
       GROUP BY 1 ORDER BY n DESC`)).rows;
+    // Examples for the "other" bucket — top hosts, computed live.
+    otherHosts = (await q(`
+      SELECT regexp_replace(regexp_replace(source_url, '^https?://(www\\.)?', ''), '/.*$', '') AS host, count(*) AS n
+      FROM provenance
+      WHERE verification_status = 'quote_confirmed'
+        AND source_url NOT LIKE '%wikipedia.org%' AND source_url NOT LIKE '%loc.gov%'
+        AND source_url NOT LIKE '%freshairarchive%' AND source_url NOT LIKE '%americanarchive%'
+      GROUP BY 1 ORDER BY n DESC LIMIT 3`)).rows.map((r) => r.host);
     domains = (await q(`
       SELECT e.domain, count(DISTINCT m.subject_entity_id) AS subjects
       FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
@@ -94,7 +102,14 @@ export default async function AboutPage() {
         <div style={{ marginBottom: "38px" }}>
           {sources.map((r) => (
             <div key={r.src} style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "9px 2px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <span style={{ fontSize: "14px", color: "rgba(226,232,240,0.85)" }}>{r.src}</span>
+              <span style={{ fontSize: "14px", color: "rgba(226,232,240,0.85)" }}>
+                {r.src}
+                {r.src === "other primary sources" && otherHosts.length > 0 && (
+                  <span style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.55)" }}>
+                    {" "}(incl. {otherHosts.join(", ")}, …)
+                  </span>
+                )}
+              </span>
               <span style={mono("11.5px")}>{fmt(r.n)} citations · {fmt(r.first)} first-degree</span>
             </div>
           ))}
