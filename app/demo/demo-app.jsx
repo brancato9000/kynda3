@@ -198,7 +198,13 @@ function mergeCitations(citations) {
     g.quote = kept.join(" … ");
     g.quotes = kept;
   }
-  return groups;
+  // Cross-URL airings of the same utterance (same speaker, token-subset)
+  // collapse to the longest group.
+  return groups.filter((g, i) => !groups.some((o, j) => {
+    if (i === j || (g.speaker || "") !== (o.speaker || "")) return false;
+    const contained = subsumes(o.quote, g.quote);
+    return contained && (o.quote.length > g.quote.length || (o.quote.length === g.quote.length && j < i));
+  }));
 }
 
 function CitationBlock({ citations, subjectName, item }) {
