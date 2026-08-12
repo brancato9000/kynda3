@@ -132,7 +132,7 @@ function ConnectionChip({ connection }) {
   return (
     <span title="This connection rests on the model's knowledge — no independent citation found yet. Interview-grade citations arrive with the research corpus."
       style={{ ...chipBase, color: "rgba(148,163,184,0.6)", border: "1px solid rgba(148,163,184,0.2)" }}>
-      Kynda’s synthesis
+      Kynda’s synthesis — not verified
     </span>
   );
 }
