@@ -7,6 +7,23 @@ import { FONTS, BASE } from "./tokens.js";
 // what the graph holds; the node view drowns in dots. This is the honest
 // middle — a LEDGER of documented connections the cards didn't show,
 // ranked by evidence, as quiet text rows. Depth expressed, no hairball.
+// Evidence dedupe (Tony QA, 2026-08-11, the double Brubeck): harvest runs
+// re-read the same source with drifted quote boundaries and publication
+// names — same-page fragments where one contains the other's core keep
+// only the longest.
+function dedupeEvidence(evidence) {
+  const nrm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const rows = (evidence || []).filter((e) => e.quote);
+  return rows.filter((e, i) => !rows.some((o, j) => {
+    if (i === j) return false;
+    const a = nrm(e.quote), b = nrm(o.quote);
+    const shorter = a.length <= b.length ? a : b;
+    const overlap = b.includes(a) || a.includes(b)
+      || (shorter.length > 24 && (a.includes(shorter.slice(-24)) && b.includes(shorter.slice(-24))));
+    return overlap && (b.length > a.length || (b.length === a.length && j < i));
+  }));
+}
+
 const TIER_COLOR = { cited: "rgba(52,211,153,0.85)", documented: "rgba(250,204,21,0.75)", claimed: "rgba(148,163,184,0.45)" };
 const ROLE_LABEL = { predecessors: "influence on them", peers: "alongside them", successors: "their influence on others" };
 
@@ -69,10 +86,12 @@ function ArchiveLedger({ slots, graph }) {
                     {n.summary}
                   </div>
                 )}
-                {(n.evidence || []).filter((e) => e.quote).slice(0, 2).map((e, j) => (
+                {dedupeEvidence(n.evidence).slice(0, 2).map((e, j) => (
                   <div key={j} style={{ marginBottom: "8px", paddingLeft: "12px", borderLeft: "2px solid rgba(52,211,153,0.3)" }}>
                     <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "12.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.78)" }}>
-                      &ldquo;{e.quote.length > 220 ? `${e.quote.slice(0, 220)}…` : e.quote}&rdquo;
+                      {e.contextBefore && <span style={{ color: "rgba(148,163,184,0.5)" }}>…{e.contextBefore} </span>}
+                      &ldquo;{e.quote.length > 260 ? `${e.quote.slice(0, 260)}…` : e.quote}&rdquo;
+                      {e.contextAfter && <span style={{ color: "rgba(148,163,184,0.5)" }}> {e.contextAfter}…</span>}
                     </div>
                     <a href={e.url} target="_blank" rel="noreferrer"
                       style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.7)", textDecoration: "none" }}>

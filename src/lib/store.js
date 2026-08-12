@@ -343,7 +343,7 @@ export async function getCitationsForItem(subject, item) {
   const creator = (item.creator || "").trim();
   const sameCreator = creator && creator.toLowerCase() === subject.name.toLowerCase();
   const r = await q(
-    `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date, p.speaker, p.source_degree, p.notes
+    `SELECT p.source_url, p.archived_url, p.quote, p.publication, p.published_date, p.speaker, p.source_degree, p.notes, p.context_before, p.context_after
      FROM provenance p
      JOIN claims c ON c.id = p.claim_id
      JOIN entities s ON s.id IN (c.subject_id, c.object_id)
@@ -379,6 +379,8 @@ export async function getCitationsForItem(subject, item) {
     // — ground truth from watching the tape, never estimated (the estimate
     // methodology was QA-falsified 2026-08-10).
     timestamp: (row.notes || "").match(/\[t@(\d{1,2}:\d{2}(?::\d{2})?)\]/)?.[1] || null,
+    contextBefore: row.context_before || null,
+    contextAfter: row.context_after || null,
     publication: row.publication || (row.source_url ? new URL(row.source_url).hostname.replace(/^www\./, "") : "source"),
     date: row.published_date instanceof Date ? String(row.published_date.getUTCFullYear()) : row.published_date ? String(row.published_date).slice(0, 4) : null,
   }));
@@ -941,6 +943,7 @@ export async function getGraphForSubject(subject) {
             COALESCE((SELECT json_agg(json_build_object(
                 'quote', p.quote, 'url', p.source_url, 'publication', p.publication,
                 'speaker', p.speaker, 'degree', p.source_degree,
+                'contextBefore', p.context_before, 'contextAfter', p.context_after,
                 'method', p.verification_method, 'status', p.verification_status)
               ORDER BY (p.verification_method = 'primary_source_quote_match') DESC, p.created_at DESC)
               FROM provenance p WHERE p.claim_id = c.id

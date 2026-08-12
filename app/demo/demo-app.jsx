@@ -205,7 +205,16 @@ function CitationBlock({ citations, subjectName, item }) {
       {merged.map((c, i) => (
         <div key={i} style={{ marginBottom: i < merged.length - 1 ? "10px" : 0 }}>
           <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "13.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.8)" }}>
+            {/* Context (2026-08-11): the sentences around the verified quote,
+                captured deterministically from the same source — dimmed, so
+                the certified quote stays visually distinct. */}
+            {c.quotes?.length === 1 && c.contextBefore && (
+              <span style={{ color: "rgba(148,163,184,0.55)" }}>…{c.contextBefore} </span>
+            )}
             “{c.quote}”
+            {c.quotes?.length === 1 && c.contextAfter && (
+              <span style={{ color: "rgba(148,163,184,0.55)" }}> {c.contextAfter}…</span>
+            )}
           </div>
           <a href={c.url} target="_blank" rel="noreferrer"
             title={c.degree ? `${DEGREE_LABELS[c.degree]} — degree classified by the research agent` : undefined}
