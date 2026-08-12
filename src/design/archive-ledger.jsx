@@ -23,7 +23,10 @@ function dedupeEvidence(evidence) {
   };
   const rows = (evidence || []).filter((e) => e.quote);
   return rows.filter((e, i) => !rows.some((o, j) => {
-    if (i === j || e.url !== o.url) return false;
+    // Cross-URL too (the same interview archived as two segments): a
+    // token-subset quote from the SAME speaker is one utterance, not two
+    // receipts — the reader keeps the longest with its link.
+    if (i === j || (e.speaker || "") !== (o.speaker || "")) return false;
     const a = nrm(e.quote), b = nrm(o.quote);
     const overlap = b.includes(a) || a.includes(b) || subsumes(o.quote, e.quote) || subsumes(e.quote, o.quote);
     const oWins = b.length > a.length || (b.length === a.length && j < i);
