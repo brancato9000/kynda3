@@ -13,14 +13,21 @@ import { FONTS, BASE } from "./tokens.js";
 // only the longest.
 function dedupeEvidence(evidence) {
   const nrm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const toks = (s) => (s || "").toLowerCase().match(/[a-z0-9']+/g) || [];
+  // Token-subset beats substring containment: spoken interjections ("oh,")
+  // break substrings but not word inclusion (the double-Brubeck case).
+  const subsumes = (long, short) => {
+    const set = new Set(toks(long));
+    const st = toks(short);
+    return st.length >= 4 && st.every((t) => set.has(t));
+  };
   const rows = (evidence || []).filter((e) => e.quote);
   return rows.filter((e, i) => !rows.some((o, j) => {
-    if (i === j) return false;
+    if (i === j || e.url !== o.url) return false;
     const a = nrm(e.quote), b = nrm(o.quote);
-    const shorter = a.length <= b.length ? a : b;
-    const overlap = b.includes(a) || a.includes(b)
-      || (shorter.length > 24 && (a.includes(shorter.slice(-24)) && b.includes(shorter.slice(-24))));
-    return overlap && (b.length > a.length || (b.length === a.length && j < i));
+    const overlap = b.includes(a) || a.includes(b) || subsumes(o.quote, e.quote) || subsumes(e.quote, o.quote);
+    const oWins = b.length > a.length || (b.length === a.length && j < i);
+    return overlap && oWins;
   }));
 }
 

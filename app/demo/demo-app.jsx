@@ -182,10 +182,21 @@ function mergeCitations(citations) {
       if ((rank[c.degree] ?? 3) < (rank[g.degree] ?? 3)) g.degree = c.degree;
     }
   }
+  const toks = (s) => (s || "").toLowerCase().match(/[a-z0-9']+/g) || [];
+  const subsumes = (long, short) => {
+    const set = new Set(toks(long));
+    const st = toks(short);
+    return st.length >= 4 && st.every((t) => set.has(t));
+  };
   for (const g of groups) {
     const kept = g.quotes.filter((q1, i) =>
-      !g.quotes.some((q2, j) => j !== i && nrm(q2).includes(nrm(q1)) && (nrm(q2) !== nrm(q1) || j < i)));
+      !g.quotes.some((q2, j) => {
+        if (j === i) return false;
+        const contained = nrm(q2).includes(nrm(q1)) || subsumes(q2, q1);
+        return contained && (nrm(q2) !== nrm(q1) ? q2.length >= q1.length : j < i);
+      }));
     g.quote = kept.join(" … ");
+    g.quotes = kept;
   }
   return groups;
 }
