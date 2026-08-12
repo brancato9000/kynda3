@@ -5,6 +5,7 @@ import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIM
 import Wordmark from "../src/design/wordmark.jsx";
 import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
 import { parseEmbed, InlineMedia, CardImage, PreviewAudio, MediaFlag, SuggestMedia, TimestampReport } from "../src/design/inline-media.jsx";
+import ArchiveLedger from "../src/design/archive-ledger.jsx";
 import GraphView from "./graph-view.jsx";
 import { slugify } from "../src/lib/slug.js";
 
@@ -1003,9 +1004,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
   const [covers, setCovers] = useState({ status: "idle", data: null, error: null });
   const runRef = useRef(0);
 
-  // Graph is lazy (kynda2 AD-05) and free — a pure claims-store read.
-  const openGraphTab = useCallback(async (subj) => {
-    setTab("graph");
+  // Graph fetch is free — a pure claims-store read. Loaded eagerly once a
+  // mix completes (2026-08-11: the archive ledger under the mix needs it),
+  // still lazy-fallback on tab open.
+  const loadGraph = useCallback(async (subj) => {
     if (graph.status === "loading" || graph.status === "ready") return;
     setGraph({ status: "loading", data: null, error: null });
     try {
@@ -1021,6 +1023,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
       setGraph({ status: "error", data: null, error: err.message });
     }
   }, [graph.status]);
+  const openGraphTab = useCallback((subj) => { setTab("graph"); loadGraph(subj); }, [loadGraph]);
 
   // Covers tab (V3-42): lazy and free, same pattern as the graph.
   const openCoversTab = useCallback(async (subj) => {
@@ -1046,7 +1049,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo")) {
       setSubject(DEMO.subject); setTier("certain"); setIntro(DEMO.intro);
       setSlots(DEMO.slots);
-      setPhase("mixing"); setDone(true);
+      setPhase("mixing"); setDone(true); loadGraph(subj);
     }
   }, []);
 
@@ -1101,7 +1104,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
             next[evt.s] = { ...next[evt.s], order: evt.order };
             return next;
           });
-          else if (evt.type === "done") setDone(true);
+          else if (evt.type === "done") { setDone(true); loadGraph(subj); }
           else if (evt.type === "error") setError(evt.message);
         }
       }
@@ -1389,6 +1392,9 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
           </div>
           )}
 
+          {tab === "mix" && done && graph.status === "ready" && (
+            <ArchiveLedger slots={slots} graph={graph.data} />
+          )}
           {tab === "mix" && done && subject && <AskCard subject={subject} />}
           {tab === "mix" && done && subject && <ProposedSection subject={subject} />}
           {tab === "mix" && done && subject && <AddConnectionCard subject={subject} />}
