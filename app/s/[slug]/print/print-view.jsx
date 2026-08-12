@@ -19,7 +19,7 @@ function Badges({ verification }) {
   const conn = verification?.connection?.status;
   if (conn === "documented" || conn === "documented_via") out.push("◆ documented");
   if ((verification?.citations || []).length) out.push(`❝ ${verification.citations.length} primary-source citation${verification.citations.length === 1 ? "" : "s"}`);
-  if (!out.length) out.push("Kynda's synthesis");
+  if (!out.length) out.push("Kynda's synthesis — not verified");
   return <span style={{ fontFamily: MONO, fontSize: "9.5px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>{out.join("   ·   ")}</span>;
 }
 
