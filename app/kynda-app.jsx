@@ -1049,7 +1049,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo")) {
       setSubject(DEMO.subject); setTier("certain"); setIntro(DEMO.intro);
       setSlots(DEMO.slots);
-      setPhase("mixing"); setDone(true); loadGraph(subj);
+      setPhase("mixing"); setDone(true); loadGraph(DEMO.subject);
     }
   }, []);
 
