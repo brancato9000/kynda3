@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { FONTS, BASE } from "./tokens.js";
 
 // The archive beneath (Tony, 2026-08-11): the mix curates ~a third of
@@ -10,6 +11,7 @@ const TIER_COLOR = { cited: "rgba(52,211,153,0.85)", documented: "rgba(250,204,2
 const ROLE_LABEL = { predecessors: "influence on them", peers: "alongside them", successors: "their influence on others" };
 
 function ArchiveLedger({ slots, graph }) {
+  const [open, setOpen] = useState(null);
   if (!graph) return null;
   const nrm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const onCards = new Set();
@@ -43,14 +45,48 @@ function ArchiveLedger({ slots, graph }) {
       </div>
       <div style={{ display: "grid", gap: "4px" }}>
         {shown.map((n, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "10px", padding: "6px 2px", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
-            <span title={n.tier === "cited" ? "quote-confirmed receipt" : n.tier === "documented" ? "documented in a database or cross-reference" : "claimed — no independent receipt yet"}
-              style={{ width: "7px", height: "7px", borderRadius: "50%", background: TIER_COLOR[n.tier] || TIER_COLOR.claimed, flexShrink: 0, position: "relative", top: "-1px" }} />
-            <span style={{ fontFamily: FONTS.display, fontSize: "14.5px", color: "rgba(226,232,240,0.88)" }}>{n.name}</span>
-            {n.creator && <span style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.6)" }}>{n.creator}</span>}
-            <span style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.45)", textTransform: "uppercase", letterSpacing: "0.05em", marginLeft: "auto" }}>
-              {ROLE_LABEL[n.role]}{n.evidence?.length ? ` · ${n.evidence.length} receipt${n.evidence.length > 1 ? "s" : ""}` : ""}
-            </span>
+          <div key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            {/* Peek (Tony, 2026-08-11): a row opens into its receipts —
+                summary + verified quotes, straight from the graph payload
+                already on the page. Context without cards. */}
+            <div role="button" tabIndex={0}
+              onClick={() => setOpen(open === i ? null : i)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === i ? null : i); } }}
+              style={{ display: "flex", alignItems: "baseline", gap: "10px", padding: "6px 2px", flexWrap: "wrap", cursor: "pointer" }}>
+              <span title={n.tier === "cited" ? "quote-confirmed receipt" : n.tier === "documented" ? "documented in a database or cross-reference" : "claimed — no independent receipt yet"}
+                style={{ width: "7px", height: "7px", borderRadius: "50%", background: TIER_COLOR[n.tier] || TIER_COLOR.claimed, flexShrink: 0, position: "relative", top: "-1px" }} />
+              <span style={{ fontFamily: FONTS.display, fontSize: "14.5px", color: "rgba(226,232,240,0.88)" }}>{n.name}</span>
+              {n.creator && <span style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.6)" }}>{n.creator}</span>}
+              <span style={{ fontFamily: FONTS.mono, fontSize: "10px", color: "rgba(148,163,184,0.45)", textTransform: "uppercase", letterSpacing: "0.05em", marginLeft: "auto" }}>
+                {ROLE_LABEL[n.role]}{n.evidence?.length ? ` · ${n.evidence.length} receipt${n.evidence.length > 1 ? "s" : ""}` : ""}
+                <span style={{ marginLeft: "8px", color: "rgba(148,163,184,0.35)" }}>{open === i ? "▾" : "▸"}</span>
+              </span>
+            </div>
+            {open === i && (
+              <div style={{ padding: "2px 2px 12px 19px" }}>
+                {n.summary && (
+                  <div style={{ fontSize: "12.5px", lineHeight: 1.65, color: "rgba(148,163,184,0.8)", marginBottom: n.evidence?.length ? "8px" : 0 }}>
+                    {n.summary}
+                  </div>
+                )}
+                {(n.evidence || []).filter((e) => e.quote).slice(0, 2).map((e, j) => (
+                  <div key={j} style={{ marginBottom: "8px", paddingLeft: "12px", borderLeft: "2px solid rgba(52,211,153,0.3)" }}>
+                    <div style={{ fontFamily: FONTS.display, fontStyle: "italic", fontSize: "12.5px", lineHeight: 1.6, color: "rgba(226,232,240,0.78)" }}>
+                      &ldquo;{e.quote.length > 220 ? `${e.quote.slice(0, 220)}…` : e.quote}&rdquo;
+                    </div>
+                    <a href={e.url} target="_blank" rel="noreferrer"
+                      style={{ fontFamily: FONTS.mono, fontSize: "9.5px", letterSpacing: "0.05em", color: "rgba(52,211,153,0.7)", textDecoration: "none" }}>
+                      — {e.speaker ? `${e.speaker}, via ` : ""}{e.publication || new URL(e.url).hostname.replace(/^www\./, "")} ↗
+                    </a>
+                  </div>
+                ))}
+                {!(n.evidence || []).some((e) => e.quote) && !n.summary && (
+                  <div style={{ fontFamily: FONTS.mono, fontSize: "10.5px", color: "rgba(148,163,184,0.5)" }}>
+                    claimed in the graph — no receipt captured yet
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
