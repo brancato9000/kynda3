@@ -99,6 +99,15 @@ export async function getArticle({ name, qid = null }) {
   return { title: page.title, text: page.extract, url: articleUrl(page.title) };
 }
 
+/** TextExtracts strips IPA/audio templates but keeps their separators,
+ * leaving artifacts like "(; THEE-lee" or an empty "()". Repair only those;
+ * the text stays verbatim otherwise. */
+function repairStrippedTemplates(s) {
+  return s
+    .replace(/\(\s*(?:[;,]\s*)+/g, "(")
+    .replace(/\s*\(\s*\)/g, "");
+}
+
 /**
  * Fetch just the article's opening section (fast, small). Used verbatim as
  * the subject bio (V3-15: don't generate what you can quote) — trimmed to a
@@ -118,7 +127,7 @@ export async function getIntroExtract({ name, qid = null, maxChars = 600 }) {
   });
   const page = Object.values(data.query?.pages || {})[0];
   if (!page?.extract) return null;
-  let text = page.extract.replace(/\s+/g, " ").trim();
+  let text = repairStrippedTemplates(page.extract).replace(/\s+/g, " ").trim();
   if (text.length > maxChars) {
     const cut = text.slice(0, maxChars);
     const lastSentenceEnd = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(".”"), cut.lastIndexOf(".)"));
