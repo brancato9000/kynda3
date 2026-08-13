@@ -24,6 +24,8 @@ const DEMO_SLUGS = new Set([
   "mary-halvorson",
   "chris-thile",
   "molly-tuttle",
+  // Tony Berg door (2026-08-13): produced Lost Weekend, connected via label.
+  "phoebe-bridgers",
 ]);
 
 export async function generateMetadata({ params }) {

@@ -113,7 +113,7 @@ export async function loadSubjectMembers(subject) {
 // either way — badge rates ARE the model eval.
 export const MIX_MODEL = process.env.KYNDA_MIX_MODEL || "claude-opus-5";
 
-export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low" } = {}) {
+export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low", notes = [] } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
@@ -124,6 +124,10 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
     context.push(`Members / associated acts (from MusicBrainz): ${members.slice(0, 15).map((m) => m.name).join(", ")}`);
   }
   if (context.length) parts.push(`This specifically refers to:\n${context.join("\n")}`);
+  // Curated-context channel (Tony, 2026-08-13): recent facts the model's
+  // training can't know (a release newer than the cutoff, a steer from the
+  // subject's own team). Facts only — verification still runs on every card.
+  if (notes.length) parts.push(`Curated context — recent facts to incorporate:\n${notes.join("\n")}`);
 
   const mix = model && model !== "claude-fable-5"
     ? await callModel(model, {
