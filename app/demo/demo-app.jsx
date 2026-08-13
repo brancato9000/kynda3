@@ -600,10 +600,10 @@ function SlotCard({ slot, index, subject }) {
           <span title="Multiple candidates for this slot, ordered by evidence strength"
             style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(226,232,240,0.92)" }}>
             <button onClick={() => setPos((p) => (p - 1 + order.length) % order.length)} aria-label="previous candidate"
-              style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.5)", color: BASE.gold, borderRadius: "4px", cursor: "pointer", padding: "2px 9px", fontSize: "13px", lineHeight: 1.2 }}>‹</button>
+              style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.5)", color: "#34d399", borderRadius: "4px", cursor: "pointer", padding: "2px 9px", fontSize: "13px", lineHeight: 1.2 }}>‹</button>
             {Math.min(pos, order.length - 1) + 1} / {order.length}
             <button onClick={() => setPos((p) => (p + 1) % order.length)} aria-label="next candidate"
-              style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.5)", color: BASE.gold, borderRadius: "4px", cursor: "pointer", padding: "2px 9px", fontSize: "13px", lineHeight: 1.2 }}>›</button>
+              style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.5)", color: "#34d399", borderRadius: "4px", cursor: "pointer", padding: "2px 9px", fontSize: "13px", lineHeight: 1.2 }}>›</button>
           </span>
         )}
       </div>
