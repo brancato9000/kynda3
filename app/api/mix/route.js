@@ -10,7 +10,7 @@
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixFingerprint } from "../../../src/lib/store.js";
-import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
+import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 
 export const maxDuration = 300;
@@ -90,8 +90,9 @@ export async function POST(req) {
           send({ type: "error", message: "Too many new maps from this connection — cached subjects still work. Try again in an hour." });
           return;
         }
-        if (await generationCapReached()) {
-          send({ type: "error", message: CAPACITY_MESSAGE });
+        const blocked = await generationCapReached();
+        if (blocked) {
+          send({ type: "error", message: blocked === "unavailable" ? UNAVAILABLE_MESSAGE : CAPACITY_MESSAGE });
           return;
         }
 

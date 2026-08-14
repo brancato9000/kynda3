@@ -39,16 +39,32 @@ export function clientIp(req) {
   );
 }
 
-/** True when today's fresh-generation budget is exhausted. Fails open without a DB. */
+/**
+ * Falsy when a fresh generation may proceed; otherwise the reason why not
+ * ("cap" | "unavailable").
+ *
+ * Fails CLOSED when the store is unreachable (2026-08-14). The old catch
+ * returned false — cap disabled — which inverted the guard exactly when it
+ * mattered most. During a Postgres outage the cache lookup above ALSO
+ * fails, so every request becomes a fresh paid generation, and
+ * persistMixRun then cannot save it: full price, nothing kept, no cap, and
+ * no telemetry to notice. Refusing to start a map we cannot keep costs
+ * nothing, because that map was never going to survive the request.
+ */
 export async function generationCapReached() {
-  if (!dbConfigured()) return false;
+  if (!dbConfigured()) {
+    // Deliberately unconfigured is local dev. In production a missing
+    // DATABASE_URL is a fault, and generation would persist nothing.
+    return process.env.NODE_ENV === "production" ? "unavailable" : false;
+  }
   try {
     const r = await q(
       "SELECT count(*)::int AS n FROM mixes WHERE created_at > now() - interval '24 hours'"
     );
-    return r.rows[0].n >= DAILY_GENERATION_CAP;
-  } catch {
-    return false;
+    return r.rows[0].n >= DAILY_GENERATION_CAP ? "cap" : false;
+  } catch (err) {
+    console.error("generation cap check failed — refusing to generate:", err.message);
+    return "unavailable";
   }
 }
 
@@ -84,3 +100,9 @@ export async function searchCapReached() {
 
 export const CAPACITY_MESSAGE =
   "Kynda is at capacity for today — subjects already in the graph still work. Fresh maps resume tomorrow.";
+
+// The capacity line promises that mapped subjects still work and that maps
+// resume tomorrow. Both are false during an outage — the library is what's
+// missing — so say the true thing instead.
+export const UNAVAILABLE_MESSAGE =
+  "Kynda can't reach its library right now, so it won't start a map it can't keep. Try again in a few minutes.";
