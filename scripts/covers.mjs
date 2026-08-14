@@ -44,11 +44,20 @@ if (args[0] === "--all") {
   process.exit(1);
 }
 
+const { getArtistMembers } = await import("../src/lib/entities/musicbrainz.js");
+const nrm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
 let claims = 0;
 for (const t of targets) {
   process.stdout.write(`▸ ${t.name} … `);
   try {
-    const covers = await getLiveCovers(t.mbid);
+    // Self-cover filter (Tony's axiom, 2026-08-13): an artist performing
+    // their own band's song is not a cover — Phoebe playing boygenius'
+    // "Me & My Dog" was topping her covers tab. Exclude originals credited
+    // to the subject or any of their MusicBrainz-associated acts.
+    const ownActs = new Set([nrm(t.name)]);
+    try { for (const m of await getArtistMembers(t.mbid)) ownActs.add(nrm(m.name)); } catch { /* solo */ }
+    const covers = (await getLiveCovers(t.mbid)).filter((c) => !ownActs.has(nrm(c.artist)));
     const top = covers.slice(0, TOP_N);
     for (const c of top) {
       const id = await recordCoverClaim({
