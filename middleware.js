@@ -24,5 +24,5 @@ export function middleware(req) {
 
 export const config = {
   // Everything except the demo share pages and Next's own assets.
-  matcher: ["/((?!demo/|_next/|favicon.ico).*)"],
+  matcher: ["/((?!demo/|_next/|favicon.ico|icon.svg).*)"],
 };
