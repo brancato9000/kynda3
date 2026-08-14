@@ -130,7 +130,7 @@ async function addProvenance(claimId, { status, method, url = null, quote = null
  * rows mirroring the machine verifications, plus the mix payload itself
  * (the durable L2 cache). Accepts {slots} (v2) or legacy {entries}.
  */
-export async function persistMixRun({ subject, rawQuery = null, intro, slots = null, entries = null }) {
+export async function persistMixRun({ subject, rawQuery = null, intro, slots = null, entries = null, cut = null, modelVersion = null }) {
   if (!dbConfigured()) return;
 
   const subjectId = await upsertEntity({
@@ -209,7 +209,12 @@ export async function persistMixRun({ subject, rawQuery = null, intro, slots = n
 
   await q(
     "INSERT INTO mixes (subject_entity_id, payload, source, model_version) VALUES ($1, $2, 'generated', $3)",
-    [subjectId, JSON.stringify(slots ? { intro, slots } : { intro, entries }), process.env.KYNDA_MODEL_VERSION || process.env.KYNDA_MIX_MODEL || "claude-opus-5"]
+    // modelVersion is the model that ACTUALLY generated this payload —
+    // the env fallback is a default, and would have labeled a Fable run
+    // "claude-opus-5" (Tony's before/after experiment, 2026-08-14).
+    [subjectId,
+     JSON.stringify(slots ? { intro, slots, ...(cut ? { cut } : {}) } : { intro, entries, ...(cut ? { cut } : {}) }),
+     modelVersion || process.env.KYNDA_MODEL_VERSION || process.env.KYNDA_MIX_MODEL || "claude-opus-5"]
   );
 
   if (rawQuery) {
@@ -1015,16 +1020,22 @@ export async function getGraphForSubject(subject) {
 }
 
 /** Durable L2 mix cache: most recent stored mix for this subject (6-month TTL). */
-export async function getStoredMix(subject) {
+export async function getStoredMix(subject, { cut = null } = {}) {
   if (!dbConfigured()) return null;
   const clauses = [];
   const params = [];
   if (subject.mbid) { params.push(subject.mbid); clauses.push(`e.mbid = $${params.length}`); }
   if (subject.wikidata_qid) { params.push(subject.wikidata_qid); clauses.push(`e.wikidata_qid = $${params.length}`); }
   if (!clauses.length) { params.push(subject.name); clauses.push(`lower(e.name) = lower($${params.length})`); }
+  // Named cuts (Tony, 2026-08-14): a mix generated as a deliberate variant
+  // — the Berg before/after experiment — carries payload.cut.id and stays
+  // addressable by name after later cuts supersede it at serve time.
+  // Named cuts are exempt from the 180-day window: they're kept on purpose.
+  let cutClause = `AND m.created_at > now() - interval '180 days'`;
+  if (cut) { params.push(cut); cutClause = `AND m.payload->'cut'->>'id' = $${params.length}`; }
   const r = await q(
     `SELECT m.payload FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
-     WHERE (${clauses.join(" OR ")}) AND m.created_at > now() - interval '180 days'
+     WHERE (${clauses.join(" OR ")}) ${cutClause}
      ORDER BY m.created_at DESC LIMIT 1`,
     params
   );
