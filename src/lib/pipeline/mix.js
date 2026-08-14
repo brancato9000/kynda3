@@ -113,7 +113,7 @@ export async function loadSubjectMembers(subject) {
 // either way — badge rates ARE the model eval.
 export const MIX_MODEL = process.env.KYNDA_MIX_MODEL || "claude-opus-5";
 
-export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low", notes = [] } = {}) {
+export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low", notes = [], maxTokens = 16_000 } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
@@ -134,7 +134,7 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
         system: MIX_SYSTEM,
         user: parts.join("\n\n"),
         schema: MIX_SCHEMA,
-        maxTokens: 16_000,
+        maxTokens,
         effort,
         label: `mix_${model}`,
       })
@@ -142,7 +142,7 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
         system: MIX_SYSTEM,
         user: parts.join("\n\n"),
         schema: MIX_SCHEMA,
-        maxTokens: 16_000,
+        maxTokens,
       });
 
   // Deterministic slot-rule enforcement (AD-10) — never trust prompt compliance.
