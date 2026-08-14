@@ -26,6 +26,9 @@ const DEMO_SLUGS = new Set([
   "molly-tuttle",
   // Tony Berg door (2026-08-13): produced Lost Weekend, connected via label.
   "phoebe-bridgers",
+  // Berg himself (2026-08-14) — the transcript experiment. ?cut=before
+  // serves the pre-interview baseline; no param serves the latest cut.
+  "tony-berg",
 ]);
 
 export async function generateMetadata({ params }) {
@@ -66,8 +69,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function DemoPage({ params }) {
+export default async function DemoPage({ params, searchParams }) {
   const { slug } = await params;
+  const sp = (await searchParams) || {};
+  const cut = typeof sp.cut === "string" ? sp.cut : null;
   if (!DEMO_SLUGS.has(slug)) notFound();
   const subjects = await listSubjects();
   const subject = subjects.find((s) => slugify(s.name) === slug) || null;
@@ -101,7 +106,7 @@ export default async function DemoPage({ params }) {
   const vibe = pr.rows[0]?.vibe_url ? { url: pr.rows[0].vibe_url, page: pr.rows[0].vibe_page, track: pr.rows[0].vibe_track } : null;
 
   const [mix, graph, bio] = await Promise.all([
-    getStoredMix(subject),
+    getStoredMix(subject, { cut }),
     getGraphForSubject(subject).catch(() => null),
     getIntroExtract({ name: subject.name, qid: subject.wikidata_qid }).catch(() => null),
   ]);

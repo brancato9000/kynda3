@@ -1,0 +1,433 @@
+{
+  "mixId": "e34cfe47-5362-46f9-ad5d-d016cbf304d4",
+  "createdAt": "2026-08-14T03:38:47.978Z",
+  "model": "claude-opus-5",
+  "payload": {
+    "intro": "Tony Berg's career runs from Los Angeles session guitar and A&R offices at Geffen and A&M to the Zeitgeist garage studio in Silver Lake, where he built the sound of a new generation of confessional songwriters. This mix traces the craft-obsessed pop lineage he came up in, the LA scenes he moved through, and the artists who carry his method forward.",
+    "slots": [
+      {
+        "slotType": "titan",
+        "candidates": [
+          {
+            "item": {
+              "via": null,
+              "year": "1966",
+              "title": "Revolver",
+              "medium": "music",
+              "reason": "Berg belongs to the generation of American producers formed by George Martin's studio-as-instrument approach: guitars run backwards, tape manipulation and orchestral color deployed in service of three-minute songs. His work with Michael Penn, Squeeze and Andrew Bird shares that ethic — arrangements built from odd timbres and vintage gear rather than presets, with the song's structure never sacrificed to the experiment.",
+              "creator": "The Beatles",
+              "crossing": null,
+              "slotType": "titan"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/72d15666-99a7-321e-b1f3-a3f8c09dff9f",
+                "detail": "first released 1966-08-05",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "1966",
+              "title": "Pet Sounds",
+              "medium": "music",
+              "reason": "Brian Wilson's Los Angeles studio craft — Wrecking Crew players, unlikely instrument doublings, chamber-pop chord motion — is the local ancestor for Berg's producing. Berg has worked at the same LA rooms and with players descended from that session culture, and the harmonic density and unusual layered textures of records like Michael Penn's are unimaginable without Wilson's template of pop as arrangement art.",
+              "creator": "The Beach Boys",
+              "crossing": null,
+              "slotType": "titan"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/fdd96703-7b21-365e-bdea-38029fbeb84e",
+                "detail": "first released 1966-05-16",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "ghost",
+        "candidates": [
+          {
+            "item": {
+              "via": null,
+              "year": "1968",
+              "title": "Song Cycle",
+              "medium": "music",
+              "reason": "An almost willfully ornate Los Angeles art-pop record that flopped commercially but became a private touchstone for LA arrangers. Its collision of Americana, ragtime orchestration and studio collage anticipates the maximalist detail Berg brings to intimate songwriter records — the impulse to answer a solo voice with a strange orchestra. Parks remained a fixture in the same circle of LA session arrangers Berg drew on.",
+              "creator": "Van Dyke Parks",
+              "crossing": null,
+              "slotType": "ghost"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/8a9daa2c-faf5-3357-ad2e-15253c678300",
+                "detail": "first released 1968",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "1971",
+              "title": "Bryter Layter",
+              "medium": "music",
+              "reason": "Joe Boyd and Robert Kirby's framing of Drake — a quiet, close-mic'd voice surrounded by strings, jazz bass and restrained drums — is the hidden blueprint for the hushed-but-orchestrated aesthetic Berg pursued on records like Phoebe Bridgers' debut. The record's model of making fragility sound large without loudness is exactly the problem Berg's productions repeatedly solve.",
+              "creator": "Nick Drake",
+              "crossing": null,
+              "slotType": "ghost"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/d742fded-00e7-3746-a63d-aa2def3fdbcc",
+                "detail": "first released 1971-03",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "geography",
+        "candidates": [
+          {
+            "item": {
+              "via": null,
+              "year": "1980",
+              "title": "Los Angeles",
+              "medium": "music",
+              "reason": "Berg's LA credits extend into the city's punk-descended rock world, and X — produced by Ray Manzarek, rooted in the same Hollywood clubs — defines the scene's literate, Raymond Chandler-ish songwriting. That combination of hard local reportage and bookish lyricism describes the LA sensibility Berg has worked within for four decades as guitarist, A&R man and producer for the city's songwriters.",
+              "creator": "X",
+              "crossing": null,
+              "slotType": "geography"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/700da083-bd95-3301-91f1-af571a001414",
+                "detail": "first released 1980-04",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "1974",
+              "title": "Late for the Sky",
+              "medium": "music",
+              "reason": "The Los Angeles singer-songwriter tradition Berg inherited: David Lindley's guitar filigree, warm analog rooms, lyrics of domestic reckoning. Berg's own guitar work and his production of confessional writers sits in this Laurel Canyon lineage, and the LA studio ecosystem he later worked in — the players, engineers and rooms — was largely built by records like this one.",
+              "creator": "Jackson Browne",
+              "crossing": null,
+              "slotType": "geography"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/e87e9bc0-bbd3-3c68-a391-0412794a717c",
+                "detail": "first released 1974-09",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "culture",
+        "candidates": [
+          {
+            "item": {
+              "via": null,
+              "year": "1988",
+              "title": "Where I'm Calling From",
+              "medium": "literature",
+              "reason": "Berg's productions favor unadorned first-person detail — the small domestic specificity that defines the American short story of Carver's school. The songwriters he has shepherded, from Michael Penn to Phoebe Bridgers, write in that register: flat declarative lines, ordinary objects, devastation implied rather than sung. Carver's minimalist prose is the literary counterpart to Berg's restraint behind the desk.",
+              "creator": "Raymond Carver",
+              "crossing": "literature → music",
+              "slotType": "culture"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://openlibrary.org/works/OL1865876W",
+                "detail": "first published 1988",
+                "method": "openlibrary_search",
+                "source": "Open Library",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "1974",
+              "title": "Chinatown",
+              "medium": "film",
+              "reason": "A defining portrait of Los Angeles as a place of water, money and buried history — the mythology any LA record-maker works inside. Jerry Goldsmith's spare trumpet-and-strings score is a lesson in atmosphere built from very few elements, the approach Berg takes when he answers a voice and guitar with a single unexpected instrumental color rather than a full arrangement.",
+              "creator": "Roman Polanski",
+              "crossing": null,
+              "slotType": "culture"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://www.themoviedb.org/movie/829",
+                "detail": "directed by Roman Polanski (1974)",
+                "method": "tmdb_credits",
+                "source": "TMDB",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "peer",
+        "candidates": [
+          {
+            "item": {
+              "via": "Michael Penn",
+              "year": "2001",
+              "title": "Meaningless",
+              "medium": "music",
+              "reason": "Brion and Berg both orbited Michael Penn — Berg produced Penn's breakthrough, Brion co-wrote and played on his records and became his long-term collaborator. Brion's own album is the purest statement of the LA multi-instrumentalist producer-as-auteur: chamber pop, vintage keyboards, obsessive arrangement. He and Berg represent parallel branches of the same Los Angeles craft school.",
+              "creator": "Jon Brion",
+              "crossing": null,
+              "slotType": "peer"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "via": "Michael Penn",
+                "hop1": {
+                  "url": "https://en.wikipedia.org/wiki/Tony_Berg",
+                  "kind": "mention",
+                  "excerpt": "His first major success was with Michael Penn's 1989 debut March.",
+                  "articleTitle": "Tony Berg"
+                },
+                "hop2": {
+                  "url": "https://en.wikipedia.org/wiki/Michael_Penn",
+                  "excerpt": "2 (2000) Co-produced The Wallflowers' (Breach) (2000) \"Two of Us\" with Aimee Mann on I Am Sam (2001) \"It's Sweet\", \"Little Digger\" (produced, recorded by, guitar, bass) on Liz Phair's self-titled fourth album (2003) \"Red Light Fever\", \"Take A Look\", \"Friend of Mine\" (produced, recorded by, guitar) on Liz Phair (2003…",
+                  "articleTitle": "Michael Penn"
+                },
+                "status": "documented_via"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/758d7039-ad75-3256-ba1b-e01679e5ebf4",
+                "detail": "first released 2000",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "1998",
+              "title": "Dopamine",
+              "medium": "music",
+              "reason": "Froom worked the same era and city, producing Crowded House, Los Lobos and Suzanne Vega with a taste for wheezing keyboards and deliberately imperfect textures. He and Berg both produced records for Squeeze-adjacent and songwriter-centric artists in the late 80s and 90s, sharing an aesthetic in which the arrangement is a character rather than a bed.",
+              "creator": "Mitchell Froom",
+              "crossing": null,
+              "slotType": "peer"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "status": "undocumented"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/58845e37-6ec8-39e7-973c-ab630ddbc087",
+                "detail": "first released 1998",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "legacy",
+        "candidates": [
+          {
+            "item": {
+              "via": "Phoebe Bridgers",
+              "year": "2023",
+              "title": "The Record",
+              "medium": "music",
+              "reason": "Berg's studio and production work with Phoebe Bridgers, including the trio's earliest recordings, helped establish the sonic vocabulary this Grammy-winning album expands: layered close harmony, guitars that swing from hush to distortion, confessional lyrics given widescreen production. The record is the fullest flowering of the songwriter aesthetic Berg helped incubate at Zeitgeist.",
+              "creator": "Boygenius",
+              "crossing": null,
+              "slotType": "legacy"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "via": "Phoebe Bridgers",
+                "hop1": {
+                  "url": "https://en.wikipedia.org/wiki/Tony_Berg",
+                  "kind": "mention",
+                  "excerpt": "Berg also began working with Phoebe Bridgers while working on her first album, Stranger in the Alps.",
+                  "articleTitle": "Tony Berg"
+                },
+                "hop2": {
+                  "url": "https://en.wikipedia.org/wiki/Phoebe_Bridgers",
+                  "excerpt": "She is also a member of the supergroup boygenius, with which she released a self-titled EP in 2018, followed by its debut album The Record and the EP The Rest in 2023.",
+                  "articleTitle": "Phoebe Bridgers"
+                },
+                "status": "documented_via"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/c58e97f0-9da0-4baf-9572-8a144b6f7b78",
+                "detail": "first released 2023-01-18",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": null,
+              "year": "2020",
+              "title": "Mutable Set",
+              "medium": "music",
+              "reason": "Mills is the leading figure of the next Los Angeles producer generation, occupying the role Berg pioneered: guitarist-arranger who reshapes songwriters from inside the room. His work with Fiona Apple, Perfume Genius and Bob Dylan extends Berg's ethic of strange, handmade timbres serving intimate songs, and this solo album is his clearest statement of that patience.",
+              "creator": "Blake Mills",
+              "crossing": null,
+              "slotType": "legacy"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "url": "https://en.wikipedia.org/wiki/Tony_Berg",
+                "status": "documented",
+                "excerpt": "During this time, he built mentor/mentee relationships with Blake Mills, Ethan Gruska, and Shawn Everett.",
+                "articleTitle": "Tony Berg"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/8c0b866c-0a74-4dba-9de0-a6d15a90da47",
+                "detail": "first released 2020-05-08",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "slotType": "collaborator",
+        "candidates": [
+          {
+            "item": {
+              "via": null,
+              "year": "2020",
+              "title": "En Garde",
+              "medium": "music",
+              "reason": "Gruska co-produced Phoebe Bridgers' debut with Berg and became his key studio partner at Zeitgeist, bridging Berg's analog-arrangement instincts with contemporary electronic texture. His second solo album, made largely alone with synths, piano and processed vocals, shows the sound-design side of that partnership — the ambient scaffolding under many Berg-produced songwriter records.",
+              "creator": "Ethan Gruska",
+              "crossing": null,
+              "slotType": "collaborator"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "url": "https://en.wikipedia.org/wiki/Tony_Berg",
+                "status": "documented",
+                "excerpt": "During this time, he built mentor/mentee relationships with Blake Mills, Ethan Gruska, and Shawn Everett.",
+                "articleTitle": "Tony Berg"
+              },
+              "attribution": {
+                "url": "https://musicbrainz.org/release-group/e930eea0-e0d9-4596-9956-18d2b32332d0",
+                "detail": "first released 2020-01-24",
+                "method": "musicbrainz_release_group",
+                "source": "MusicBrainz",
+                "status": "verified"
+              }
+            }
+          },
+          {
+            "item": {
+              "via": "Michael Penn",
+              "year": "1993",
+              "title": "Aimee Mann's Whatever",
+              "medium": "music",
+              "reason": "Berg's long association with Michael Penn connects him to Mann, Penn's collaborator and eventual wife, and to the same Los Angeles circle of arrangers and players. Her debut, with its Beatlesque chamber-pop detail and acidic lyricism, is the sibling record to the Penn albums Berg produced and a portrait of the songwriting community his studios served.",
+              "creator": "Aimee Mann",
+              "crossing": null,
+              "slotType": "collaborator"
+            },
+            "verification": {
+              "citations": [],
+              "connection": {
+                "url": "https://en.wikipedia.org/wiki/Tony_Berg",
+                "status": "documented",
+                "excerpt": "From there Berg went on to produce for Edie Brickell, Public Image Ltd, Altered State, Aimee Mann, and numerous other artists.",
+                "articleTitle": "Tony Berg"
+              },
+              "attribution": {
+                "source": "MusicBrainz",
+                "status": "not_found",
+                "candidates": []
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "cut": {
+      "id": "before",
+      "label": "Default map — generated without the 2022 interview",
+      "model": "claude-opus-5",
+      "generatedAt": "2026-08-14T03:38:47.978Z",
+      "note": "Baseline for the transcript experiment. Preserved deliberately; do not overwrite."
+    }
+  }
+}
