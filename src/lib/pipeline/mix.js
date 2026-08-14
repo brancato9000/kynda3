@@ -49,7 +49,7 @@ const MIX_SCHEMA = {
 
 const MIX_SYSTEM = `You are Kynda, a contextual recommendation engine mapping the influences, connections, and legacy of works of culture.
 
-Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a given subject. For EACH slot provide 2 or 3 ranked candidates (strongest first) — influence is never singular, and the interface presents a carousel per slot. Every candidate is a distinct work; no work may appear twice anywhere in the mix. Slots, in this order:
+Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a given subject. For EACH slot provide exactly 3 ranked candidates (strongest first) — influence is never singular, and the interface presents a carousel per slot. Every candidate is a distinct work; no work may appear twice anywhere in the mix. Slots, in this order:
 
 1. titan — The KEY influence: a foundational work or artist the subject is documented to have drawn on.
 2. ghost — The HIDDEN thread: an obscure, avant-garde, or under-documented influence most people wouldn't know. The most important slot for discovery.
@@ -69,6 +69,9 @@ Rules:
 - When the subject is a CONCEPT or practice: essential = landmark realized works OF the practice itself, by its practitioners (a practice's canon is its defining realizations).
 - An artist cannot influence themselves in Kynda's model: the same artist appears ONLY in the essential slot, never anywhere else. The canon slot exists precisely because everything an artist makes is presumed to inform everything else in their career — a precursor by the same hand is canon, not influence.
 - Each reason: 425-475 characters of specific historical context — documented influences, collaborations, scenes, events. No generic praise. Do not claim a specific interview or source exists unless you are confident it does; describe the connection instead.
+- When the subject works substantially across MORE THAN ONE domain (a musician who also directs films, a
+poet who also choreographs), represent EACH substantial career in the mix rather than confining the map to
+the primary domain. Their influences differ per practice, and a map of only one career misrepresents them.
 - medium: the domain of the recommended work itself (not the subject).
 - crossing: for culture-slot items ONLY, a terse label of the boundary crossed ("philosophy → fiction", "classical → jazz"); null for every other slot and whenever the item's medium already differs from the subject's domain.
 - via: when the connection runs through an intermediate person — most often a band member's work outside the band, or a collaborator's other projects — put that person's name in via. Otherwise null. Only name a via when the intermediate link is real: both hops (subject↔via and via↔work) are machine-checked against databases and encyclopedias.
@@ -156,6 +159,16 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
   const isWorkSubject = WORK_KINDS.has(subject.kind);
   const creatorNorm = norm(subject.creator || subject.metadata?.creator || "");
   const subjectNorm = norm(subject.name);
+  // A person's own work includes the acts they record under (Tony,
+  // 2026-08-14): Boots Riley's catalogue is credited to The Coup, so the
+  // canon slot came back EMPTY for him — and for 31 of 224 mixes, i.e.
+  // every band frontperson. MusicBrainz already hands us their acts.
+  // Deliberately NOT applied to group subjects: a member's solo album is
+  // not the band's canon, it is collaborator material.
+  const ownActs = new Set([subjectNorm]);
+  if (subject.kind === "person") {
+    for (const m of members) { const n = norm(m.name); if (n) ownActs.add(n); }
+  }
   const seen = new Set();
   const valid = (mix.items || []).filter((item) => {
     // Beyond-the-medium guard (V3-61): the slot means a crossing of domain
@@ -172,8 +185,8 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
       // realized works OF the practice, by its practitioners — the
       // creator-match rules below are person/work-shaped and don't apply.
     } else if (!isWorkSubject) {
-      if (item.slotType !== "essential" && norm(item.creator) === subjectNorm) item.slotType = "essential";
-      if (item.slotType === "essential" && norm(item.creator) !== subjectNorm) return false;
+      if (item.slotType !== "essential" && ownActs.has(norm(item.creator))) item.slotType = "essential";
+      if (item.slotType === "essential" && !ownActs.has(norm(item.creator))) return false;
     } else if (creatorNorm) {
       if (norm(item.title) === subjectNorm) return false; // a work never cards itself
       if (item.slotType !== "essential" && norm(item.creator) === creatorNorm) item.slotType = "essential";
