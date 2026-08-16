@@ -1,12 +1,25 @@
 #!/usr/bin/env node
-// iTunes 30-second preview backfill (inline media v0.6, 2026-08-09).
-// Apple's Search API is free, keyless, and returns preview URLs it
-// provides explicitly for this purpose — official snippets with outbound
-// credit to the store page. Deterministic identity gate (V3-02 ethic):
-// the result's track AND artist must match the entity name/creator after
-// normalization, or nothing is stored. Music WORK entities only.
+// Preview backfill — loose-match edition (promoted from the demo-page
+// sweep, Tony 2026-08-16). The strict version required near-equal album
+// titles and its last corpus run stored 3 of 172: iTunes decorates titles
+// with parentheticals ("(1945-1949)", "(Remastered)", "(Deluxe Edition)")
+// and subtitle drift that exact matching can never survive. This matcher
+// tolerates exactly that — stripped parentheticals, containment when the
+// shorter side is distinctive, token-subset ignoring the creator's own
+// name — while keeping the identity gate hard: artist congruence required,
+// and a wrong preview is worse than silence (the SEVENTEEN lesson: Apple's
+// search happily returns K-pop for "The Coup Party Music"; the gate is
+// what keeps it off the card).
 //
-//   node scripts/backfill-previews.mjs [--dry] [--limit N]
+// Works card-by-card from the latest mix per subject, so creator
+// congruence comes from the card itself. Stamps the work ENTITY (serve-
+// time hydration picks it up with no deploy), always WITH its creator —
+// creator-less entities hold media the identity gate then refuses to
+// serve (the invisible-Punisher lesson, 2026-08-14). Falls back to Deezer
+// per card, stamping preview_source so the player credits the right
+// service.
+//
+//   node scripts/backfill-previews.mjs [--subject "Name"] [--cut ID] [--dry] [--limit N]
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -24,71 +37,126 @@ const { q, getPool } = await import("../src/lib/db.js");
 
 const UA = { "User-Agent": "Kynda/3.0 (kynda3.vercel.app; brancato@gmail.com)" };
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-const dry = process.argv.includes("--dry");
-const limitFlag = process.argv.indexOf("--limit");
-const limit = limitFlag === -1 ? null : parseInt(process.argv[limitFlag + 1], 10);
+const DRY = process.argv.includes("--dry");
+const sFlag = process.argv.indexOf("--subject");
+const ONLY_SUBJECT = sFlag === -1 ? null : process.argv[sFlag + 1];
+const cFlag = process.argv.indexOf("--cut");
+const CUT = cFlag === -1 ? null : process.argv[cFlag + 1];
+const lFlag = process.argv.indexOf("--limit");
+const LIMIT = lFlag === -1 ? null : parseInt(process.argv[lFlag + 1], 10);
 
-// Same normalization spirit as the quote wall: strip to comparable core.
-const norm = (s) => (s || "")
-  .normalize("NFD").replace(/[̀-ͯ]/g, "")
-  .toLowerCase()
-  .replace(/\(.*?\)|\[.*?\]/g, "")   // parentheticals: "(live)", "(remastered)"
-  .replace(/[^a-z0-9]/g, "");
+const nrm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const toks = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().match(/[a-z]+/g) || [];
+const stripParen = (s) => (s || "").replace(/\s*[([].*?[)\]]\s*/g, " ").trim();
 
-const rows = (await q(
-  `SELECT id, name, metadata->>'creator' AS creator FROM entities
-   WHERE kind = 'work' AND domain = 'music'
-     AND metadata->>'preview_url' IS NULL
-     AND COALESCE(metadata->>'creator', '') <> ''
-   ORDER BY created_at ${limit ? `LIMIT ${limit}` : ""}`
-)).rows;
-console.log(`${rows.length} music works to try${dry ? " (dry)" : ""} — ~${Math.ceil((rows.length * 3.4) / 60)} min at iTunes rate limits`);
-
-let stored = 0, missed = 0, gated = 0;
-for (const [i, r] of rows.entries()) {
-  await pause(3400); // iTunes tolerates ~20/min
-  let d;
-  try {
-    const u = `https://itunes.apple.com/search?term=${encodeURIComponent(`${r.name} ${r.creator}`)}&media=music&entity=song&limit=5`;
-    d = await (await fetch(u, { headers: UA })).json();
-  } catch {
-    missed += 1;
-    continue;
-  }
-  let hit = (d.results || []).find(
-    (x) => x.previewUrl && norm(x.trackName) === norm(r.name) && (norm(x.artistName) === norm(r.creator) || norm(x.artistName).includes(norm(r.creator)) || norm(r.creator).includes(norm(x.artistName)))
-  );
-  // Album fallback (2026-08-11, "more playable samples"): albums carry no
-  // preview themselves — match the ALBUM under the same identity gates,
-  // then sample its opening track.
-  if (!hit) {
-    await pause(3400);
-    try {
-      const ad = await (await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(`${r.name} ${r.creator}`)}&media=music&entity=album&limit=5`, { headers: UA })).json();
-      const album = (ad.results || []).find(
-        (x) => norm(x.collectionName) === norm(r.name) && (norm(x.artistName) === norm(r.creator) || norm(x.artistName).includes(norm(r.creator)) || norm(r.creator).includes(norm(x.artistName)))
-      );
-      if (album) {
-        await pause(3400);
-        const td = await (await fetch(`https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song&limit=6`, { headers: UA })).json();
-        const track = (td.results || []).find((x) => x.wrapperType === "track" && x.previewUrl);
-        if (track) hit = { previewUrl: track.previewUrl, trackViewUrl: album.collectionViewUrl || track.trackViewUrl, trackName: track.trackName, artistName: album.artistName };
-      }
-    } catch { /* fall through */ }
-  }
-  if (!hit) {
-    (d.results || []).length ? (gated += 1) : (missed += 1);
-    continue;
-  }
-  stored += 1;
-  if (dry) { if (stored <= 12) console.log(`  ${r.name} — ${r.creator} → ${hit.trackName} / ${hit.artistName}`); }
-  else {
-    await q(`UPDATE entities SET metadata = metadata || $2::jsonb WHERE id = $1`, [
-      r.id,
-      JSON.stringify({ preview_url: hit.previewUrl, preview_page: hit.trackViewUrl || null }),
-    ]);
-  }
-  if (i % 50 === 0 && i) console.log(`  ...${i}/${rows.length} (${stored} stored, ${gated} gate-refused, ${missed} no result)`);
+function titleOk(ours, theirs, creator) {
+  const a = nrm(stripParen(ours)), b = nrm(stripParen(theirs));
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // containment only when the shorter side is distinctive enough ("Home"
+  // must not match "Homecoming")
+  const shorter = a.length <= b.length ? a : b;
+  if (shorter.length >= 8 && (a.includes(b) || b.includes(a))) return true;
+  // token-subset ignoring the creator's own name tokens (handles
+  // "Bach: Sonatas and Partitas…" vs a BWV-numbered card title)
+  const cred = new Set(toks(creator));
+  const ta = toks(stripParen(ours)).filter((t) => !cred.has(t));
+  const tb = toks(stripParen(theirs)).filter((t) => !cred.has(t));
+  const [small, big] = ta.length <= tb.length ? [ta, new Set(tb)] : [tb, new Set(ta)];
+  return small.length >= 3 && small.every((t) => big.has(t));
 }
-console.log(`${dry ? "would store" : "stored"}: ${stored} | gate-refused (results but identity mismatch): ${gated} | no results: ${missed}`);
+const creatorOk = (artist, creator) => {
+  const a = nrm(artist), c = nrm(creator);
+  return !!a && !!c && (a.includes(c) || c.includes(a));
+};
+
+async function itunes(params) {
+  const u = new URL(`https://itunes.apple.com/${params.lookup ? "lookup" : "search"}`);
+  for (const [k, v] of Object.entries(params)) if (k !== "lookup") u.searchParams.set(k, v);
+  return (await fetch(u, { headers: UA })).json();
+}
+
+async function findPreview(title, creator) {
+  // 1) album route: loose title match on the album, then a previewable track
+  await pause(3400);
+  try {
+    const alb = await itunes({ term: `${creator} ${title}`, media: "music", entity: "album", limit: "10" });
+    for (const a of alb.results || []) {
+      if (!titleOk(title, a.collectionName, creator)) continue;
+      if (!creatorOk(a.artistName, creator) && !nrm(a.collectionName).includes(nrm(creator.split(/\s+/).pop()))) continue;
+      await pause(3400);
+      const d = await itunes({ lookup: true, id: String(a.collectionId), entity: "song", limit: "60" });
+      const t = (d.results || []).find((x) => x.wrapperType === "track" && x.previewUrl);
+      if (t) return { url: t.previewUrl, page: t.trackViewUrl || a.collectionViewUrl, source: null, label: `"${t.trackName}" on ${a.collectionName}` };
+    }
+    // 2) song route: the title itself may be a song
+    await pause(3400);
+    const s = await itunes({ term: `${creator} ${title}`, media: "music", entity: "song", limit: "10" });
+    for (const t of s.results || []) {
+      if (!t.previewUrl || !creatorOk(t.artistName, creator)) continue;
+      if (titleOk(title, t.trackName, creator) || titleOk(title, t.collectionName, creator))
+        return { url: t.previewUrl, page: t.trackViewUrl, source: null, label: `"${t.trackName}"` };
+    }
+  } catch { /* fall through */ }
+  // 3) Deezer — carries catalogs Apple structurally lacks (The Coup lesson)
+  try {
+    await pause(600);
+    const dz = await (await fetch(
+      `https://api.deezer.com/search?q=${encodeURIComponent(`artist:"${creator}" album:"${stripParen(title)}"`)}&limit=5`,
+      { headers: UA })).json();
+    const hit = (dz.data || []).find((t) => t.preview && creatorOk(t.artist?.name, creator) &&
+      (titleOk(title, t.album?.title, creator) || titleOk(title, t.title, creator)));
+    if (hit) return {
+      url: hit.preview,
+      page: hit.album?.id ? `https://www.deezer.com/album/${hit.album.id}` : hit.link,
+      source: "Deezer", label: `"${hit.title}" (Deezer)`,
+    };
+  } catch { /* silence beats a wrong preview */ }
+  return null;
+}
+
+// ── main: card-by-card over the latest mix per subject ──
+const mixes = (await q(`
+  SELECT DISTINCT ON (m.subject_entity_id) e.name, m.payload
+  FROM mixes m JOIN entities e ON e.id = m.subject_entity_id
+  ${ONLY_SUBJECT ? "WHERE lower(e.name) = lower($1)" : ""}
+  ORDER BY m.subject_entity_id, m.created_at DESC`,
+  ONLY_SUBJECT ? [ONLY_SUBJECT] : []
+)).rows.filter((r) => (CUT ? r.payload?.cut?.id === CUT : true));
+
+let applied = 0, had = 0, missed = 0, tried = 0;
+outer: for (const mix of mixes) {
+  let announced = false;
+  for (const slot of mix.payload.slots || []) {
+    for (const c of slot.candidates || []) {
+      const it = c.item || {};
+      if (!it.title || !it.creator || it.medium !== "music" || it.previewUrl) continue;
+      // entity state is the serve-time truth (title + creator congruence)
+      const ents = (await q(`
+        SELECT id, metadata->>'creator' AS creator, metadata->>'preview_url' AS preview
+        FROM entities WHERE regexp_replace(lower(name), '[^a-z0-9]', '', 'g') = $1`,
+        [nrm(it.title)])).rows;
+      const ent = ents.length > 1 ? ents.find((e) => nrm(e.creator) === nrm(it.creator)) : ents[0];
+      if (ent?.preview) { had += 1; continue; }
+      if (LIMIT && tried >= LIMIT) break outer;
+      tried += 1;
+      if (!announced) { console.log(`── ${mix.name}`); announced = true; }
+      const hit = await findPreview(it.title, it.creator);
+      if (!hit) { missed += 1; console.log(`  ✗ ${it.title} — ${it.creator}`); continue; }
+      applied += 1;
+      console.log(`  ♪ ${it.title} — ${it.creator} → ${hit.label}`);
+      if (!DRY) {
+        const media = { preview_url: hit.url, preview_page: hit.page, ...(hit.source ? { preview_source: hit.source } : {}) };
+        if (ent) {
+          await q(`UPDATE entities SET metadata = metadata || $2::jsonb WHERE id = $1`,
+            [ent.id, JSON.stringify({ ...(ent.creator ? {} : { creator: it.creator }), ...media })]);
+        } else {
+          await q(`INSERT INTO entities (kind, domain, name, metadata) VALUES ('work', 'music', $1, $2::jsonb)`,
+            [it.title, JSON.stringify({ creator: it.creator, ...media })]);
+        }
+      }
+    }
+  }
+}
+console.log(`\napplied: ${applied} | already had: ${had} | missed: ${missed}${DRY ? " (dry)" : ""}`);
 await getPool().end();
