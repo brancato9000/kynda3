@@ -1406,7 +1406,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
 
           {tab === "mix" && !intro && !error && (
             <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Pulse /> composing the mix — Fable is thinking…
+              <Pulse /> composing the mix — Kynda is thinking…
             </div>
           )}
 

@@ -102,7 +102,10 @@ function extractJson(response) {
  * Fable 5 call with structured output. Returns the parsed, schema-valid object.
  */
 export async function callFable({ system, user, schema, maxTokens = 8000, effort = "low" }) {
-  const response = await client().beta.messages.create({
+  // Streamed accumulation (2026-08-16): the SDK refuses non-streaming
+  // calls whose max_tokens could exceed 10 minutes, and Fable at a 32k
+  // budget trips that. .stream().finalMessage() is byte-identical output.
+  const response = await client().beta.messages.stream({
     model: FABLE,
     max_tokens: maxTokens,
     betas: ["server-side-fallback-2026-06-01"],
@@ -113,7 +116,7 @@ export async function callFable({ system, user, schema, maxTokens = 8000, effort
       format: { type: "json_schema", schema },
     },
     messages: [{ role: "user", content: user }],
-  });
+  }).finalMessage();
   recordUsage("fable", response.model, response.usage);
   return extractJson(response);
 }
