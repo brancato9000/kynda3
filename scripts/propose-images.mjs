@@ -149,6 +149,8 @@ outer: for (const s of work) {
         item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")
         || /is (a|the) [^.]{0,90}?\bfilm\b/i.test(found.extract || "")
         || /is (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries)\b/i.test(found.extract || "")
+        || item.medium === "literature"
+        || /is (a|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i.test(found.extract || "")
       ) {
         // Class rules: covers (V3-73) and film posters (V3-74) — the two
         // settled fair-use categories, decided once by Tony. Posters are
@@ -156,13 +158,19 @@ outer: for (const s of work) {
         // display (Tony, ex-GM of IMDb).
         const isCover = item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "");
         const isTv = !isCover && /is (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries)\b/i.test(found.extract || "");
-        const isFilm = !isCover && !isTv;
+        // Book jackets (V3-76, Tony 2026-08-14): a jacket is publisher
+        // marketing collateral, identical in kind to a film poster — the
+        // rights-holder incentive runs TOWARD display. Settles 444
+        // literature cards that were queuing for per-asset judgment.
+        const isBook = !isCover && !isTv && (item.medium === "literature"
+          || /is (a|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i.test(found.extract || ""));
+        const isFilm = !isCover && !isTv && !isBook;
         classApplied += 1;
-        console.log(`  ${isCover ? "♪ cover (V3-73)" : isTv ? "📺 title card (V3-75)" : "🎬 poster (V3-74)"}: ${s.name} → ${item.title}`);
+        console.log(`  ${isCover ? "♪ cover (V3-73)" : isTv ? "📺 title card (V3-75)" : isBook ? "📕 jacket (V3-76)" : "🎬 poster (V3-74)"}: ${s.name} → ${item.title}`);
         if (!DRY) {
           Object.assign(item, {
             imageUrl: info.url, imagePage: info.page,
-            imageLicense: isCover ? "fair use — cover art thumbnail (class rule V3-73)" : isTv ? "fair use — TV title card thumbnail (class rule V3-75)" : "fair use — film poster thumbnail (class rule V3-74)",
+            imageLicense: isCover ? "fair use — cover art thumbnail (class rule V3-73)" : isTv ? "fair use — TV title card thumbnail (class rule V3-75)" : isBook ? "fair use — book jacket thumbnail (class rule V3-76)" : "fair use — film poster thumbnail (class rule V3-74)",
             imageCredit: `en.wikipedia (${found.article})`,
           });
           dirty = true;
