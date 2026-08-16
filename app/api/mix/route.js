@@ -12,6 +12,7 @@ import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, l
 import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixFingerprint } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
+import { enrichStoredMixMedia } from "../../../src/lib/pipeline/media.js";
 
 export const maxDuration = 300;
 
@@ -28,6 +29,7 @@ function normalizePayload(payload) {
 }
 
 export async function POST(req) {
+  const t0 = Date.now();
   const { subject } = await req.json().catch(() => ({}));
   if (!subject?.name) {
     return Response.json({ error: "subject required" }, { status: 400 });
@@ -153,6 +155,20 @@ export async function POST(req) {
           if (h?.confirmed) console.log(`harvest-on-search: ${subject.name} +${h.confirmed} citations`);
         } catch (err) {
           console.error("harvest-on-search failed:", err.message);
+        }
+
+        // Media-on-generation (V3-77): art and previews used to be batch
+        // scripts run by hand, so a public visitor's fresh page arrived
+        // bare. Same post-response window as the harvest, hard deadline
+        // well inside maxDuration — whatever the clock cuts off still
+        // belongs to the batch scripts. Zero model calls.
+        try {
+          const med = await enrichStoredMixMedia(subject, { deadline: t0 + 260_000 });
+          if (med?.images || med?.previews) {
+            console.log(`media-on-generation: ${subject.name} +${med.images} images +${med.previews} previews${med.outOfTime ? " (deadline hit)" : ""}`);
+          }
+        } catch (err) {
+          console.error("media-on-generation failed:", err.message);
         }
       } catch (err) {
         console.error("mix error:", err);
