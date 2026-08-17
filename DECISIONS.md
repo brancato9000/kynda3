@@ -367,3 +367,14 @@ subjects, walk shared ancestors/descendants in the claims graph, render
 as a PRIVATE page (a listening history is sensitive — nothing public by
 default). The pitch-deck echo: this is the ancestry-for-art metaphor as
 a personal product — your taste, mapped, with receipts.
+
+**Preregistered prediction (2026-08-16, before any data).** Tony and
+Meagan will export their Spotify histories as the listening-map test
+run. Registered in advance so the test can actually fail: given
+Meagan's documented affection for Lucinda Williams and Liz Phair, the
+graph walk over her history should surface **Waxahatchee** as a
+top-ranked unheard-or-underheard recommendation, via legacy edges that
+already exist in the corpus — not via any rule written after seeing
+her data. If it doesn't, that is a finding about the graph's density,
+recorded with equal honesty. Raw exports stay local and gitignored;
+outputs are private to the two of them.
