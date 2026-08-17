@@ -29,6 +29,8 @@ const DEMO_SLUGS = new Set([
   // Berg himself (2026-08-14) — the transcript experiment. ?cut=before
   // serves the pre-interview baseline; no param serves the latest cut.
   "tony-berg",
+  // Meagan (2026-08-16): the share that exposed the unfurl gap.
+  "waxahatchee",
 ]);
 
 export async function generateMetadata({ params }) {
