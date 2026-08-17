@@ -1025,6 +1025,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
   const [introDone, setIntroDone] = useState(false);
   const [slots, setSlots] = useState([]);
   const [done, setDone] = useState(false);
+  // Polaroid enrichment (V3-78): media-on-generation lands server-side a
+  // minute or three after the mix streams; the page quietly refetches and
+  // lets covers and players develop into already-rendered cards.
+  const [enriching, setEnriching] = useState(false);
   const [tab, setTab] = useState("mix");
   const [graph, setGraph] = useState({ status: "idle", data: null, error: null });
   const [covers, setCovers] = useState({ status: "idle", data: null, error: null });
@@ -1087,6 +1091,49 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const MEDIA_KEYS = ["imageUrl", "imagePage", "imageLicense", "imageCredit", "previewUrl", "previewPage", "previewSource"];
+  const pollEnrichment = useCallback(async (subj, run) => {
+    setEnriching(true);
+    let quiet = 0;
+    try {
+      for (let attempt = 0; attempt < 10 && runRef.current === run && quiet < 2; attempt++) {
+        await new Promise((r) => setTimeout(r, 25_000));
+        if (runRef.current !== run) break;
+        // Cached serves bypass every guard and cost ~nothing — this is the
+        // stored payload with entity media freshly hydrated per card.
+        const res = await fetch("/api/mix", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject: subj }),
+        });
+        if (!res.ok || !res.body) break;
+        const text = await res.text();
+        const incoming = new Map();
+        for (const line of text.split("\n")) {
+          if (!line.trim()) continue;
+          try { const evt = JSON.parse(line); if (evt.type === "item") incoming.set(`${evt.s}|${evt.c}`, evt.item); } catch { /* partial line */ }
+        }
+        let gained = 0;
+        setSlots((prev) => prev.map((slot, si) => {
+          if (!slot) return slot;
+          let changed = false;
+          const candidates = slot.candidates.map((cand, ci) => {
+            const inc = incoming.get(`${si}|${ci}`);
+            if (!inc || !cand?.item || inc.title !== cand.item.title) return cand;
+            const patch = {};
+            for (const k of MEDIA_KEYS) if (cand.item[k] == null && inc[k] != null) patch[k] = inc[k];
+            if (!Object.keys(patch).length) return cand;
+            changed = true; gained += 1;
+            return { ...cand, item: { ...cand.item, ...patch } };
+          });
+          return changed ? { ...slot, candidates } : slot;
+        }));
+        quiet = gained === 0 ? quiet + 1 : 0;
+      }
+    } finally {
+      if (runRef.current === run) setEnriching(false);
+    }
+  }, []);
+
   const fireMix = useCallback(async (subj, run) => {
     try {
       const res = await fetch("/api/mix", {
@@ -1130,7 +1177,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
             next[evt.s] = { ...next[evt.s], order: evt.order };
             return next;
           });
-          else if (evt.type === "done") { setDone(true); loadGraph(subj); }
+          else if (evt.type === "done") { setDone(true); loadGraph(subj); if (!evt.cached) pollEnrichment(subj, run); }
           else if (evt.type === "error") setError(evt.message);
         }
       }
@@ -1407,6 +1454,12 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
           {tab === "mix" && !intro && !error && (
             <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
               <Pulse /> composing the mix — Kynda is thinking…
+            </div>
+          )}
+
+          {tab === "mix" && done && enriching && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              ❈ gathering artwork and audio — they'll appear as they're found
             </div>
           )}
 
