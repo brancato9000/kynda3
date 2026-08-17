@@ -328,3 +328,42 @@ identify itself as a television series/program, the V3-72 caveat and ⚑
 channel render, card-scoped, never entity-mirrored. Same rights-holder
 logic as posters (networks market their key art everywhere). Book
 jackets, artwork photos, and the rest remain per-asset curator judgment.
+
+## V3-76: The book-jacket class rule
+**Tony's call (2026-08-14), extending the marketing-collateral family
+(V3-73 covers, V3-74 posters, V3-75 title cards).** Book jackets, at
+thumbnail size, on the card for that very book, auto-apply under fair
+use — a jacket is publisher marketing collateral, and the rights-holder
+incentive runs toward display. Conditions unchanged: the work's own
+en-wiki article must identify itself as a novel/memoir/poetry
+collection/etc., the V3-72 caveat and ⚑ channel render, card-scoped,
+never entity-mirrored. Settled 444 queued literature cards in one
+ruling. Plays and screenplays deliberately NOT covered (the lead-
+sentence gate excludes them); artwork photos and the rest remain
+per-asset curator judgment.
+
+## Backlog (2026-08-16, from Tony's share test + a product idea)
+
+**Share links don't unfurl — diagnosed, not yet designed.** Tony
+iMessaged the root URL to Meagan; no card surfaced. Verified cause: the
+basic-auth wall. Link-preview crawlers get the 401 "invite-only" text —
+no HTML, no OG tags — so anything behind the password can never unfurl.
+NOT an OG bug: public /demo/* pages carry full OG metadata and unfurl
+correctly (verified live: Phoebe's page serves title/description/
+portrait to a crawler UA). Interim practice: share demo links. The real
+design question for later: a public share surface for arbitrary pages —
+per-page public flags, share tokens, or a public OG-bearing landing —
+WITHOUT the leaky pattern of serving full content to anything claiming
+a crawler user-agent.
+
+**Spotify listening-history import → a personal listening map.** Tony's
+sketch: import a listener's history and build their map with contextual
+influences threaded in — Meagan's Lucinda Williams + Liz Phair play
+would have surfaced Waxahatchee via the graph's existing legacy edges.
+Notes for the build: the free path is Spotify's own privacy export
+(user-initiated GDPR takeout, JSON, no dev app, no paid Web API — Tony
+already declined the paid API 2026-08-11); affinity-weight the
+subjects, walk shared ancestors/descendants in the claims graph, render
+as a PRIVATE page (a listening history is sensitive — nothing public by
+default). The pitch-deck echo: this is the ancestry-for-art metaphor as
+a personal product — your taste, mapped, with receipts.
