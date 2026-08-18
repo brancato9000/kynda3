@@ -378,3 +378,38 @@ already exist in the corpus — not via any rule written after seeing
 her data. If it doesn't, that is a finding about the graph's density,
 recorded with equal honesty. Raw exports stay local and gitignored;
 outputs are private to the two of them.
+
+## V3-80: Harvest only with a QID in hand (the Spoon-utensil autopsy)
+**Lesson ratified 2026-08-17, from the listening-wave run.** Name-based
+article resolution failed 3 of 12 subjects, in two OPPOSITE ways with
+identical symptoms: Spoon and Pavement harvested exactly-titled WRONG
+articles (the utensil, the road surface — the V3-56 name-guard passes
+because the wrong article's title is a perfect match), while Geese's
+correct article sat unreachable at "Geese (band)" (the guard rightly
+refuses the suffix without corroboration). Defense in depth held both
+times — the extraction found nothing influence-shaped in a cutlery
+article and the wall stored zero garbage — but silence cost real
+citations: the three subjects held 90 confirmed quotes (Geese alone 36)
+once their Wikidata QIDs were resolved and the harvests re-run via
+sitelink ($0.48). Policy: subject harvests REQUIRE a resolved QID;
+name-path harvesting is a fallback for entities Wikidata doesn't hold.
+Corollary recorded the same night: common-word band names fail name
+search at ~3-in-12, and "no article" and "not yet documented" are
+indistinguishable without an autopsy.
+
+## The Beyoncé 2022 import (Layer 0 of the supernova, run 2026-08-17)
+**Tony's 593 hand-labeled connections (beyonce-connections-2022.xlsx)
+are now claims.** 568 created as origin human_curation (run
+curator_tony_beyonce_2022): 84 inbound influences, 48 successors →
+influenced_by both directions, 64 collaborators, 49 same_scene, 33
+covers, 338 covered_by — the outbound covers set is the largest
+hand-gathered legacy signal in the corpus. Where a row carried its
+Wikipedia evidence passage, the QUOTE WALL re-verified it against the
+LIVE article: **103 of 206 passages survived verbatim and became
+quote_confirmed provenance** — second-degree receipts earned by
+2022 homework four years later. The other half have been edited out of
+Wikipedia since: hand-copied evidence has a measurable half-life
+(~50%/4yr), which is itself an argument for archived_url capture at
+ingest. The spreadsheet remains the golden set for Layer 2 (the
+classifier sweep, revised estimate $50–75); anti_influence stays an
+unbuilt claim type.
