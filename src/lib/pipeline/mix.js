@@ -15,7 +15,10 @@ import { verifyGutenberg } from "../entities/gutendex.js";
 import { verifyFilm, verifyTvShow, tmdbConfigured } from "../entities/tmdb.js";
 import { getArticle, findMention } from "../entities/wikipedia.js";
 
-const SLOT_IDS = ["titan", "ghost", "geography", "culture", "peer", "essential", "legacy", "collaborator"];
+// Legacy is LAST (Tony, 2026-08-17): the mix reads as a chain — what
+// poured in, the room they competed in, the canon, the partners, and
+// finally what poured back out. The story ends on legacy.
+const SLOT_IDS = ["titan", "ghost", "geography", "culture", "peer", "essential", "collaborator", "legacy"];
 
 const MIX_SCHEMA = {
   type: "object",
@@ -57,8 +60,8 @@ Create a "KyndaMix": 8 slots illuminating the influences, peers, and legacy of a
 4. culture — BEYOND THE MEDIUM: an influence that crosses the subject's primary domain OR tradition — a reach the audience wouldn't expect. Crossing mediums (film for a musician) always qualifies. Within the same medium, a crossing of TRADITION qualifies — philosophy or scripture into fiction, classical repertoire into jazz, epic poetry into philosophy — but a straight same-genre influence never does (that is titan material).
 5. peer — A contemporary working in a similar orbit during the same era.
 6. essential — FROM THE CANON: a definitive work by the subject themselves (creator = the subject). Given a deep catalog, choose the canon works that most illuminate THIS subject — the pieces of the career that best explain its evolution, themes, or method (Life in Hell for The Simpsons) — never merely the most famous.
-7. legacy — A successor who carries the torch and cites the subject as influence.
-8. collaborator — A key creative partner (producer, co-writer, cinematographer, bandmate); recommend a work that showcases the collaboration or the partner's own craft.
+7. collaborator — A key creative partner (producer, co-writer, cinematographer, bandmate); recommend a work that showcases the collaboration or the partner's own craft.
+8. legacy — A successor who carries the torch and cites the subject as influence. ALWAYS the final slot: the mix ends on what the subject poured back into the culture.
 
 Rules:
 - Emit candidates as a flat items list: all candidates for a slot consecutively, strongest first, in the slot order above.
