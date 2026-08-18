@@ -30,8 +30,13 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function SubjectPage({ params }) {
+export default async function SubjectPage({ params, searchParams }) {
   const { slug } = await params;
+  // Named cuts (2026-08-17): ?cut=graph-first serves a stored experiment
+  // cut by name — behind the site password, and NEVER able to trigger a
+  // fresh generation (the mix route refuses unknown cuts).
+  const sp = (await searchParams) || {};
+  const cut = typeof sp.cut === "string" ? sp.cut : null;
   const subject = await resolveSlug(slug);
   if (!subject) notFound();
 
@@ -39,6 +44,7 @@ export default async function SubjectPage({ params }) {
 
   return (
     <KyndaApp
+      initialCut={cut}
       initialSubject={{
         name: subject.name,
         kind: subject.kind,
