@@ -30,7 +30,7 @@ function normalizePayload(payload) {
 
 export async function POST(req) {
   const t0 = Date.now();
-  const { subject } = await req.json().catch(() => ({}));
+  const { subject, cut } = await req.json().catch(() => ({}));
   if (!subject?.name) {
     return Response.json({ error: "subject required" }, { status: 400 });
   }
@@ -44,6 +44,36 @@ export async function POST(req) {
         // Freshness (2026-08-10): curation edits the stored payload out from
         // under warm instances — one md5 probe per serve invalidates the L1
         // copy so curated media/doors show immediately, not at next deploy.
+        // Named cuts bypass the L1 cache (keyed per subject, not per cut)
+        // and can never fall through to generation: an unknown cut is a
+        // 404-shaped error, not a $0.17 side effect.
+        if (cut) {
+          const storedCut = await getStoredMix(subject, { cut }).catch(() => null);
+          const normalized = normalizePayload(storedCut);
+          if (!normalized?.slots) {
+            send({ type: "error", message: `No stored cut "${cut}" for this subject.` });
+            return;
+          }
+          send({ type: "intro", intro: normalized.intro, cached: true });
+          for (let s = 0; s < normalized.slots.length; s++) {
+            const slot = normalized.slots[s];
+            const verifications = [];
+            for (let c = 0; c < slot.candidates.length; c++) {
+              const entry = slot.candidates[c];
+              const citations = await getCitationsForItem(subject, entry.item).catch(() => entry.verification?.citations || []);
+              const media = await getCardMedia(entry.item).catch(() => null);
+              if (media) for (const [k, v] of Object.entries(media)) if (entry.item[k] == null) entry.item[k] = v;
+              const verification = { ...entry.verification, citations };
+              verifications.push(verification);
+              send({ type: "item", s, c, slotType: slot.slotType, item: entry.item });
+              send({ type: "verification", s, c, verification });
+            }
+            send({ type: "rank", s, order: rankCandidates(verifications) });
+          }
+          send({ type: "done", cached: true });
+          return;
+        }
+
         let cached = getCachedMix(subject);
         if (cached) {
           const fp = await getMixFingerprint(subject).catch(() => null);

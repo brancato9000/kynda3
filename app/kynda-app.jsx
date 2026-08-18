@@ -1011,7 +1011,7 @@ const DEMO = {
 
 // ─── App (V3-28: reusable — home renders it bare; /s/[slug] subject
 // pages render it with an initialSubject that boots the mix) ──────────
-export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }) {
+export default function KyndaApp({ initialSubject = null, indexedSubjects = [], initialCut = null }) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState("idle"); // idle | searching | choosing | mixing
   const [error, setError] = useState(null);
@@ -1103,7 +1103,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
         // stored payload with entity media freshly hydrated per card.
         const res = await fetch("/api/mix", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject: subj }),
+          body: JSON.stringify({ subject: subj, cut: initialCut }),
         });
         if (!res.ok || !res.body) break;
         const text = await res.text();
@@ -1139,7 +1139,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [] }
       const res = await fetch("/api/mix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subj }),
+        body: JSON.stringify({ subject: subj, cut: initialCut }),
       });
       if (!res.ok || !res.body) throw new Error(`mix request failed (${res.status})`);
       const reader = res.body.getReader();
