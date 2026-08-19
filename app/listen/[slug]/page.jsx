@@ -74,6 +74,25 @@ export default async function ListeningMapPage({ params }) {
             ))}
           </div>
 
+          {p.together?.length ? (<>
+            <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>Listening together</h2>
+            <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>
+              rising on both accounts in the same twelve months — household listening is fluid, and the car doesn&rsquo;t know whose account is playing. Shared days are the tell. Resonance, not attribution.
+            </div>
+            <div style={{ marginBottom: "40px" }}>
+              {p.together.map((r) => (
+                <div key={r.name} style={{ display: "flex", gap: "12px", alignItems: "baseline", padding: "9px 2px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <span style={{ fontSize: "14px", color: "rgba(226,232,240,0.9)" }}>
+                    {r.href ? <a href={r.href} style={{ color: "inherit" }}>{r.name}</a> : r.name}
+                  </span>
+                  <span style={{ ...mono("10.5px"), marginLeft: "auto" }}>
+                    {an} {r[key(an)]}h · {bn} {r[key(bn)]}h this year{r.sharedDays ? ` · ${r.sharedDays} shared day${r.sharedDays === 1 ? "" : "s"}` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>) : null}
+
           <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>The handoffs</h2>
           <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>what each could give the other — loved by one, untouched by the other</div>
           <div style={{ ...mono("10.5px", BASE.gold), textTransform: "uppercase", marginBottom: "8px" }}>{an} → {bn}</div>
@@ -137,6 +156,21 @@ export default async function ListeningMapPage({ params }) {
               : <div key={a.name}>{inner}</div>;
           })}
         </div>
+
+        {/* ── rising ── */}
+        {p.rising?.length ? (<>
+          <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>Rising</h2>
+          <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>
+            who you&rsquo;re becoming — the last twelve months, weighted for depth, so a new obsession registers against years of spine
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "40px" }}>
+            {p.rising.map((r) => (
+              <span key={r.name} style={{ ...mono("11px", "rgba(226,232,240,0.85)"), border: `1px solid ${r.isNew ? "rgba(250,204,21,0.35)" : "rgba(255,255,255,0.1)"}`, borderRadius: "14px", padding: "5px 12px" }}>
+                {r.isNew ? "✧ " : "↗ "}{r.href ? <a href={r.href} style={{ color: "inherit" }}>{r.name}</a> : r.name} · {r.recentHours}h this year
+              </span>
+            ))}
+          </div>
+        </>) : null}
 
         {/* ── shared ancestors ── */}
         <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>The influences behind what you love</h2>
