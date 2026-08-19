@@ -27,6 +27,82 @@ export default async function ListeningMapPage({ params }) {
   if (!row) notFound();
   const p = row.payload;
 
+  // Intersection maps (2026-08-17): two histories, one shared ancestry.
+  if (p.kind === "intersection") {
+    const an = p.a.name, bn = p.b.name;
+    const key = (n) => n.toLowerCase();
+    return (
+      <main style={{ minHeight: "100vh", background: BASE.bg, color: "#e2e8f0", fontFamily: FONTS.body }}>
+        <div style={{ maxWidth: "880px", margin: "0 auto", padding: "48px 24px 80px" }}>
+          <Wordmark />
+          <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "34px", margin: "26px 0 6px" }}>
+            {an} &amp; {bn} — a Shared Ancestry
+          </h1>
+          <div style={{ ...mono("11px"), textTransform: "uppercase", marginBottom: "8px" }}>
+            {an}: {fmt(p.a.hours)}h · {fmt(p.a.artists)} artists&nbsp;&nbsp;·&nbsp;&nbsp;{bn}: {fmt(p.b.hours)}h · {fmt(p.b.artists)} artists&nbsp;&nbsp;·&nbsp;&nbsp;{fmt(p.overlapCount)} artists in common
+          </div>
+          <div style={{ ...mono("10.5px"), lineHeight: 1.6, marginBottom: "36px", maxWidth: "620px" }}>{p.note}</div>
+
+          <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>The common spine</h2>
+          <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>what both of you actually play, ranked by combined hours</div>
+          <div style={{ marginBottom: "40px" }}>
+            {p.shared.map((r) => (
+              <div key={r.name} style={{ display: "flex", gap: "12px", alignItems: "baseline", padding: "9px 2px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize: "14px", color: "rgba(226,232,240,0.9)" }}>
+                  {r.href ? <a href={r.href} style={{ color: "inherit" }}>{r.name}</a> : r.name}
+                </span>
+                <span style={{ ...mono("10.5px"), marginLeft: "auto" }}>{an} {r[key(an)]}h · {bn} {r[key(bn)]}h</span>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>Common roots</h2>
+          <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>
+            documented ancestors reachable from BOTH spines — the shared inheritance, receipts required
+          </div>
+          <div style={{ marginBottom: "40px" }}>
+            {p.commonRoots.map((r) => (
+              <div key={r.name + (r.creator || "")} style={{ display: "flex", gap: "12px", alignItems: "baseline", padding: "9px 2px", borderBottom: "1px solid rgba(255,255,255,0.05)", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "14px", color: "rgba(226,232,240,0.9)" }}>
+                  {r.href ? <a href={r.href} style={{ color: "inherit" }}>{r.name}</a> : r.name}
+                  {r.kind === "work" && r.creator ? <span style={{ ...mono("10.5px") }}> — {r.creator}</span> : null}
+                </span>
+                <span style={{ ...mono("10.5px"), marginLeft: "auto", textAlign: "right" }}>
+                  {an} via {r.viaA.slice(0, 2).join(", ")} · {bn} via {r.viaB.slice(0, 2).join(", ")} · {r.receipts} receipt{r.receipts === 1 ? "" : "s"}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>The handoffs</h2>
+          <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>what each could give the other — loved by one, untouched by the other</div>
+          <div style={{ ...mono("10.5px", BASE.gold), textTransform: "uppercase", marginBottom: "8px" }}>{an} → {bn}</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
+            {p.aToB.map((g) => (
+              <span key={g.name} style={{ ...mono("11px", "rgba(226,232,240,0.8)"), border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "5px 12px" }}>
+                {g.href ? <a href={g.href} style={{ color: "inherit" }}>{g.name}</a> : g.name} · {g.hours}h
+              </span>
+            ))}
+          </div>
+          <div style={{ ...mono("10.5px", BASE.gold), textTransform: "uppercase", marginBottom: "8px" }}>{bn} → {an}</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "40px" }}>
+            {p.bToA.length ? p.bToA.map((g) => (
+              <span key={g.name} style={{ ...mono("11px", "rgba(226,232,240,0.8)"), border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "5px 12px" }}>
+                {g.href ? <a href={g.href} style={{ color: "inherit" }}>{g.name}</a> : g.name} · {g.hours}h
+              </span>
+            )) : (
+              <span style={{ ...mono("11px") }}>none yet — everything {bn} loves, {an} has at least touched</span>
+            )}
+          </div>
+
+          <div style={{ ...mono("10px"), lineHeight: 1.7 }}>
+            Built {String(p.built).slice(0, 10)} · derived intersection only — the raw exports never leave the family machine.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main style={{ minHeight: "100vh", background: BASE.bg, color: "#e2e8f0", fontFamily: FONTS.body }}>
       <div style={{ maxWidth: "880px", margin: "0 auto", padding: "48px 24px 80px" }}>
