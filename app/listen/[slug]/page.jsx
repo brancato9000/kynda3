@@ -214,6 +214,21 @@ export default async function ListeningMapPage({ params }) {
           ))}
         </div>
 
+        {/* ── the subtraction ── */}
+        {p.subtracted?.length ? (<>
+          <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>Set aside as {p.subtractedFrom}&rsquo;s</h2>
+          <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>
+            artists whose deeper home is {p.subtractedFrom}&rsquo;s own account — car-hijack listening, subtracted as an estimate, never hidden
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "40px" }}>
+            {p.subtracted.map((g) => (
+              <span key={g.name} style={{ ...mono("11px", "rgba(148,163,184,0.7)"), border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "14px", padding: "5px 12px" }}>
+                {g.name} · {g.hours}h here / {g.theirs}h theirs
+              </span>
+            ))}
+          </div>
+        </>) : null}
+
         {/* ── the gap list ── */}
         <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "4px" }}>Where the graph hasn&rsquo;t reached yet</h2>
         <div style={{ ...mono("10.5px"), marginBottom: "14px" }}>
