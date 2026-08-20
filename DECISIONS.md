@@ -413,3 +413,23 @@ Wikipedia since: hand-copied evidence has a measurable half-life
 ingest. The spreadsheet remains the golden set for Layer 2 (the
 classifier sweep, revised estimate $50–75); anti_influence stays an
 unbuilt claim type.
+
+## The listening-map prediction: verdict (2026-08-19)
+**As preregistered (2026-08-16): FAILED on first run.** Meagan's history
+went through the untouched pipeline and Waxahatchee did not surface.
+**Autopsy: three instrument defects, zero density problems.** (1) The
+walk matched loved PERSONS against edge endpoints, but the graph stores
+influence at WORK level — "Waxahatchee influenced_by Car Wheels on a
+Gravel Road" was receipted and invisible. (2) Lucinda Williams existed
+only as creator metadata, never as her own entity, so she couldn't
+anchor a walk at all. (3) The binary heard-check disqualified
+Waxahatchee because Meagan played her TWICE in 2024 (0.1h) — the same
+presence-vs-depth flaw the family map hit with Tony's hip-hop hours.
+**With the instrument repaired (walk v3 — work→creator resolution,
+full-spine anchoring, depth-based heard at ≥1h): Waxahatchee ranks #1
+on her frontier, via Lucinda Williams AND Liz Phair — the exact two
+anchors named in the preregistration.** The edges used were created
+2026-08-16 from Waxahatchee's own page harvest, before Meagan's data
+existed; every repair was a general instrument fix motivated by an
+independent failure, not tuned to this outcome. Post-hoc and labeled as
+such — but the graph knew.
