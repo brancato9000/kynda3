@@ -1,6 +1,9 @@
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
+  // Absolute-URL base for OG images and share cards (V3-81) — crawlers
+  // refuse relative og:image URLs.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kynda3.vercel.app"),
   title: "Kynda",
   description: "Discover the connections between your favorite works of culture, and the creators behind them.",
 };
