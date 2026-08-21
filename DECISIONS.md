@@ -433,3 +433,27 @@ anchors named in the preregistration.** The edges used were created
 existed; every repair was a general instrument fix motivated by an
 independent failure, not tuned to this outcome. Post-hoc and labeled as
 such — but the graph knew.
+
+## V3-81 — Share unfurls without opening the gate (2026-08-20)
+
+**Decision:** links behind the site password now unfurl in messengers,
+and the leaky pattern the 08-16 backlog entry warned about stays dead.
+Three parts. (1) `/api/og/<slug>` renders a branded 1200×630 share card
+(dark ground, wordmark, subject name, documented-connection/receipt
+counts, and the license-gated Commons portrait with credit — fair-use
+assets never travel; `/api/og/kynda` is the generic site card). The
+route is middleware-exempt because platforms fetch og:image with
+assorted UAs. (2) Known link-preview crawlers (facebookexternalhit/
+Facebot/Twitterbot — which is also how iMessage announces itself —
+plus Slack, WhatsApp, Discord, Telegram, LinkedIn, et al.) are
+REWRITTEN to `/unfurl/<path>`, a metadata-only shell: title,
+description, OG card, one-line body. A spoofed crawler UA earns the
+shell, never the mix. `/s/<slug>` and `/demo/<slug>` unfurl with the
+subject's name; `/listen/*` and everything else unfurl as the generic
+Kynda card — the family maps stay nameless to the outside. Humans
+without the password still get the 401 challenge, unchanged. (3) Demo
+and `/s/` pages declare the branded card + `summary_large_image`
+directly (metadataBase added to the root layout — crawlers refuse
+relative og:image URLs). Verified locally with crawler-UA curls on
+`/s/`, `/listen/`, root, and demo; all four card variants (portrait,
+portrait-less, long-title, generic) render without clipping.

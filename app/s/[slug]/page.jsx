@@ -23,10 +23,18 @@ export async function generateMetadata({ params }) {
   const description = subject.intro
     ? subject.intro.slice(0, 200)
     : `The influences, peers, and legacy of ${subject.name} — every connection with its receipt.`;
+  // The branded share card (V3-81). Crawlers never see this page directly
+  // (the middleware rewrites them to /unfurl), but authed humans who share
+  // from apps that reuse the page's own tags get the same card.
+  const image = `/api/og/${slug}`;
   return {
     title: `${subject.name} — Kynda`,
     description,
-    openGraph: { title: `${subject.name} — Kynda`, description, type: "article" },
+    openGraph: {
+      title: `${subject.name} — Kynda`, description, type: "article", siteName: "Kynda",
+      images: [{ url: image, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image", title: `${subject.name} — Kynda`, description, images: [image] },
   };
 }
 

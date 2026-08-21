@@ -6,6 +6,13 @@
 
 import { NextResponse } from "next/server";
 
+// Link-preview crawlers (V3-81): iMessage announces itself as
+// facebookexternalhit + Facebot + Twitterbot, so the big three cover
+// Apple too. These UAs never reach real content — they are rewritten to
+// the /unfurl shell, which serves metadata only (a rewrite does not
+// re-enter the middleware). Spoofing this UA earns the shell, not the site.
+const PREVIEW_BOT = /facebookexternalhit|facebot|twitterbot|slackbot|slack-imgproxy|linkedinbot|whatsapp|discordbot|telegrambot|applebot|snapchat|pinterest|redditbot|skypeuripreview|iframely|embedly|vkshare|bingpreview/i;
+
 export function middleware(req) {
   const password = process.env.KYNDA_SITE_PASSWORD;
   if (!password) return NextResponse.next();
@@ -16,6 +23,12 @@ export function middleware(req) {
       if (supplied === password) return NextResponse.next();
     } catch { /* malformed header falls through to the challenge */ }
   }
+  if (PREVIEW_BOT.test(req.headers.get("user-agent") || "")) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/unfurl${url.pathname === "/" ? "" : url.pathname}`;
+    url.search = "";
+    return NextResponse.rewrite(url);
+  }
   return new NextResponse("Kynda is invite-only right now.", {
     status: 401,
     headers: { "WWW-Authenticate": 'Basic realm="Kynda"' },
@@ -23,6 +36,8 @@ export function middleware(req) {
 }
 
 export const config = {
-  // Everything except the demo share pages and Next's own assets.
-  matcher: ["/((?!demo/|_next/|favicon.ico|icon.svg).*)"],
+  // Everything except the demo share pages, the public OG share cards
+  // (crawlers fetch og:image with assorted UAs — it must never 401; it
+  // carries only name + counts + a licensed portrait), and Next's assets.
+  matcher: ["/((?!demo/|api/og/|_next/|favicon.ico|icon.svg).*)"],
 };

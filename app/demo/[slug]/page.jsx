@@ -41,33 +41,26 @@ export async function generateMetadata({ params }) {
   // proper share copy.
   const { slug } = await params;
   if (!DEMO_SLUGS.has(slug)) return { title: "Kynda", robots: { index: false, follow: false } };
-  let name = null, portraitUrl = null;
+  let name = null;
   try {
     const subjects = await listSubjects();
-    const subject = subjects.find((s) => slugify(s.name) === slug) || null;
-    if (subject) {
-      name = subject.name;
-      const pr = await q(
-        `SELECT metadata->>'image_url' AS url FROM entities
-         WHERE lower(name) = lower($1) AND metadata->>'image_url' IS NOT NULL
-           AND metadata->>'image_license' NOT ILIKE '%fair use%' LIMIT 1`,
-        [subject.name]
-      );
-      portraitUrl = pr.rows[0]?.url || null;
-    }
+    name = subjects.find((s) => slugify(s.name) === slug)?.name || null;
   } catch { /* metadata must never break the page */ }
+  // V3-81: the branded /api/og card replaces the bare portrait — it embeds
+  // the licensed portrait itself (with credit) plus name and counts, and
+  // renders identically across every messenger.
   const title = name ? `${name}'s Influence Map on Kynda` : "Kynda — influence map";
+  const description = name ? `The documented influences behind ${name} — every connection quote-verified against its source.` : undefined;
+  const image = `/api/og/${slug}`;
   return {
     title,
-    description: name ? `The documented influences behind ${name} — every connection quote-verified against its source.` : undefined,
+    description,
     robots: { index: false, follow: false },
     openGraph: {
-      title,
-      description: name ? `The documented influences behind ${name}, mapped and verified by Kynda.` : undefined,
-      siteName: "Kynda",
-      ...(portraitUrl ? { images: [{ url: portraitUrl }] } : {}),
+      title, description, siteName: "Kynda", type: "article",
+      images: [{ url: image, width: 1200, height: 630 }],
     },
-    twitter: { card: portraitUrl ? "summary" : "summary", title },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
