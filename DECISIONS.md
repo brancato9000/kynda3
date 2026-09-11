@@ -457,3 +457,45 @@ directly (metadataBase added to the root layout — crawlers refuse
 relative og:image URLs). Verified locally with crawler-UA curls on
 `/s/`, `/listen/`, root, and demo; all four card variants (portrait,
 portrait-less, long-title, generic) render without clipping.
+
+## V3-82 — Creator-shaped matches can't absorb creator-bearing works; stubs get reshaped (2026-09-11)
+
+**Context:** Tony caught the homepage directory listing Duke Ellington,
+Ennio Morricone, Miles Davis, and Paul Taylor as "works" under Ideas, and
+Pavement as a "work" under Dance. Autopsy: exactly five rows in the graph
+had kind='work' with a MusicBrainz *artist* id, all created 2026-07-11 by
+the pre-V3-33 harvest path that hard-coded every mentioned artist as a
+work. Later seeding runs matched those stubs by name or id, generated
+mixes onto them, and never corrected the shape. Pavement was the reverse:
+the row was born as Kyle Abraham's 2012 dance piece (from Bill T. Jones's
+legacy slot), and the 2026-08-18 listening wave grafted the band onto it —
+the name-match clause let a creator-LESS incoming entity match a row that
+names a creator. Paul Taylor carried a second fault: the dance wave passed
+only the name to disambiguation, MusicBrainz's top "Paul Taylor" is the
+smooth-jazz saxophonist, and his mix was generated onto the choreographer's
+seat.
+
+**Decision (code, `upsertEntity`):** (1) A person/group may absorb a
+creator-less 'work' stub, never a work that names its creator. (2) When a
+person/group matches a creator-less 'work' stub, the stub is reshaped to
+the incoming kind (and domain, unless the incoming domain is the 'other'
+default) at match time. Offline eval: 44/44.
+
+**Data repair (applied 2026-09-11, dry-run reviewed by Tony first):**
+Ellington/Morricone/Davis → person/music with birth years and QIDs from
+MusicBrainz (Q4030, Q23848, Q93341). Pavement row restored as the band
+(group/music/1989, Q922445); Kyle Abraham's *Pavement* split into its own
+work/dance/2012 row carrying the Bill T. Jones edge. The Paul Taylor row
+kept as the saxophonist (person/music/1960, Q7153936) with its 14
+generated edges but its mix deleted; the choreographer created as his own
+entity (person/dance/1930, Q2916069) with the Martha Graham Dance Company
+and Rouben Ter-Arutunian edges moved to him and a fresh mix generated
+FROM THE QID, bypassing name disambiguation — 22 cards, 7 verified, 13
+documented, $0.16, then dressed by the media pass (3 images, 2 previews).
+Directory count unchanged at 225 (saxophonist out, choreographer in);
+zero works carry an artist id.
+
+**Open (not done):** the wave script should pass its category to
+disambiguation as a hint — the two Paul Taylors are the case for it. One
+harvested claim is stored backwards ("Martha Graham Dance Company
+member_of Paul Taylor"); moved as-is, direction untouched.

@@ -38,11 +38,17 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
   // since real name collisions exist (Cake's song "Frank Sinatra").
   const creator = metadata?.creator || null;
   const k = kindOf(kind);
+  const creatorShaped = k === "person" || k === "group";
+  // A person/group may absorb a creator-LESS 'work' stub (the pre-V3-33
+  // harvest shape), never a work that names its creator: Pavement the band
+  // was grafted onto Kyle Abraham's 2012 dance piece that way (2026-09-11).
   const kindClause = k === "work" && creator
     ? "kind = 'work'"
-    : "kind IN ('person','group','other','concept','work')";
+    : creatorShaped
+      ? "(kind IN ('person','group','other','concept') OR (kind = 'work' AND COALESCE(metadata->>'creator', '') = ''))"
+      : "kind IN ('person','group','other','concept','work')";
   const r0 = await q(
-    `SELECT id, mbid, wikidata_qid FROM entities
+    `SELECT id, kind, domain, mbid, wikidata_qid FROM entities
      WHERE lower(name) = lower($1) AND ${kindClause}
        AND ($2::text IS NULL OR $2 = '' OR metadata->>'creator' IS NULL OR metadata->>'creator' = '' OR lower(metadata->>'creator') = lower($2))
        AND (mbid IS NULL OR $3::uuid IS NULL OR mbid = $3)
@@ -51,15 +57,27 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
     [name, creator, mbid, wikidata_qid]
   );
   if (r0.rows[0]) {
+    const hit = r0.rows[0];
     // Enrich the match with any canonical IDs it lacks — prevents future
     // id-lookup misses from spawning duplicates.
-    if ((mbid && !r0.rows[0].mbid) || (wikidata_qid && !r0.rows[0].wikidata_qid)) {
+    if ((mbid && !hit.mbid) || (wikidata_qid && !hit.wikidata_qid)) {
       await q(
         "UPDATE entities SET mbid = COALESCE(mbid, $2), wikidata_qid = COALESCE(wikidata_qid, $3) WHERE id = $1",
-        [r0.rows[0].id, mbid, wikidata_qid]
+        [hit.id, mbid, wikidata_qid]
       ).catch(() => {});
     }
-    return r0.rows[0].id;
+    // Reshape a creator-less 'work' stub the moment a real person/group
+    // claims it — four July-11 harvest stubs (Ellington, Morricone, Davis,
+    // Paul Taylor) sat in the directory as "works" for two months because
+    // every later match reused the row without correcting its shape.
+    if (creatorShaped && hit.kind === "work") {
+      const d = domainOf(domain);
+      await q(
+        "UPDATE entities SET kind = $2, domain = CASE WHEN $3 = 'other' THEN domain ELSE $3 END WHERE id = $1",
+        [hit.id, k, d]
+      ).catch(() => {});
+    }
+    return hit.id;
   }
   const r = await q(
     `INSERT INTO entities (kind, domain, name, year_start, mbid, wikidata_qid, metadata)
