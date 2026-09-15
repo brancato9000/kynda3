@@ -63,7 +63,13 @@ async function findArticleImage(title, creator) {
     const pt = nrm(stripParen(page.title));
     const titleMatch = direct || pt === nrm(stripParen(bare)) || nrm(page.title) === nrm(bare)
       || pt === nrm(`${creator}: ${bare}`) || pt === nrm(`${creator} ${bare}`);
-    const creatorMatch = nrm(page.extract || "").includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
+    // Creator gate tightened (Chappelle autopsy, 2026-09-14): the creator
+    // must be named in the article's OPENING two sentences — the "X is a
+    // 1996 special by Chris Rock" sentence — or in its title. A passing
+    // mention deeper in the lead ("the title was later used for Chris
+    // Rock's special") put Method Man's cover on Chris Rock's card.
+    const opening = (page.extract || "").split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
+    const creatorMatch = nrm(opening).includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
     return titleMatch && creatorMatch ? { article: page.title, file: page.pageimage, extract: page.extract || "" } : null;
   };
   const pageFor = async (titles) => {
@@ -74,8 +80,16 @@ async function findArticleImage(title, creator) {
     const page = Object.values(d.query?.pages || {})[0];
     return page && page.missing === undefined ? page : null;
   };
-  for (const t of [bare, `${creator}: ${bare}`]) {
-    const hit = accept(await pageFor(t), true);
+  // Creator-prefixed article first: when "Chris Rock: Bring the Pain"
+  // exists it is the more specific identity than bare "Bring the Pain".
+  // If a "Creator: Title" article exists, the bare title is by definition
+  // a DIFFERENT work (Method Man's "Bring the Pain" vs Chris Rock's) —
+  // accept only the prefixed page, and never fall through to bare/search.
+  const prefixed = await pageFor(`${creator}: ${bare}`);
+  if (prefixed) return accept(prefixed, true);
+  await pause(120);
+  {
+    const hit = accept(await pageFor(bare), true);
     if (hit) return hit;
     await pause(120);
   }
@@ -171,7 +185,7 @@ outer: for (const s of work) {
           );
         }
       } else if (
-        item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "")
+        item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i.test(found.extract || "")
         || /is (a|the) [^.]{0,90}?\bfilm\b/i.test(found.extract || "")
         || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(found.extract || "")
         || item.medium === "literature"
@@ -181,7 +195,7 @@ outer: for (const s of work) {
         // settled fair-use categories, decided once by Tony. Posters are
         // marketing collateral; the rights-holder incentive runs TOWARD
         // display (Tony, ex-GM of IMDb).
-        const isCover = item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(found.extract || "");
+        const isCover = item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i.test(found.extract || "");
         const isTv = !isCover && /is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(found.extract || "");
         // Book jackets (V3-76, Tony 2026-08-14): a jacket is publisher
         // marketing collateral, identical in kind to a film poster — the
