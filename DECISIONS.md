@@ -538,3 +538,21 @@ Sykes (DC roots, the Comedy Central moment), so the WORK was corrected
 to her actual 2003 hour "Tongue Untied," argument preserved. "Black on
 Both Sides" is credited to Mos Def on the record; the creator field now
 carries the credit (it also unlocks cover + preview matching).
+
+**Addendum (same day, Tony's catch):** Chris Rock's *Bring the Pain* card
+on the Chappelle page wore Method Man's single cover. Mechanism: the
+Method Man article's SECOND sentence says Chris Rock named his special
+after the song — a passing mention that satisfied the creator gate. Two
+rules now, in both media paths: (1) the creator must be named in the
+article's opening two sentences or its title, not anywhere in the lead;
+(2) when a "Creator: Title" article exists at all, the bare-title page is
+by definition a different work — only the prefixed page may be accepted,
+and there is no fall-through to bare or search. "Chris Rock: Bring the
+Pain" exists but carries no image, so the card is now honestly empty.
+Corpus sweep of the same smell (non-music cards wearing an album-cover
+class): 35 hits, 30 legitimate (comedy records ARE albums), the four
+Method Man stamps stripped (Chappelle, Ali Wong, Eddie Murphy, Richard
+Pryor), *The Far Side* stripped (matched on "single-panel comic" — the
+cover regex now excludes hyphenated "single-", and a comic panel is not a
+settled class anyway), *Amarcord* ×2 relabeled from cover to poster (the
+image was the correct poster all along).

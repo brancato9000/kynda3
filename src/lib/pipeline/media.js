@@ -46,7 +46,13 @@ async function findArticleImage(title, creator) {
     const pt = nrm(stripParen(page.title));
     const titleMatch = direct || pt === nrm(stripParen(bare)) || nrm(page.title) === nrm(bare)
       || pt === nrm(`${creator}: ${bare}`) || pt === nrm(`${creator} ${bare}`);
-    const creatorMatch = nrm(page.extract || "").includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
+    // Creator gate tightened (Chappelle autopsy, 2026-09-14): the creator
+    // must be named in the article's OPENING two sentences — the "X is a
+    // 1996 special by Chris Rock" sentence — or in its title. A passing
+    // mention deeper in the lead ("the title was later used for Chris
+    // Rock's special") put Method Man's cover on Chris Rock's card.
+    const opening = (page.extract || "").split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
+    const creatorMatch = nrm(opening).includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
     return titleMatch && creatorMatch ? { article: page.title, file: page.pageimage, extract: page.extract || "" } : null;
   };
   const pageFor = async (titles) => {
@@ -57,8 +63,16 @@ async function findArticleImage(title, creator) {
     const page = Object.values(d.query?.pages || {})[0];
     return page && page.missing === undefined ? page : null;
   };
-  for (const t of [bare, `${creator}: ${bare}`]) {
-    const hit = accept(await pageFor(t), true);
+  // Creator-prefixed article first: when "Chris Rock: Bring the Pain"
+  // exists it is the more specific identity than bare "Bring the Pain".
+  // If a "Creator: Title" article exists, the bare title is by definition
+  // a DIFFERENT work (Method Man's "Bring the Pain" vs Chris Rock's) —
+  // accept only the prefixed page, and never fall through to bare/search.
+  const prefixed = await pageFor(`${creator}: ${bare}`);
+  if (prefixed) return accept(prefixed, true);
+  await pause(120);
+  {
+    const hit = accept(await pageFor(bare), true);
     if (hit) return hit;
     await pause(120);
   }
@@ -96,7 +110,7 @@ async function fileInfo(file) {
 /** Which settled fair-use class covers this card, if any (V3-73..76). */
 function fairUseClass(item, extract) {
   const ex = extract || "";
-  if (item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(ex))
+  if (item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i.test(ex))
     return { label: "♪ cover", license: "fair use — cover art thumbnail (class rule V3-73)" };
   if (/is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(ex))
     return { label: "📺 title card", license: "fair use — TV title card thumbnail (class rule V3-75)" };
