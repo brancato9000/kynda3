@@ -31,6 +31,11 @@ const DEMO_SLUGS = new Set([
   "tony-berg",
   // Meagan (2026-08-16): the share that exposed the unfurl gap.
   "waxahatchee",
+  // Post-Brown socializing set (Tony, 2026-09-14): three domains, three
+  // household names — music, comedy, film.
+  "david-bowie",
+  "dave-chappelle",
+  "ghostbusters",
 ]);
 
 export async function generateMetadata({ params }) {
