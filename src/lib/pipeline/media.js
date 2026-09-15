@@ -30,17 +30,42 @@ async function enwiki(params) {
 /** The work's en-wiki article + lead image, identity-gated (title matches
  * the work, intro names the creator) — propose-images.mjs semantics. */
 async function findArticleImage(title, creator) {
-  const s = await enwiki({ action: "query", list: "search", srsearch: `${title} ${creator}`, srlimit: "3" });
-  for (const hit of s.query?.search || []) {
+  // Identity gates (V3-77) with two additions (2026-09-14, Chappelle/
+  // Ghostbusters demo autopsy): (1) look the exact title up DIRECTLY first
+  // — an exact-title page, or Wikipedia's own redirect from it, is a
+  // stronger identity signal than a search hit, and search let person
+  // pages outrank "Saturday Night Live", "Gremlins", "Stranger Things";
+  // (2) comedy specials live under "Comedian: Title", so the creator-
+  // prefixed form is tried and accepted in both directions. The creator
+  // gate (creator named in the article's lead, or in its title) still
+  // holds on every path — a common-word title whose page is something
+  // else fails it.
+  const bare = title.replace(new RegExp(`^${creator.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*:\\s*`, "i"), "");
+  const accept = (page, direct) => {
+    if (!page?.pageimage) return null;
+    const pt = nrm(stripParen(page.title));
+    const titleMatch = direct || pt === nrm(stripParen(bare)) || nrm(page.title) === nrm(bare)
+      || pt === nrm(`${creator}: ${bare}`) || pt === nrm(`${creator} ${bare}`);
+    const creatorMatch = nrm(page.extract || "").includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
+    return titleMatch && creatorMatch ? { article: page.title, file: page.pageimage, extract: page.extract || "" } : null;
+  };
+  const pageFor = async (titles) => {
     const d = await enwiki({
-      action: "query", titles: hit.title, prop: "pageimages|extracts",
+      action: "query", titles, redirects: "1", prop: "pageimages|extracts",
       exintro: "1", explaintext: "1", piprop: "name|original", pithumbsize: "640", pilicense: "any",
     });
     const page = Object.values(d.query?.pages || {})[0];
-    if (!page?.pageimage) { await pause(120); continue; }
-    const titleMatch = nrm(stripParen(page.title)) === nrm(stripParen(title)) || nrm(page.title) === nrm(title);
-    const creatorMatch = nrm(page.extract || "").includes(nrm(creator));
-    if (titleMatch && creatorMatch) return { article: page.title, file: page.pageimage, extract: page.extract || "" };
+    return page && page.missing === undefined ? page : null;
+  };
+  for (const t of [bare, `${creator}: ${bare}`]) {
+    const hit = accept(await pageFor(t), true);
+    if (hit) return hit;
+    await pause(120);
+  }
+  const s = await enwiki({ action: "query", list: "search", srsearch: `${bare} ${creator}`, srlimit: "3" });
+  for (const h of s.query?.search || []) {
+    const hit = accept(await pageFor(h.title), false);
+    if (hit) return hit;
     await pause(120);
   }
   return null;
@@ -71,9 +96,9 @@ async function fileInfo(file) {
 /** Which settled fair-use class covers this card, if any (V3-73..76). */
 function fairUseClass(item, extract) {
   const ex = extract || "";
-  if (item.medium === "music" || /is (a|the) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(ex))
+  if (item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single|mixtape)\b/i.test(ex))
     return { label: "♪ cover", license: "fair use — cover art thumbnail (class rule V3-73)" };
-  if (/is (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries)\b/i.test(ex))
+  if (/is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(ex))
     return { label: "📺 title card", license: "fair use — TV title card thumbnail (class rule V3-75)" };
   if (item.medium === "literature" || /is (a|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i.test(ex))
     return { label: "📕 jacket", license: "fair use — book jacket thumbnail (class rule V3-76)" };

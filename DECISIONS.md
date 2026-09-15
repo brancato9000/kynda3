@@ -499,3 +499,42 @@ zero works carry an artist id.
 disambiguation as a hint — the two Paul Taylors are the case for it. One
 harvested claim is stored backwards ("Martha Graham Dance Company
 member_of Paul Taylor"); moved as-is, direction untouched.
+
+## Demo pages: Bowie, Chappelle, Ghostbusters + the article-image lookup fix (2026-09-14)
+
+**Decision:** three new public demo pages for socializing Kynda — David
+Bowie (music), Dave Chappelle (comedy), Ghostbusters (1984, film) — one
+per domain, all household names. Bowie (24 cards, July) and Chappelle
+(22 cards, Aug 9) kept their stored full-stack mixes; Ghostbusters was
+built fresh, QID-first (Q108745 — the film, never the franchise or the
+Ray Parker Jr. single), with a Wikipedia harvest (20 confirmed claims),
+an Opus mix (23 cards, 19 attribution-verified, 6 documented) and
+generation-time media (17 images + 1 preview) for $0.30 total. Bowie
+also got the setlist.fm covers pass (12 cover claims; "Under Pressure"
+×177 most played).
+
+**The media autopsy fixed the lookup for everyone.** Chappelle's page
+started at 11/22 cards with media because comedy specials live on
+Wikipedia under "Comedian: Title" (Dave Chappelle: Killin' Them Softly),
+and because search-first resolution let person pages outrank the exact
+article for Saturday Night Live, Gremlins and Stranger Things. Both
+media paths (generation-time `media.js` and `propose-images.mjs`) now
+(1) look the exact title up DIRECTLY first, accepting Wikipedia's own
+redirect from it, before falling back to search, and (2) try the
+creator-prefixed form in both directions. The creator gate (creator
+named in the lead or the title) still holds on every path — "8" (the
+number) and "Race" correctly fail it. The TV title-card class rule
+(V3-75) now names stand-up / comedy / HBO / Netflix specials — a special
+is a television program, same rights logic — and the album/TV patterns
+accept possessive leads ("is George Carlin's 14th album"). Result:
+Chappelle 15→16/22, Ghostbusters 17→19/23, Bowie 23/24. What remains is
+honestly empty: Chappelle's Show and SNL carry no lead image on
+Wikipedia at all; two 1960s comedy records and a 1974 Lindsay Kemp
+stage piece have no article.
+
+**Two card corrections on Chappelle:** "Never Scared" was Chris Rock's
+2004 special, not Wanda Sykes's — the card's argument is entirely about
+Sykes (DC roots, the Comedy Central moment), so the WORK was corrected
+to her actual 2003 hour "Tongue Untied," argument preserved. "Black on
+Both Sides" is credited to Mos Def on the record; the creator field now
+carries the credit (it also unlocks cover + preview matching).
