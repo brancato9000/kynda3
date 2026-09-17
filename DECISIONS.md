@@ -4,6 +4,10 @@ Started: 2026-07-05. Carries forward the kynda2 decision log (product vision, sl
 
 ---
 
+**Where things live (2026-09-16):** this file holds decisions only — one entry per rule, V3-numbered. Build and run records with cost are in `RUNS.md`; the single ranked backlog is `BACKLOG.md`; card and data corrections are `CORRECTIONS.md`. Scripts that ever wrote a row live in `scripts/` (durable tooling) or `scripts/experiments/` (one-off builds), never in a session scratchpad.
+
+---
+
 ## V3-01: From-scratch rebuild
 **Decision:** Rebuild rather than iterate on kynda2. New repo, server-side orchestration, truth-first data model.
 **Rationale:** The anti-hallucination architecture (verification pipeline, claims store, provenance) is greenfield either way, and kynda2's client-side orchestration and string-keyed data model actively fight it. Full reasoning in [REBUILD_PLAN.md](REBUILD_PLAN.md). Salvage list is explicit there; kynda2 stays deployed until Phase 1 reaches parity.
@@ -342,43 +346,6 @@ ruling. Plays and screenplays deliberately NOT covered (the lead-
 sentence gate excludes them); artwork photos and the rest remain
 per-asset curator judgment.
 
-## Backlog (2026-08-16, from Tony's share test + a product idea)
-
-**Share links don't unfurl — diagnosed, not yet designed.** Tony
-iMessaged the root URL to Meagan; no card surfaced. Verified cause: the
-basic-auth wall. Link-preview crawlers get the 401 "invite-only" text —
-no HTML, no OG tags — so anything behind the password can never unfurl.
-NOT an OG bug: public /demo/* pages carry full OG metadata and unfurl
-correctly (verified live: Phoebe's page serves title/description/
-portrait to a crawler UA). Interim practice: share demo links. The real
-design question for later: a public share surface for arbitrary pages —
-per-page public flags, share tokens, or a public OG-bearing landing —
-WITHOUT the leaky pattern of serving full content to anything claiming
-a crawler user-agent.
-
-**Spotify listening-history import → a personal listening map.** Tony's
-sketch: import a listener's history and build their map with contextual
-influences threaded in — Meagan's Lucinda Williams + Liz Phair play
-would have surfaced Waxahatchee via the graph's existing legacy edges.
-Notes for the build: the free path is Spotify's own privacy export
-(user-initiated GDPR takeout, JSON, no dev app, no paid Web API — Tony
-already declined the paid API 2026-08-11); affinity-weight the
-subjects, walk shared ancestors/descendants in the claims graph, render
-as a PRIVATE page (a listening history is sensitive — nothing public by
-default). The pitch-deck echo: this is the ancestry-for-art metaphor as
-a personal product — your taste, mapped, with receipts.
-
-**Preregistered prediction (2026-08-16, before any data).** Tony and
-Meagan will export their Spotify histories as the listening-map test
-run. Registered in advance so the test can actually fail: given
-Meagan's documented affection for Lucinda Williams and Liz Phair, the
-graph walk over her history should surface **Waxahatchee** as a
-top-ranked unheard-or-underheard recommendation, via legacy edges that
-already exist in the corpus — not via any rule written after seeing
-her data. If it doesn't, that is a finding about the graph's density,
-recorded with equal honesty. Raw exports stay local and gitignored;
-outputs are private to the two of them.
-
 ## V3-80: Harvest only with a QID in hand (the Spoon-utensil autopsy)
 **Lesson ratified 2026-08-17, from the listening-wave run.** Name-based
 article resolution failed 3 of 12 subjects, in two OPPOSITE ways with
@@ -396,43 +363,6 @@ name-path harvesting is a fallback for entities Wikidata doesn't hold.
 Corollary recorded the same night: common-word band names fail name
 search at ~3-in-12, and "no article" and "not yet documented" are
 indistinguishable without an autopsy.
-
-## The Beyoncé 2022 import (Layer 0 of the supernova, run 2026-08-17)
-**Tony's 593 hand-labeled connections (beyonce-connections-2022.xlsx)
-are now claims.** 568 created as origin human_curation (run
-curator_tony_beyonce_2022): 84 inbound influences, 48 successors →
-influenced_by both directions, 64 collaborators, 49 same_scene, 33
-covers, 338 covered_by — the outbound covers set is the largest
-hand-gathered legacy signal in the corpus. Where a row carried its
-Wikipedia evidence passage, the QUOTE WALL re-verified it against the
-LIVE article: **103 of 206 passages survived verbatim and became
-quote_confirmed provenance** — second-degree receipts earned by
-2022 homework four years later. The other half have been edited out of
-Wikipedia since: hand-copied evidence has a measurable half-life
-(~50%/4yr), which is itself an argument for archived_url capture at
-ingest. The spreadsheet remains the golden set for Layer 2 (the
-classifier sweep, revised estimate $50–75); anti_influence stays an
-unbuilt claim type.
-
-## The listening-map prediction: verdict (2026-08-19)
-**As preregistered (2026-08-16): FAILED on first run.** Meagan's history
-went through the untouched pipeline and Waxahatchee did not surface.
-**Autopsy: three instrument defects, zero density problems.** (1) The
-walk matched loved PERSONS against edge endpoints, but the graph stores
-influence at WORK level — "Waxahatchee influenced_by Car Wheels on a
-Gravel Road" was receipted and invisible. (2) Lucinda Williams existed
-only as creator metadata, never as her own entity, so she couldn't
-anchor a walk at all. (3) The binary heard-check disqualified
-Waxahatchee because Meagan played her TWICE in 2024 (0.1h) — the same
-presence-vs-depth flaw the family map hit with Tony's hip-hop hours.
-**With the instrument repaired (walk v3 — work→creator resolution,
-full-spine anchoring, depth-based heard at ≥1h): Waxahatchee ranks #1
-on her frontier, via Lucinda Williams AND Liz Phair — the exact two
-anchors named in the preregistration.** The edges used were created
-2026-08-16 from Waxahatchee's own page harvest, before Meagan's data
-existed; every repair was a general instrument fix motivated by an
-independent failure, not tuned to this outcome. Post-hoc and labeled as
-such — but the graph knew.
 
 ## V3-81 — Share unfurls without opening the gate (2026-08-20)
 
@@ -500,59 +430,9 @@ disambiguation as a hint — the two Paul Taylors are the case for it. One
 harvested claim is stored backwards ("Martha Graham Dance Company
 member_of Paul Taylor"); moved as-is, direction untouched.
 
-## Demo pages: Bowie, Chappelle, Ghostbusters + the article-image lookup fix (2026-09-14)
+## V3-83: Article-image identity — direct title first, creator in the opening, prefixed article is exclusive (2026-09-14)
 
-**Decision:** three new public demo pages for socializing Kynda — David
-Bowie (music), Dave Chappelle (comedy), Ghostbusters (1984, film) — one
-per domain, all household names. Bowie (24 cards, July) and Chappelle
-(22 cards, Aug 9) kept their stored full-stack mixes; Ghostbusters was
-built fresh, QID-first (Q108745 — the film, never the franchise or the
-Ray Parker Jr. single), with a Wikipedia harvest (20 confirmed claims),
-an Opus mix (23 cards, 19 attribution-verified, 6 documented) and
-generation-time media (17 images + 1 preview) for $0.30 total. Bowie
-also got the setlist.fm covers pass (12 cover claims; "Under Pressure"
-×177 most played).
+**Context:** the Chappelle demo page started at 11/22 cards with media, and Chris Rock's *Bring the Pain* wore Method Man's single cover (Tony's catch). Autopsy: comedy specials live on Wikipedia under "Comedian: Title"; search-first resolution let person pages outrank the exact article for Saturday Night Live, Gremlins and Stranger Things; and the creator gate accepted a passing mention anywhere in the lead — the Method Man article's second sentence says Chris Rock named his special after the song.
 
-**The media autopsy fixed the lookup for everyone.** Chappelle's page
-started at 11/22 cards with media because comedy specials live on
-Wikipedia under "Comedian: Title" (Dave Chappelle: Killin' Them Softly),
-and because search-first resolution let person pages outrank the exact
-article for Saturday Night Live, Gremlins and Stranger Things. Both
-media paths (generation-time `media.js` and `propose-images.mjs`) now
-(1) look the exact title up DIRECTLY first, accepting Wikipedia's own
-redirect from it, before falling back to search, and (2) try the
-creator-prefixed form in both directions. The creator gate (creator
-named in the lead or the title) still holds on every path — "8" (the
-number) and "Race" correctly fail it. The TV title-card class rule
-(V3-75) now names stand-up / comedy / HBO / Netflix specials — a special
-is a television program, same rights logic — and the album/TV patterns
-accept possessive leads ("is George Carlin's 14th album"). Result:
-Chappelle 15→16/22, Ghostbusters 17→19/23, Bowie 23/24. What remains is
-honestly empty: Chappelle's Show and SNL carry no lead image on
-Wikipedia at all; two 1960s comedy records and a 1974 Lindsay Kemp
-stage piece have no article.
+**Decision (both media paths — generation-time `media.js` and `propose-images.mjs`):** (1) If a "Creator: Title" article exists at all, the bare title is by definition a DIFFERENT work — only the prefixed page may be accepted, with no fall-through to bare or search. (2) Otherwise look the exact title up directly, accepting Wikipedia's own redirect, before falling back to search. (3) The creator must be named in the article's opening two sentences or its title, never merely somewhere in the lead. (4) The TV title-card class rule (V3-75) covers stand-up / comedy / HBO / Netflix specials — a special is a television program, same rights logic; album and TV patterns accept possessive leads ("is George Carlin's 14th album"); the cover pattern excludes hyphenated "single-" (The Far Side matched on "single-panel comic"). A comic panel is not a settled class and goes to the queue. Run record and the corrections it triggered: RUNS.md and CORRECTIONS.md, 2026-09-14.
 
-**Two card corrections on Chappelle:** "Never Scared" was Chris Rock's
-2004 special, not Wanda Sykes's — the card's argument is entirely about
-Sykes (DC roots, the Comedy Central moment), so the WORK was corrected
-to her actual 2003 hour "Tongue Untied," argument preserved. "Black on
-Both Sides" is credited to Mos Def on the record; the creator field now
-carries the credit (it also unlocks cover + preview matching).
-
-**Addendum (same day, Tony's catch):** Chris Rock's *Bring the Pain* card
-on the Chappelle page wore Method Man's single cover. Mechanism: the
-Method Man article's SECOND sentence says Chris Rock named his special
-after the song — a passing mention that satisfied the creator gate. Two
-rules now, in both media paths: (1) the creator must be named in the
-article's opening two sentences or its title, not anywhere in the lead;
-(2) when a "Creator: Title" article exists at all, the bare-title page is
-by definition a different work — only the prefixed page may be accepted,
-and there is no fall-through to bare or search. "Chris Rock: Bring the
-Pain" exists but carries no image, so the card is now honestly empty.
-Corpus sweep of the same smell (non-music cards wearing an album-cover
-class): 35 hits, 30 legitimate (comedy records ARE albums), the four
-Method Man stamps stripped (Chappelle, Ali Wong, Eddie Murphy, Richard
-Pryor), *The Far Side* stripped (matched on "single-panel comic" — the
-cover regex now excludes hyphenated "single-", and a comic panel is not a
-settled class anyway), *Amarcord* ×2 relabeled from cover to poster (the
-image was the correct poster all along).
