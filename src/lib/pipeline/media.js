@@ -29,7 +29,7 @@ async function enwiki(params) {
 
 /** The work's en-wiki article + lead image, identity-gated (title matches
  * the work, intro names the creator) — propose-images.mjs semantics. */
-async function findArticleImage(title, creator) {
+async function findArticleImage(title, creator, medium = null) {
   // Identity gates (V3-77) with two additions (2026-09-14, Chappelle/
   // Ghostbusters demo autopsy): (1) look the exact title up DIRECTLY first
   // — an exact-title page, or Wikipedia's own redirect from it, is a
@@ -41,8 +41,30 @@ async function findArticleImage(title, creator) {
   // holds on every path — a common-word title whose page is something
   // else fails it.
   const bare = title.replace(new RegExp(`^${creator.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*:\\s*`, "i"), "");
+  // Medium check (2026-09-22, Going All the Way autopsy): an adaptation's
+  // article names the source author ("screenplay by Dan Wakefield, based
+  // on his novel"), so the creatorship phrase alone let a 1997 film poster
+  // land on a 1970 novel card. What the article says the thing IS must
+  // agree with what the card says it is.
+  const articleMedium = (ex) => {
+    const e = (ex || "").slice(0, 400);
+    if (/\bis (a|an|the) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special)\b/i.test(e)) return "television";
+    if (/\bis (a|an|the) [^.]{0,90}?\b(film|movie|(?:drama|comedy|thriller|documentary|feature|anime) (?:film )?(?:written and )?directed by)\b/i.test(e)) return "film";
+    if (/\bis (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape|song)\b/i.test(e)) return "music";
+    if (/\bis (a|an|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|book|poetry collection|collection of poems|short story|essay collection|play)\b/i.test(e)) return "literature";
+    return null;
+  };
+  const mediumClash = (page) => {
+    if (!medium) return false;
+    const am = articleMedium(page.extract);
+    if (!am) return false;
+    const want = medium === "comedy" ? "television" : medium;
+    if (["literature", "film", "television", "music"].includes(want)) return am !== want && !(want === "television" && am === "film");
+    return false;
+  };
   const accept = (page, direct) => {
     if (!page?.pageimage) return null;
+    if (mediumClash(page)) return null;
     const pt = nrm(stripParen(page.title));
     const titleMatch = direct || pt === nrm(stripParen(bare)) || nrm(page.title) === nrm(bare)
       || pt === nrm(`${creator}: ${bare}`) || pt === nrm(`${creator} ${bare}`);
@@ -80,6 +102,14 @@ async function findArticleImage(title, creator) {
   const prefixed = await pageFor(`${creator}: ${bare}`);
   if (prefixed) return accept(prefixed, true);
   await pause(120);
+  // Kind-qualified title first when the card knows its medium — "Going
+  // All the Way (novel)" is the novel; bare "Going All the Way" is the film.
+  const qualified = { literature: ["novel", "book"], film: ["film"], television: ["TV series"], music: ["album", "song"] }[medium] || [];
+  for (const kind of qualified) {
+    const hit = accept(await pageFor(`${bare} (${kind})`), true);
+    if (hit) return hit;
+    await pause(120);
+  }
   {
     const hit = accept(await pageFor(bare), true);
     if (hit) return hit;
@@ -118,15 +148,28 @@ async function fileInfo(file) {
 
 /** Which settled fair-use class covers this card, if any (V3-73..76). */
 function fairUseClass(item, extract) {
-  const ex = extract || "";
-  if (item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i.test(ex))
-    return { label: "♪ cover", license: "fair use — cover art thumbnail (class rule V3-73)" };
-  if (/is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(ex))
-    return { label: "📺 title card", license: "fair use — TV title card thumbnail (class rule V3-75)" };
-  if (item.medium === "literature" || /is (a|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i.test(ex))
-    return { label: "📕 jacket", license: "fair use — book jacket thumbnail (class rule V3-76)" };
-  if (/is (a|an|the) [^.]{0,90}?\b(film|movie|(?:drama|comedy|thriller|documentary|feature|anime) (?:film )?(?:written and )?directed by)\b/i.test(ex))
-    return { label: "🎬 poster", license: "fair use — film poster thumbnail (class rule V3-74)" };
+  // The article decides what the thing IS (2026-09-22): the earliest kind
+  // noun after "is a/an/the" wins, so "a 1979 film based on the 1977 novel"
+  // is a film and "a 1977 novel, adapted into a 1979 film" is a novel. The
+  // card's medium is only the fallback when the lead names no kind — the
+  // accept() gate has already refused any article whose kind clashes.
+  const e = (extract || "").slice(0, 400);
+  const KINDS = [
+    ["music", /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i],
+    ["television", /is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i],
+    ["film", /is (a|an|the) [^.]{0,90}?\b(film|movie|(?:drama|comedy|thriller|documentary|feature|anime) (?:film )?(?:written and )?directed by)\b/i],
+    ["literature", /is (a|an|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i],
+  ];
+  let best = null;
+  for (const [kind, re] of KINDS) {
+    const m = re.exec(e);
+    if (m && (!best || m.index < best.index)) best = { kind, index: m.index };
+  }
+  const kind = best?.kind || (item.medium === "music" ? "music" : item.medium === "literature" ? "literature" : null);
+  if (kind === "music") return { label: "♪ cover", license: "fair use — cover art thumbnail (class rule V3-73)" };
+  if (kind === "television") return { label: "📺 title card", license: "fair use — TV title card thumbnail (class rule V3-75)" };
+  if (kind === "literature") return { label: "📕 jacket", license: "fair use — book jacket thumbnail (class rule V3-76)" };
+  if (kind === "film") return { label: "🎬 poster", license: "fair use — film poster thumbnail (class rule V3-74)" };
   return null;
 }
 
@@ -252,7 +295,7 @@ export async function enrichStoredMixMedia(subject, { deadline = Date.now() + 15
     out.examined += 1;
     await pause(250);
     let found = null, info = null;
-    try { found = await findArticleImage(item.title, item.creator); } catch { /* skip */ }
+    try { found = await findArticleImage(item.title, item.creator, item.medium); } catch { /* skip */ }
     if (found) { try { info = await fileInfo(found.file); } catch { /* skip */ } }
     if (!found || !info?.url) continue;
     if (info.host === "commons") {

@@ -90,3 +90,7 @@ DECISIONS.md split into decisions / RUNS / BACKLOG / CORRECTIONS; recoverable se
 ## 2026-09-20 — Demo pages for Mark Golin: Tycho, Zhang Yimou, Kurt Vonnegut
 
 First run of the spec-driven builder (`scripts/experiments/demo-build.mjs` + `specs/golin-2026-09-20.json`). All three new to the store, QID-first (Tycho also MBID-anchored — "Scott Hansen from SF"). Wikipedia harvests: 6 / 21 / 36 confirmed claims. Mixes (Opus 5): Tycho 22 cards, 19 verified, 4 documented; Zhang Yimou 22 cards, 21 verified, 10 documented; Vonnegut 24 cards, 22 verified, 16 documented. Generation-time media: 18 images + 19 previews / 11 images / 19 images. **$0.98 total.** Tycho covers pass: 1 claim. After the V3-83 refinement (creatorship-phrase gate, "drama directed by" poster class): Tycho 21/22, Zhang Yimou 22/22, Vonnegut 21/24 cards with media — the three Vonnegut gaps are an 1883 poetry collection, a 1941 anthropology monograph and a 1918 courtroom speech, correctly empty.
+
+## 2026-09-22 — Adaptation-stamp repair (V3-83 refinement 2)
+
+Tony caught the *Going All the Way* film poster on Vonnegut's novel card. Class-and-filename sweep found 36 adaptation stamps across 27 subjects: 30 stripped, 6 relabeled. Medium-aware re-run: 221 cards examined, 56 stamped (38 class-rule, 18 licensed/public-domain), 7 queued, 158 correctly empty. Zero model calls; Wikipedia API only.
