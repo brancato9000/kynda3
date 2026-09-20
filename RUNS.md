@@ -86,3 +86,7 @@ Bowie (24 cards, July) and Chappelle (22 cards, Aug 9) kept their stored full-st
 ## 2026-09-16 — Log restructure
 
 DECISIONS.md split into decisions / RUNS / BACKLOG / CORRECTIONS; recoverable session scripts committed to `scripts/experiments/`. No model calls.
+
+## 2026-09-20 — Demo pages for Mark Golin: Tycho, Zhang Yimou, Kurt Vonnegut
+
+First run of the spec-driven builder (`scripts/experiments/demo-build.mjs` + `specs/golin-2026-09-20.json`). All three new to the store, QID-first (Tycho also MBID-anchored — "Scott Hansen from SF"). Wikipedia harvests: 6 / 21 / 36 confirmed claims. Mixes (Opus 5): Tycho 22 cards, 19 verified, 4 documented; Zhang Yimou 22 cards, 21 verified, 10 documented; Vonnegut 24 cards, 22 verified, 16 documented. Generation-time media: 18 images + 19 previews / 11 images / 19 images. **$0.98 total.** Tycho covers pass: 1 claim. After the V3-83 refinement (creatorship-phrase gate, "drama directed by" poster class): Tycho 21/22, Zhang Yimou 22/22, Vonnegut 21/24 cards with media — the three Vonnegut gaps are an 1883 poetry collection, a 1941 anthropology monograph and a 1918 courtroom speech, correctly empty.

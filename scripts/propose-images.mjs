@@ -69,7 +69,16 @@ async function findArticleImage(title, creator) {
     // mention deeper in the lead ("the title was later used for Chris
     // Rock's special") put Method Man's cover on Chris Rock's card.
     const opening = (page.extract || "").split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
-    const creatorMatch = nrm(opening).includes(nrm(creator)) || nrm(page.title).includes(nrm(creator));
+    // Creatorship phrase (2026-09-20, Zhang Yimou autopsy): film leads often
+    // spend their first sentences on plot ("Red Sorghum is a 1988 Chinese
+    // film about a young woman...") and CJK leads carry "lit." abbreviations
+    // that break the sentence count — so a "by <creator>" / "starring
+    // <creator>" phrase anywhere in the lead also satisfies the gate. A bare
+    // mention ("Chris Rock named his special after this song") still fails.
+    const flat = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const creWords = flat(creator).replace(/[^a-z0-9 ]/g, " ").trim().split(/\s+/).join("\\s+");
+    const phrase = creWords && new RegExp(`\\b(by|starring|debut of|debut for)\\s+(?:[^.;()]{0,60}?\\s)?${creWords}\\b`).test(flat(page.extract).replace(/[^a-z0-9 .;()]/g, " "));
+    const creatorMatch = nrm(opening).includes(nrm(creator)) || nrm(page.title).includes(nrm(creator)) || phrase;
     return titleMatch && creatorMatch ? { article: page.title, file: page.pageimage, extract: page.extract || "" } : null;
   };
   const pageFor = async (titles) => {
@@ -186,7 +195,7 @@ outer: for (const s of work) {
         }
       } else if (
         item.medium === "music" || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,90}?\b(album|EP|single(?!-)|mixtape)\b/i.test(found.extract || "")
-        || /is (a|the) [^.]{0,90}?\bfilm\b/i.test(found.extract || "")
+        || /is (a|an|the) [^.]{0,90}?\b(film|movie|(?:drama|comedy|thriller|documentary|feature|anime) (?:film )?(?:written and )?directed by)\b/i.test(found.extract || "")
         || /is (a|an|the|[^.]{0,40}?'s) [^.]{0,110}?\b(television series|TV series|television sitcom|television program|television show|streaming series|web series|miniseries|stand-up( comedy)? special|comedy special|television special|HBO special|Netflix special)\b/i.test(found.extract || "")
         || item.medium === "literature"
         || /is (a|the) [^.]{0,110}?\b(novel|novella|memoir|autobiography|poetry collection|collection of poems|short story collection|essay collection)\b/i.test(found.extract || "")

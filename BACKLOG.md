@@ -60,3 +60,4 @@ Density program ($250), Phase-3 predictive analytics, patent groundwork, TV clos
 ## Done since last review (2026-09-14 → 09-16)
 
 - Share unfurls (V3-81). Pilot-shapes doc v1 in Drive. Smoke test of Sydney's three pages. Demo pages: Bowie, Chappelle, Ghostbusters. Article-image identity fix (V3-83).
+- 2026-09-20: Golin demo pages (Tycho, Zhang Yimou, Vonnegut) via the spec-driven builder; V3-83 creatorship-phrase refinement.
