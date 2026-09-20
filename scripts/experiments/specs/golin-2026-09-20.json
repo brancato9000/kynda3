@@ -1,0 +1,33 @@
+{
+  "requestedBy": "Mark Golin (friend/mentor), 2026-09-20",
+  "subjects": [
+    {
+      "name": "Tycho",
+      "kind": "person",
+      "domain": "music",
+      "wikidata_qid": "Q3608376",
+      "mbid": "cbef45a9-7acb-4325-94c9-70081ac8d1b8",
+      "year": 1977,
+      "description": "American ambient / electronic musician, composer and producer Scott Hansen (born 1977, Sacramento; based in San Francisco), who records and performs as Tycho and works as the graphic designer ISO50",
+      "rawQuery": "Tycho (Scott Hansen)"
+    },
+    {
+      "name": "Zhang Yimou",
+      "kind": "person",
+      "domain": "film",
+      "wikidata_qid": "Q55430",
+      "year": 1950,
+      "description": "Chinese film director and cinematographer of the Fifth Generation (born 1950, Xi'an) — Red Sorghum, Ju Dou, Raise the Red Lantern, To Live, Hero, House of Flying Daggers",
+      "rawQuery": "Zhang Yimou"
+    },
+    {
+      "name": "Kurt Vonnegut",
+      "kind": "person",
+      "domain": "literature",
+      "wikidata_qid": "Q49074",
+      "year": 1922,
+      "description": "American novelist and satirist (1922–2007, Indianapolis) — Slaughterhouse-Five, Cat's Cradle, Breakfast of Champions, The Sirens of Titan",
+      "rawQuery": "Kurt Vonnegut"
+    }
+  ]
+}

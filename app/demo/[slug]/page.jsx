@@ -36,6 +36,10 @@ const DEMO_SLUGS = new Set([
   "david-bowie",
   "dave-chappelle",
   "ghostbusters",
+  // Mark Golin (friend/mentor, 2026-09-20): a musician, a director, an author.
+  "tycho",
+  "zhang-yimou",
+  "kurt-vonnegut",
 ]);
 
 export async function generateMetadata({ params }) {
