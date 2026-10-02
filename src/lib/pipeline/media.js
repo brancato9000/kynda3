@@ -24,7 +24,7 @@ const stripParen = (s) => (s || "").replace(/\s*[([].*?[)\]]\s*/g, " ").trim();
 async function enwiki(params) {
   const u = new URL("https://en.wikipedia.org/w/api.php");
   for (const [k, v] of Object.entries({ format: "json", ...params })) u.searchParams.set(k, v);
-  return (await fetch(u, { headers: UA })).json();
+  return (await fetch(u, { headers: UA, signal: AbortSignal.timeout(15000) })).json();
 }
 
 /** The work's en-wiki article + lead image, identity-gated (title matches
@@ -330,3 +330,7 @@ export async function enrichStoredMixMedia(subject, { deadline = Date.now() + 15
   if (dirty) await q(`UPDATE mixes SET payload = $2 WHERE id = $1`, [mr.id, JSON.stringify(mr.payload)]);
   return out;
 }
+
+// Shared with the map-image backfill (map-images.js): same identity gates,
+// same license allowlist, same fair-use class rules as the mix cards.
+export { enwiki, findArticleImage, fileInfo, fairUseClass, ALLOWLIST, UA };

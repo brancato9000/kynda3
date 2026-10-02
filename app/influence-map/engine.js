@@ -31,8 +31,8 @@ const CLAIM_LABELS = {
 const CENTER_R = 54;
 const STRETCH = 150;
 
-// Wikipedia thumbnails for non-mix bubbles, and bios for travelled-to centers, shared across map instances.
-const thumbCache = new Map();
+// Bios for travelled-to centers, shared across map instances. (Pictures come only from the
+// server — rights-cleared images applied by the backfill or a curator; the map fetches none itself.)
 const bioCache = new Map();
 function loadBio(name) {
   if (!bioCache.has(name)) {
@@ -65,7 +65,7 @@ function smallImage(url) {
   return url;
 }
 
-export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph, onOpenSubject }) {
+export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph, onOpenSubject, adminToken = null }) {
   const q = (k) => root.querySelector(`[data-k="${k}"]`);
   const stage = q("stage"), card = q("card");
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -131,7 +131,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
         n = { name: c.title, creator: c.creator, year: c.year, type: slot[2], weight: 4, evidence: [], tier: "mix pick" };
         out.push(n); byTitle.set(normT(c.title), n);
       }
-      n.mix = { slot: c.slotType, label: slot[0], color: slot[1], reason: c.reason, image: smallImage(c.imageUrl) };
+      n.mix = { slot: c.slotType, label: slot[0], color: slot[1], reason: c.reason, image: smallImage(c.imageUrl),
+        imageCredit: c.imageCredit || null, imageLicense: c.imageLicense || null, imagePage: c.imagePage || null };
     }
     const typeOrder = { predecessor: 1, peer: 2, successor: 3 };
     return out.sort((a, b) => (a.mix ? 0 : 1) - (b.mix ? 0 : 1) || typeOrder[a.type] - typeOrder[b.type] || (a.year ?? 9999) - (b.year ?? 9999));
@@ -147,7 +148,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const span = narrow ? Math.max(h, 600) * 0.5 * (h / Math.max(w, 1) > 1.4 ? 1.25 : 1) : Math.max(w, 900) * 0.36;
     const rand = d3.randomLcg(name.length * 7919 + 13);
     const old = live.get(name);
-    const nodes = [{ name, type: "center", r: CENTER_R, fx: 0, fy: 0 }];
+    const g = graphs.get(name) || {};
+    const nodes = [{ name, type: "center", r: CENTER_R, fx: 0, fy: 0, id: g.subjectId || null, image: g.subjectImage || null }];
     let peerI = 0;
     for (const n of neighbors(name)) {
       const prev = live.get(n.name);
@@ -189,6 +191,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (size().w === 0) { waitingForSize = true; return; } // hidden tab; the resize observer resumes us
     waitingForSize = false;
     hideCard(true);
+    closeCurator();
     if (wobble) { wobble.stop(); wobble = null; grabbed = null; for (const n of live.values()) { n.fx = n.fy = null; n.vx = n.vy = 0; } }
     const prevCenter = center;
     if (push && name !== center) { trail = trail.slice(0, trailPos + 1); trail.push(name); trailPos = trail.length - 1; }
@@ -222,8 +225,6 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     updateTrail();
     updateLegend(target);
     loadBio(name);
-    ensureCenterPhoto(name);
-    if (picsOn) ensureThumbs();
   }
 
   // The first build frames the camera instantly, so the subject appears in the middle and the map grows
@@ -241,7 +242,19 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     svg.transition().duration(1100).ease(d3.easeCubicInOut).call(zoom.transform, to);
   }
 
-  const picOf = (d) => (d.mix && d.mix.image) || thumbCache.get(d.name) || null;
+  // A curator's choice wins, then the mix card's own art, then the backfill's pick.
+  const picOf = (d) => (d.image?.status === "approved" && d.image.url) || d.mix?.image || d.image?.url || null;
+  const creditOf = (d) => {
+    if (d.image?.status === "approved" || (!d.mix?.image && d.image?.url)) return d.image;
+    if (d.mix?.image) return { credit: d.mix.imageCredit, license: d.mix.imageLicense, page: d.mix.imagePage };
+    return null;
+  };
+  const creditLine = (d) => {
+    const c = picOf(d) && creditOf(d);
+    if (!c || !(c.credit || c.license)) return "";
+    const text = [c.credit, c.license].filter(Boolean).map(esc).join(" · ");
+    return `<div class="credit">Picture: ${c.page ? `<a href="${esc(c.page)}" target="_blank" rel="noopener">${text}</a>` : text}</div>`;
+  };
 
   function render() {
     const prevCenter = trail[trailPos - 1];
@@ -294,34 +307,6 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const all = gNodes.selectAll("g.node");
     all.classed("has-pic", (d) => !!picOf(d));
     all.select(".pic").attr("href", (d) => picOf(d)).style("display", (d) => (picOf(d) ? null : "none"));
-  }
-
-  async function fetchThumb(name, title = name) {
-    try {
-      const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}?redirect=true`);
-      if (!r.ok) return;
-      const j = await r.json();
-      if (j.type !== "disambiguation" && j.thumbnail?.source) { thumbCache.set(name, j.thumbnail.source); if (alive) updatePics(); }
-    } catch { /* no picture; initials stay */ }
-  }
-
-  // The subject in the center always shows its photo, whatever the Pictures setting. The page's own
-  // subject is looked up by its bio's article title, so a namesake can't slip in.
-  function ensureCenterPhoto(name) {
-    if (thumbCache.has(name)) return;
-    thumbCache.set(name, null);
-    fetchThumb(name, name === subjectName && subjectBio?.articleTitle ? subjectBio.articleTitle : name);
-  }
-
-  // Pictures are opt-in: fetch Wikipedia thumbnails only for what's on screen, a few at a time.
-  async function ensureThumbs() {
-    const names = [...live.values()].filter((n) => !(n.mix && n.mix.image) && !thumbCache.has(n.name)).map((n) => n.name);
-    for (const n of names) thumbCache.set(n, null);
-    let i = 0;
-    const worker = async () => {
-      while (alive && i < names.length) await fetchThumb(names[i++]);
-    };
-    await Promise.all([worker(), worker(), worker(), worker()]);
   }
 
   const ease = d3.easeCubicOut, easeBack = d3.easeBackOut.overshoot(1.4);
@@ -416,7 +401,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       if (anim || d.exiting) return;
       if (!dragging) {
         // Only a real move starts the tug, so taps, clicks and press-and-hold still work.
-        clearTimeout(holdT); clearTimeout(hoverT); hideCard(true);
+        clearTimeout(holdT); clearTimeout(hoverT); unpress(); hideCard(true);
         dragging = true;
         if (!wobble) startWobble();
         grabbed = d;
@@ -450,16 +435,29 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 500);
   }
   function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); hideT = setTimeout(() => hideCard(), 220); }
+  // Phones (2026-10-02, Tony): a tap is for looking, a hold is for going. Tap opens the
+  // relationship card (the bio on the center); press and hold re-centers the map on that
+  // bubble, with its ring lighting up while the hold registers. Desktop: hover shows, click travels.
+  let touchTap = false, pressT = null;
+  const unpress = () => { clearTimeout(pressT); gNodes.selectAll(".pressing").classed("pressing", false); };
   function onDown(ev, d) {
-    if (ev.pointerType !== "touch") return;
-    held = false; clearTimeout(holdT);
-    holdT = setTimeout(() => { held = true; showCard(d, true); try { navigator.vibrate?.(10); } catch { /* optional */ } }, 420);
-    const cancel = () => { clearTimeout(holdT); window.removeEventListener("pointerup", cancel); window.removeEventListener("pointercancel", cancel); };
+    touchTap = ev.pointerType === "touch";
+    if (!touchTap) return;
+    held = false; clearTimeout(holdT); unpress();
+    const el = gNodes.selectAll("g.node").filter((n) => n === d);
+    pressT = setTimeout(() => el.classed("pressing", true), 140);
+    holdT = setTimeout(() => {
+      held = true; unpress();
+      try { navigator.vibrate?.(12); } catch { /* optional */ }
+      if (d.type === "center") showCard(d, true); else travel(d);
+    }, 480);
+    const cancel = () => { clearTimeout(holdT); unpress(); window.removeEventListener("pointerup", cancel); window.removeEventListener("pointercancel", cancel); };
     window.addEventListener("pointerup", cancel); window.addEventListener("pointercancel", cancel);
   }
   function onClick(ev, d) {
     ev.stopPropagation();
     if (held) { held = false; return; }
+    if (touchTap) { if (cardFor === d) hideCard(true); else showCard(d, true); return; }
     travel(d);
   }
   let travelling = null;
@@ -492,10 +490,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       <h2>${esc(d.name)}</h2>
       ${bio?.description ? `<div class="meta">${esc(bio.description)}</div>` : ""}
       ${text ? `<p class="summary bio">${esc(text)}</p>` : `<p class="summary">No bio for ${esc(d.name)} yet.</p>`}
-      ${bio?.url || (d.name !== subjectName && onOpenSubject) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a>` : ""}</span>
-        <span class="acts">${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}`;
+      ${creditLine(d)}
+      ${bio?.url || (d.name !== subjectName && onOpenSubject) || curating(d) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a>` : ""}</span>
+        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}`;
     placeCard(d, touch);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
+    const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
   }
 
   function showCard(d, touch) {
@@ -521,9 +521,11 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${d.mix?.reason ? `<p class="summary">${esc(d.mix.reason)}</p>` : d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ""}
       ${quotes.map((x) => `<blockquote>“${esc(x.quote.replace(/^["“]|["”]$/g, ""))}”<cite>${x.speaker ? esc(x.speaker) + " · " : ""}${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.publication || host(x.url))}</a>` : esc(x.publication || "")}</cite></blockquote>`).join("")}
       ${!quotes.length && ev0 ? `<blockquote class="plain">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
+      ${creditLine(d)}
       <div class="foot"><span>${n ? `${n} source${n === 1 ? "" : "s"} · ${esc(d.tier || "")}` : "mix pick"}</span>
-        <span class="acts">${onOpenSubject ? `<button class="open">Open page</button>` : ""}${missing.has(d.name) ? "" : `<button class="go">Travel →</button>`}</span></div>`;
+        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${missing.has(d.name) ? "" : `<button class="go">Travel →</button>`}</span></div>`;
     const goBtn = card.querySelector(".go"); if (goBtn) goBtn.onclick = () => travel(d);
+    const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
     placeCard(d, touch);
   }
@@ -554,6 +556,97 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     gNodes.selectAll("g.node").classed("hot", false);
     gEdges.selectAll("path.edge").classed("hot", false);
   }
+
+  // ── Admin overlay (2026-10-02): a signed-in curator fixes pictures in place while browsing.
+  // Same API as the /admin/images queue; every change shows on the map immediately.
+  const curator = q("curator");
+  const curating = (d) => !!adminToken && !!d.id;
+  let curatorFor = null;
+  async function adminCall(method, body, query = "") {
+    const res = await fetch(`/api/admin/images${query}`, {
+      method, headers: { "Content-Type": "application/json", "x-kynda-admin": adminToken },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) throw new Error("Your admin sign-in has expired. Sign in again at /admin.");
+    if (!res.ok) throw new Error(data.error || "That didn't work.");
+    return data;
+  }
+  function closeCurator() { curator.hidden = true; curatorFor = null; }
+  async function openCurator(d) {
+    hideCard(true);
+    curatorFor = d;
+    curator.hidden = false;
+    curator.innerHTML = `<div class="ch"><div><div class="kind">Picture for</div><h3>${esc(d.name)}</h3></div><button class="x" aria-label="Close">×</button></div><p class="status">Loading…</p>`;
+    curator.querySelector(".x").onclick = closeCurator;
+    try {
+      let view = await adminCall("GET", null, `?entity_id=${encodeURIComponent(d.id)}`);
+      if (curatorFor !== d) return;
+      renderCurator(d, view);
+      if (!view.candidates.length && view.settled !== "none") {
+        setCuratorStatus("Searching free sources…");
+        view = await adminCall("POST", { action: "find", entity_id: d.id });
+        if (curatorFor === d) renderCurator(d, view);
+      }
+    } catch (err) { if (curatorFor === d) setCuratorStatus(err.message, true); }
+  }
+  function setCuratorStatus(msg, bad) {
+    const st = curator.querySelector(".status");
+    if (st) { st.textContent = msg; st.classList.toggle("bad", !!bad); }
+  }
+  function applyToMap(d, view) {
+    // Every node for this entity, on this map and any cached map, takes the new picture.
+    const img = view.current ? { ...view.current } : null;
+    for (const n of live.values()) if (n.id === d.id) n.image = img;
+    for (const g of graphs.values()) {
+      if (g.subjectId === d.id) g.subjectImage = img;
+      for (const k of ["predecessors", "peers", "successors"]) for (const n of g[k] || []) if (n.id === d.id) n.image = img;
+    }
+    updatePics();
+  }
+  function renderCurator(d, view) {
+    const cur = view.current;
+    const tag = (c) => [c.license, c.credit].filter(Boolean).map(esc).join(" · ");
+    curator.innerHTML = `
+      <div class="ch"><div><div class="kind">Picture for</div><h3>${esc(view.entity.name)}</h3>
+        <div class="meta">${esc([view.entity.kind, view.entity.domain, view.entity.creator].filter((x) => x && x !== "other").join(" · "))}</div></div>
+        <button class="x" aria-label="Close">×</button></div>
+      ${view.context?.length ? `<p class="ctx">${view.context.map(esc).join("<br>")}</p>` : ""}
+      <div class="sec">Now showing</div>
+      ${cur ? `<div class="cur"><img src="${esc(cur.url)}" alt=""><div><div class="lic">${tag(cur)}</div>
+          <div class="src">${esc(cur.status === "auto" ? `Picked automatically${cur.identity ? ` (${cur.identity})` : ""}` : cur.status === "approved" ? "Chosen by a curator" : "From the pipeline")}</div>
+          ${cur.page ? `<a href="${esc(cur.page)}" target="_blank" rel="noopener">Source ↗</a>` : ""}
+          <div class="row"><button data-act="remove">Remove</button><button data-act="none">No good picture</button></div></div></div>`
+        : `<p class="empty">${view.settled === "none" ? "Marked as having no good picture." : "No picture yet."}${!cur && view.settled !== "none" ? ` <button class="link" data-act="none">Mark as no good picture</button>` : ""}</p>`}
+      <div class="sec">Candidates <span>${view.candidates.length}</span></div>
+      <p class="status"></p>
+      <div class="grid">${view.candidates.map((c) => `
+        <figure>
+          <a href="${esc(c.page || c.url)}" target="_blank" rel="noopener" title="Open the source"><img src="${esc(c.url)}" alt="" loading="lazy"></a>
+          <figcaption><b>${esc(c.title || c.source)}</b>${c.description ? `<span>${esc(c.description)}</span>` : ""}
+            <span class="lic${c.fair_use ? " fu" : ""}">${c.fair_use ? "Fair use · " : ""}${tag(c)}</span></figcaption>
+          <button data-use="${esc(c.id)}">Use this</button>
+        </figure>`).join("") || `<p class="empty">No candidates. Try a search below.</p>`}</div>
+      <form class="search"><input name="q" placeholder="Search with other words…" aria-label="Search for a picture"><button>Search</button></form>
+      <form class="paste"><input name="u" placeholder="Or paste a Wikimedia Commons file link" aria-label="Commons file link"><button>Use link</button></form>`;
+    curator.querySelector(".x").onclick = closeCurator;
+    const act = async (body, busy) => {
+      setCuratorStatus(busy);
+      curator.classList.add("busy");
+      try {
+        const v = await adminCall("POST", { entity_id: d.id, ...body });
+        if (curatorFor !== d) return;
+        applyToMap(d, v);
+        renderCurator(d, v);
+      } catch (err) { setCuratorStatus(err.message, true); }
+      finally { curator.classList.remove("busy"); }
+    };
+    curator.querySelectorAll("[data-use]").forEach((b) => { b.onclick = () => act({ action: "approve", candidate_id: b.dataset.use }, "Applying…"); });
+    curator.querySelectorAll("[data-act]").forEach((b) => { b.onclick = () => act({ action: b.dataset.act }, b.dataset.act === "remove" ? "Removing…" : "Saving…"); });
+    curator.querySelector(".search").onsubmit = (e) => { e.preventDefault(); const v = e.target.q.value.trim(); if (v) act({ action: "find", query: v }, "Searching free sources…"); };
+    curator.querySelector(".paste").onsubmit = (e) => { e.preventDefault(); const v = e.target.u.value.trim(); if (v) act({ action: "use_url", url: v }, "Checking the license…"); };
+  }
+  if (adminToken) q("adminbadge").hidden = false;
 
   function updateTrail() {
     const el = q("trail");
@@ -598,7 +691,6 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     picsOn = e.currentTarget.getAttribute("aria-pressed") !== "true";
     e.currentTarget.setAttribute("aria-pressed", String(picsOn));
     stage.classList.toggle("pics-on", picsOn);
-    if (picsOn) ensureThumbs();
     setMenu(false);
   };
   q("replay").onclick = () => {
@@ -615,7 +707,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     try { await navigator.clipboard.writeText(text); toast("Path copied"); } catch { toast(text); }
   };
   q("openpage").onclick = () => onOpenSubject?.(center);
-  if (matchMedia("(hover: none)").matches) q("hint").textContent = "Press and hold for the evidence · tap to travel · drag to tug";
+  if (matchMedia("(hover: none)").matches) q("hint").textContent = "Tap for the evidence · press and hold to travel · drag to tug";
 
   // Re-fit when the panel changes size (window resize, or the tab coming back into view).
   // lastW starts at the current width: the observer's first report on mount is not a resize, and

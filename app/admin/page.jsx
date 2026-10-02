@@ -118,7 +118,10 @@ export default function Admin() {
     <main style={{ maxWidth: "980px", margin: "0 auto", padding: "48px 24px 120px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "28px" }}>
         <h1 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "36px", margin: 0 }}><Wordmark /> <span style={{ color: BASE.gold }}>admin</span></h1>
-        <button onClick={() => load(token)} style={{ ...mono("11px", BASE.gold), background: "none", border: "1px solid rgba(250,204,21,0.3)", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", textTransform: "uppercase" }}>refresh</button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "baseline" }}>
+          <a href="/admin/images" style={{ ...mono("11px", BASE.gold), border: "1px solid rgba(250,204,21,0.3)", borderRadius: "6px", padding: "6px 14px", textDecoration: "none", textTransform: "uppercase" }}>map images</a>
+                  <button onClick={() => load(token)} style={{ ...mono("11px", BASE.gold), background: "none", border: "1px solid rgba(250,204,21,0.3)", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", textTransform: "uppercase" }}>refresh</button>
+        </div>
       </div>
 
       {error && <div style={{ ...mono("12px", "rgba(248,113,113,0.85)"), marginBottom: "16px" }}>{error}</div>}
