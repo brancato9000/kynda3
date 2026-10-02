@@ -145,6 +145,8 @@ const CSS = `
 .kmap .node .ring { fill: none; }
 .kmap .node .pic { opacity: 0; transition: opacity .35s; pointer-events: none; }
 .kmap .pics-on .node .pic { opacity: 1; }
+.kmap .node.center .pic { opacity: 1; }
+.kmap .node.center.has-pic .ring { stroke-width: 2px; stroke-opacity: 0.9; }
 .kmap .pics-on .node.has-pic .ring { stroke-width: 2.5px; stroke-opacity: 1; }
 .kmap .node .initials { font-family: var(--mono); font-size: 10px; fill: var(--bg); text-anchor: middle; dominant-baseline: central; pointer-events: none; transition: opacity .3s; }
 .kmap .node.center .initials { display: none; }
