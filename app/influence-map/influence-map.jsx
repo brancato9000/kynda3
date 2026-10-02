@@ -18,7 +18,7 @@ async function fetchGraph(name) {
   return res.json();
 }
 
-export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject }) {
+export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, status, waiting = true }) {
   const rootRef = useRef(null);
   const openRef = useRef(onOpenSubject);
   openRef.current = onOpenSubject;
@@ -78,6 +78,11 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
         <div className="hint" data-k="hint">Hover for the evidence (or the center for a bio) · click to travel · drag a bubble to tug it · scroll to zoom</div>
         <div className="card" data-k="card" role="dialog" aria-live="polite" />
         <div className="toast" data-k="toast" />
+        {!graph && (
+          <div className="loading" role="status">
+            {waiting && <i className="pulse" aria-hidden="true" />}{status}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -182,6 +187,10 @@ const CSS = `
 .kmap .card.touch .x { display: block; }
 
 .kmap .toast { position: absolute; left: 50%; top: 14px; transform: translate(-50%, -8px); background: var(--surface-2); border: 1px solid var(--line); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; color: var(--fg); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 6; max-width: calc(100% - 32px); text-align: center; }
+.kmap .loading { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--mono); font-size: 0.74rem; color: var(--muted); pointer-events: none; }
+.kmap .loading .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: kmapPulse 1.4s ease-in-out infinite; }
+@keyframes kmapPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kmap .loading .pulse { animation: none; } }
 .kmap .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 html:has(.kmap) { overflow-x: clip; }
