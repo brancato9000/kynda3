@@ -219,6 +219,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     updateTrail();
     updateLegend(target);
     loadBio(name);
+    ensureCenterPhoto(name);
     if (picsOn) ensureThumbs();
   }
 
@@ -292,21 +293,30 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     all.select(".pic").attr("href", (d) => picOf(d)).style("display", (d) => (picOf(d) ? null : "none"));
   }
 
+  async function fetchThumb(name, title = name) {
+    try {
+      const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}?redirect=true`);
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j.type !== "disambiguation" && j.thumbnail?.source) { thumbCache.set(name, j.thumbnail.source); if (alive) updatePics(); }
+    } catch { /* no picture; initials stay */ }
+  }
+
+  // The subject in the center always shows its photo, whatever the Pictures setting. The page's own
+  // subject is looked up by its bio's article title, so a namesake can't slip in.
+  function ensureCenterPhoto(name) {
+    if (thumbCache.has(name)) return;
+    thumbCache.set(name, null);
+    fetchThumb(name, name === subjectName && subjectBio?.articleTitle ? subjectBio.articleTitle : name);
+  }
+
   // Pictures are opt-in: fetch Wikipedia thumbnails only for what's on screen, a few at a time.
   async function ensureThumbs() {
     const names = [...live.values()].filter((n) => !(n.mix && n.mix.image) && !thumbCache.has(n.name)).map((n) => n.name);
     for (const n of names) thumbCache.set(n, null);
     let i = 0;
     const worker = async () => {
-      while (alive && i < names.length) {
-        const name = names[i++];
-        try {
-          const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name.replace(/ /g, "_"))}?redirect=true`);
-          if (!r.ok) continue;
-          const j = await r.json();
-          if (j.type !== "disambiguation" && j.thumbnail?.source) { thumbCache.set(name, j.thumbnail.source); if (alive) updatePics(); }
-        } catch { /* no picture; initials stay */ }
-      }
+      while (alive && i < names.length) await fetchThumb(names[i++]);
     };
     await Promise.all([worker(), worker(), worker(), worker()]);
   }
