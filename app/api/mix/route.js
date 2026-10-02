@@ -13,6 +13,7 @@ import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixF
 import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 import { enrichStoredMixMedia } from "../../../src/lib/pipeline/media.js";
+import { enrichMapImages } from "../../../src/lib/pipeline/map-images.js";
 
 export const maxDuration = 300;
 
@@ -192,6 +193,14 @@ export async function POST(req) {
         // bare. Same post-response window as the harvest, hard deadline
         // well inside maxDuration — whatever the clock cuts off still
         // belongs to the batch scripts. Zero model calls.
+        // Map images (V3-84): the subject's own photo first — it's the center of the map —
+        // then the mix-card media, then the rest of the map in whatever time is left.
+        try {
+          await enrichMapImages(subject.name, { deadline: t0 + 200_000, onlySubject: true });
+        } catch (err) {
+          console.error("map-image (subject) failed:", err.message);
+        }
+
         try {
           const med = await enrichStoredMixMedia(subject, { deadline: t0 + 260_000 });
           if (med?.images || med?.previews) {
@@ -199,6 +208,12 @@ export async function POST(req) {
           }
         } catch (err) {
           console.error("media-on-generation failed:", err.message);
+        }
+        try {
+          const mi = await enrichMapImages(subject.name, { deadline: t0 + 270_000 });
+          if (mi.applied || mi.queued) console.log(`map-images-on-generation: ${subject.name} +${mi.applied} pictures, ${mi.queued} queued${mi.outOfTime ? " (deadline hit)" : ""}`);
+        } catch (err) {
+          console.error("map-images-on-generation failed:", err.message);
         }
       } catch (err) {
         console.error("mix error:", err);

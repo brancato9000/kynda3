@@ -318,3 +318,59 @@ export async function candidateFromCommonsUrl(url) {
   if (!ALLOWLIST.test(info.license)) return { error: `License "${info.license}" isn't on the allowlist.` };
   return { candidate: asCandidate("commons", info, { title: file, description: "Pasted by curator", identity: "curator" }) };
 }
+
+/**
+ * Entities that still need a picture, busiest first. `subject` limits to that subject and
+ * everything on its map (the subject itself first); `shard` = [i, n] splits the corpus for
+ * parallel backfills; `recheck` includes entities already looked at (never curator-settled ones).
+ */
+export async function entitiesNeedingImages({ subject = null, limit = 200, recheck = false, shard = null } = {}) {
+  const params = [];
+  let scope = `WITH ents AS (SELECT DISTINCT unnest(ARRAY[subject_id, object_id]) AS id FROM claims)`;
+  if (subject) {
+    params.push(subject);
+    scope = `WITH s AS (SELECT id FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1),
+      ents AS (SELECT id FROM s UNION
+               SELECT CASE WHEN c.subject_id = s.id THEN c.object_id ELSE c.subject_id END FROM claims c, s
+               WHERE c.subject_id = s.id OR c.object_id = s.id)`;
+  }
+  let shardClause = "";
+  if (shard) { params.push(shard[1], shard[0]); shardClause = `AND abs(hashtext(e.id::text)) % $${params.length - 1} = $${params.length}`; }
+  params.push(limit);
+  return (await q(
+    `${scope}
+     SELECT e.id, e.kind, e.domain, e.name, e.wikidata_qid, e.metadata,
+            (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) AS degree
+     FROM entities e JOIN ents ON ents.id = e.id
+     WHERE e.metadata->>'image_url' IS NULL
+       AND COALESCE(e.metadata->>'image_status', '') NOT IN ('none', 'removed', 'approved')
+       ${recheck ? "" : "AND e.metadata->>'image_checked_at' IS NULL"}
+       ${shardClause}
+     ORDER BY ${subject ? "(lower(e.name) = lower($1)) DESC, " : ""}degree DESC, e.name
+     LIMIT $${params.length}`, params)).rows;
+}
+
+/** Look at one entity: apply a settled picture, else queue candidates; either way mark it checked. */
+export async function processEntityImage(entity) {
+  const r = await findEntityImage(entity);
+  if (r.auto) { await applyEntityImage(entity.id, r.auto, "auto"); return { outcome: "applied", pick: r.auto }; }
+  if (r.candidates.length) await saveCandidates(entity.id, r.candidates);
+  await q(`UPDATE entities SET metadata = metadata || $2::jsonb WHERE id = $1`, [entity.id, JSON.stringify({ image_checked_at: new Date().toISOString() })]);
+  return { outcome: r.candidates.length ? "queued" : "nothing", count: r.candidates.length };
+}
+
+/**
+ * Map images on generation (2026-10-02): a fresh subject's map gets its pictures in the
+ * post-response window, the subject's own photo first. Stops cleanly at the deadline —
+ * whatever it doesn't reach, the backfill (scripts/map-images.mjs) picks up later.
+ */
+export async function enrichMapImages(subjectName, { deadline, limit = 80, onlySubject = false } = {}) {
+  const out = { applied: 0, queued: 0, nothing: 0, outOfTime: false };
+  const rows = await entitiesNeedingImages({ subject: subjectName, limit: onlySubject ? 1 : limit });
+  for (const e of rows) {
+    if (Date.now() > deadline) { out.outOfTime = true; break; }
+    if (onlySubject && e.name.toLowerCase() !== subjectName.toLowerCase()) break;
+    try { out[(await processEntityImage(e)).outcome] += 1; } catch { /* next */ }
+  }
+  return out;
+}
