@@ -6,7 +6,7 @@ import Wordmark from "../src/design/wordmark.jsx";
 import { experienceLinks, STREAM_SERVICES } from "../src/lib/experience.js";
 import { parseEmbed, InlineMedia, CardImage, PreviewAudio, MediaFlag, SuggestMedia, TimestampReport } from "../src/design/inline-media.jsx";
 import ArchiveLedger from "../src/design/archive-ledger.jsx";
-import GraphView from "./graph-view.jsx";
+import InfluenceMap from "./influence-map/influence-map.jsx";
 import { slugify } from "../src/lib/slug.js";
 
 const SLOT_BY_ID = Object.fromEntries(MIX_SLOT_TYPES.map((s) => [s.id, s]));
@@ -1009,6 +1009,77 @@ const DEMO = {
   ],
 };
 
+// ─── Subject bar (2026-10-02) ─────────────────────────────────────────
+// On a subject page the hero header and search box collapse into one slim
+// bar pinned to the top — wordmark · subject, the tabs, search and nav — so
+// the influence map gets ~95% of the screen. Home keeps the full header.
+function SubjectBar({ subject, tabs, tab, onTab, composing, query, setQuery, onSearch, searching }) {
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => { if (open) inputRef.current?.select(); }, [open]);
+  return (
+    <div className="kbar">
+      <style>{`
+        .kbar { position: sticky; top: 0; z-index: 20; width: 100vw; margin-left: calc(50% - 50vw); height: 48px; box-sizing: border-box;
+          display: flex; align-items: center; gap: 18px; padding: 0 max(16px, calc(50vw - 600px));
+          background: rgba(15,16,22,0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .kbar .who { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 0 1 auto; }
+        .kbar .mark { font-family: ${FONTS.display}; font-size: 22px; color: #e2e8f0; text-decoration: none; line-height: 1; flex: none; }
+        .kbar .name { font-family: ${FONTS.display}; font-size: 19px; color: ${BASE.gold}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .kbar .dot { color: rgba(148,163,184,0.4); flex: none; }
+        .kbar .tabs { display: flex; height: 100%; flex: none; }
+        .kbar .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; height: 100%; padding: 0 12px;
+          font-family: ${FONTS.mono}; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(148,163,184,0.6); display: inline-flex; align-items: center; gap: 6px; }
+        .kbar .tabs button[aria-selected="true"] { color: ${BASE.gold}; border-bottom-color: ${BASE.gold}; }
+        .kbar .tabs button:hover { color: #e2e8f0; }
+        .kbar .nav { margin-left: auto; display: flex; align-items: center; gap: 14px; flex: none; }
+        .kbar .nav a { font-family: ${FONTS.mono}; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(148,163,184,0.7); text-decoration: none; }
+        .kbar .nav a:hover { color: #e2e8f0; }
+        .kbar .icon { width: 32px; height: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); background: none; color: rgba(148,163,184,0.8); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .kbar .icon:hover { color: #e2e8f0; border-color: rgba(148,163,184,0.4); }
+        .kbar .search { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding: 0 max(16px, calc(50vw - 600px)); background: #0f1016; }
+        .kbar .search input { flex: 1; min-width: 0; height: 34px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 0 12px; color: #e2e8f0; font-family: ${FONTS.body}; font-size: 15px; outline: none; }
+        .kbar .search input:focus { border-color: rgba(250,204,21,0.45); }
+        .kbar .go { height: 34px; padding: 0 16px; border-radius: 8px; background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.35); color: ${BASE.gold}; font-family: ${FONTS.mono}; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; }
+        .kbar button:focus-visible, .kbar a:focus-visible, .kbar input:focus-visible { outline: 2px solid ${BASE.gold}; outline-offset: 2px; }
+        @media (max-width: 640px) {
+          .kbar { gap: 8px; }
+          .kbar .mark { font-size: 19px; }
+          .kbar .name { font-size: 16px; }
+          .kbar .tabs button { padding: 0 8px; font-size: 10.5px; }
+          .kbar .nav a { display: none; }
+        }
+      `}</style>
+      <div className="who">
+        <a className="mark" href="/" title="Back to the start"><Wordmark /></a>
+        <span className="dot" aria-hidden="true">·</span>
+        <span className="name" title={subject.name}>{subject.name}</span>
+      </div>
+      <div className="tabs" role="tablist">
+        {tabs.map(([id, label]) => (
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => onTab(id)}>
+            {label}{id === "mix" && composing && <Pulse />}
+          </button>
+        ))}
+      </div>
+      <nav className="nav">
+        <a href="/">Browse</a>
+        <a href="/path">Paths</a>
+        <button className="icon" aria-label="Search" title="Map someone else" onClick={() => setOpen(true)}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5L14 14" /></svg>
+        </button>
+      </nav>
+      {open && (
+        <form className="search" onSubmit={(e) => { setOpen(false); onSearch(e); }} onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}>
+          <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Map any creator or creation..." aria-label="Search" />
+          <button type="submit" className="go" disabled={searching}>{searching ? <Spinner /> : "Map"}</button>
+          <button type="button" className="icon" aria-label="Close search" onClick={() => setOpen(false)}>×</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 // ─── App (V3-28: reusable — home renders it bare; /s/[slug] subject
 // pages render it with an initialSubject that boots the mix) ──────────
 export default function KyndaApp({ initialSubject = null, indexedSubjects = [], initialCut = null }) {
@@ -1029,16 +1100,21 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   // minute or three after the mix streams; the page quietly refetches and
   // lets covers and players develop into already-rendered cards.
   const [enriching, setEnriching] = useState(false);
-  const [tab, setTab] = useState("mix");
+  // Map first, mix second (2026-10-01): the influence map is the front door.
+  const [tab, setTab] = useState("map");
   const [graph, setGraph] = useState({ status: "idle", data: null, error: null });
   const [covers, setCovers] = useState({ status: "idle", data: null, error: null });
   const runRef = useRef(0);
 
-  // Graph fetch is free — a pure claims-store read. Loaded eagerly once a
-  // mix completes (2026-08-11: the archive ledger under the mix needs it),
-  // still lazy-fallback on tab open.
+  // Graph fetch is free — a pure claims-store read. Loaded as soon as a
+  // subject is chosen (the map is the first tab) and again when a mix
+  // completes, for brand-new subjects whose graph only exists afterwards.
+  // A ref dedupes by subject so callbacks with stale closures can't refetch.
+  const graphReq = useRef(null);
   const loadGraph = useCallback(async (subj) => {
-    if (graph.status === "loading" || graph.status === "ready") return;
+    const key = subj?.name;
+    if (!key || graphReq.current === key) return;
+    graphReq.current = key;
     setGraph({ status: "loading", data: null, error: null });
     try {
       const res = await fetch("/api/graph", {
@@ -1047,13 +1123,15 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
         body: JSON.stringify({ subject: subj }),
       });
       const data = await res.json();
+      if (graphReq.current !== key) return;
       if (!res.ok) throw new Error(data.error || "graph failed");
       setGraph({ status: "ready", data, error: null });
     } catch (err) {
+      if (graphReq.current !== key) return;
+      graphReq.current = null; // let the mix-complete retry through
       setGraph({ status: "error", data: null, error: err.message });
     }
-  }, [graph.status]);
-  const openGraphTab = useCallback((subj) => { setTab("graph"); loadGraph(subj); }, [loadGraph]);
+  }, []);
 
   // Covers tab (V3-42): lazy and free, same pattern as the graph.
   const openCoversTab = useCallback(async (subj) => {
@@ -1193,9 +1271,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     setTier("certain");
     setPhase("mixing");
     setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false); setIntroDone(false);
-    setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
+    setTab("map"); graphReq.current = null; setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
+    loadGraph(subj);
     fireMix(subj, run);
-  }, [fireMix]);
+  }, [fireMix, loadGraph]);
 
   async function onSearch(e) {
     e.preventDefault();
@@ -1215,7 +1294,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     setPhase("searching");
     setError(null); setSubject(null); setAlternatives([]); setTier(null);
     setIntro(null); setSlots([]); setDone(false); setBioDone(false); setIntroDone(false);
-    setTab("mix"); setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
+    setTab("map"); graphReq.current = null; setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     try {
       const res = await fetch("/api/disambiguate", {
         method: "POST",
@@ -1251,9 +1330,13 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   // candidates), so exclude non-performer kinds rather than require person/group.
   const isMusician = subject?.domain === "music" &&
     !["work", "release", "recording", "concept", "place", "book", "film", "tv_show"].includes(subject?.kind);
+  const subjectView = phase === "mixing" && !!subject;
+  // MAP | MIX | COVERS (map and covers are token-free reads)
+  const subjectTabs = [["map", "Map"], ["mix", "Mix"], ...(isMusician ? [["covers", "Covers"]] : [])];
+  const openTab = (id) => (id === "map" ? (setTab("map"), loadGraph(subject)) : id === "covers" ? openCoversTab(subject) : setTab("mix"));
 
   return (
-    <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
+    <main style={{ maxWidth: "880px", margin: "0 auto", padding: subjectView ? "0 24px 120px" : "56px 24px 120px" }}>
       <style>{`
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
         @keyframes kyndaSpin { to { transform: rotate(360deg) } }
@@ -1261,6 +1344,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
         input::placeholder, textarea::placeholder { color: rgba(148,163,184,0.4) }
       `}</style>
 
+      {subjectView ? (
+        <SubjectBar subject={subject} tabs={subjectTabs} tab={tab} onTab={openTab} composing={!done}
+          query={query} setQuery={setQuery} onSearch={onSearch} searching={phase === "searching"} />
+      ) : (<>
       <header style={{ marginBottom: "36px" }}>
         <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}>
           {/* Full navigation (not client state reset) so the logo works
@@ -1295,6 +1382,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
           {phase === "searching" || (phase === "mixing" && !done) ? <Spinner /> : "Map"}
         </button>
       </form>
+      </>)}
 
       {error && (
         <div style={{ fontFamily: FONTS.mono, fontSize: "13px", color: "rgba(248,113,113,0.85)", marginBottom: "24px" }}>{error}</div>
@@ -1378,7 +1466,24 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
 
       {phase === "mixing" && subject && (
         <>
-          <SubjectCard subject={subject} onBioDone={() => setBioDone(true)} />
+          {tab === "map" && graph.status !== "ready" && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px", minHeight: "60px", marginTop: "16px" }}>
+              {graph.status === "error" && done
+                ? <span style={{ color: "rgba(148,163,184,0.7)" }}>{graph.error}</span>
+                : <><Pulse /> {graph.status === "error" ? "the map draws itself once the mix is composed…" : "drawing the map…"}</>}
+            </div>
+          )}
+          {/* Kept mounted on other tabs so the map keeps its trail and position. */}
+          {graph.status === "ready" && (
+            <div style={{ display: tab === "map" ? "block" : "none", marginBottom: "36px" }}>
+              <InfluenceMap subjectName={subject.name} subjectBio={subject.bio} graph={graph.data} onOpenSubject={navigateTo} />
+            </div>
+          )}
+
+          {/* The bio sits under the map: the map is the first thing a subject page shows. */}
+          <div style={{ marginTop: tab === "map" ? 0 : "28px" }}>
+            <SubjectCard subject={subject} onBioDone={() => setBioDone(true)} />
+          </div>
           {tier === "likely" && alternatives.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
               <span style={{ fontFamily: FONTS.mono, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(148,163,184,0.6)" }}>
@@ -1389,23 +1494,6 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
               ))}
             </div>
           )}
-
-          {/* MIX | COVERS | GRAPH tabs (covers and graph are lazy and token-free) */}
-          <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            {[["mix", "Mix"], ...(isMusician ? [["covers", "Covers"]] : []), ["graph", "Graph"]].map(([id, label]) => (
-              <button key={id}
-                onClick={() => (id === "graph" ? openGraphTab(subject) : id === "covers" ? openCoversTab(subject) : setTab("mix"))}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  fontFamily: FONTS.mono, fontSize: "12px", letterSpacing: "0.1em", textTransform: "uppercase",
-                  padding: "10px 18px", color: tab === id ? BASE.gold : "rgba(148,163,184,0.6)",
-                  borderBottom: tab === id ? `2px solid ${BASE.gold}` : "2px solid transparent",
-                  marginBottom: "-1px",
-                }}>
-                {label}
-              </button>
-            ))}
-          </div>
 
           {tab === "covers" && (
             <div>
@@ -1421,21 +1509,6 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
             </div>
           )}
 
-          {tab === "graph" && (
-            <div>
-              {graph.status === "loading" && (
-                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Pulse /> reading the claims graph…
-                </div>
-              )}
-              {graph.status === "error" && (
-                <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.7)" }}>{graph.error}</div>
-              )}
-              {graph.status === "ready" && (
-                <GraphView data={graph.data} subjectName={subject.name} onNavigate={navigateTo} />
-              )}
-            </div>
-          )}
 
           {tab === "mix" && intro && (
             <div style={{ marginBottom: "28px" }}>
