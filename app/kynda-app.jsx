@@ -1466,17 +1466,16 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
 
       {phase === "mixing" && subject && (
         <>
-          {tab === "map" && graph.status !== "ready" && (
-            <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px", minHeight: "60px", marginTop: "16px" }}>
-              {graph.status === "error" && done
-                ? <span style={{ color: "rgba(148,163,184,0.7)" }}>{graph.error}</span>
-                : <><Pulse /> {graph.status === "error" ? "the map draws itself once the mix is composed…" : "drawing the map…"}</>}
-            </div>
-          )}
-          {/* Kept mounted on other tabs so the map keeps its trail and position. */}
-          {graph.status === "ready" && (
+          {/* The map's panel is there from the first frame — a placeholder message until the graph
+              arrives — so the bio never shows in its place and then gets shoved down. Kept mounted on
+              other tabs once loaded so the map keeps its trail and position. */}
+          {(tab === "map" || graph.status === "ready") && (
             <div style={{ display: tab === "map" ? "block" : "none", marginBottom: "36px" }}>
-              <InfluenceMap subjectName={subject.name} subjectBio={subject.bio} graph={graph.data} onOpenSubject={navigateTo} />
+              <InfluenceMap subjectName={subject.name} subjectBio={subject.bio}
+                graph={graph.status === "ready" ? graph.data : null} onOpenSubject={navigateTo}
+                status={graph.status === "error" && done ? graph.error
+                  : graph.status === "error" ? "The map draws itself once the mix is composed…" : "Drawing the map…"}
+                waiting={!(graph.status === "error" && done)} />
             </div>
           )}
 
