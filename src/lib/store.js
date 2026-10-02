@@ -942,6 +942,16 @@ export async function actOnContribution(id, action) {
 export const PREDECESSOR_TYPES = ["influenced_by", "cited_as_influence", "cross_medium_influence", "studied_under"];
 export const PEER_TYPES = ["same_scene", "collaborated_with", "produced_by", "member_of", "covers", "covered_by", "used_gear", "recorded_at", "founded", "taught_at", "created_by"];
 
+// The rights-cleared picture an entity carries (map images, 2026-10-02) — only
+// what the backfill or a curator applied; the map never fetches its own.
+function mapImage(meta) {
+  if (!meta?.image_url) return null;
+  return {
+    url: meta.image_url, page: meta.image_page || null, license: meta.image_license || null,
+    credit: meta.image_credit || null, status: meta.image_status || null,
+  };
+}
+
 export async function getGraphForSubject(subject) {
   if (!dbConfigured()) return null;
 
@@ -949,19 +959,20 @@ export async function getGraphForSubject(subject) {
   let entity = null;
   if (subject.mbid || subject.wikidata_qid) {
     const r = await q(
-      "SELECT id, name, domain FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
+      "SELECT id, name, domain, metadata FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
       [subject.mbid || null, subject.wikidata_qid || null]
     );
     entity = r.rows[0] || null;
   }
   if (!entity) {
-    const r = await q("SELECT id, name, domain FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [subject.name]);
+    const r = await q("SELECT id, name, domain, metadata FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [subject.name]);
     entity = r.rows[0] || null;
   }
   if (!entity) return null;
 
   const r = await q(
     `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS outbound,
+            e.id AS entity_id, e.metadata AS meta,
             e.name, e.kind, e.domain, e.year_start, e.metadata->>'creator' AS creator,
             COALESCE((SELECT json_agg(json_build_object(
                 'quote', p.quote, 'url', p.source_url, 'publication', p.publication,
@@ -1003,10 +1014,13 @@ export async function getGraphForSubject(subject) {
     const existing = byName.get(key);
     if (existing) {
       existing.evidence.push(...evidence);
+      existing.image = existing.image || mapImage(row.meta);
       existing.creator = existing.creator || row.creator || null;
       existing.year = existing.year || (row.year_start ? String(row.year_start) : null);
     } else {
       byName.set(key, {
+        id: row.entity_id,
+        image: mapImage(row.meta),
         name: row.name,
         creator: row.creator || null,
         kind: row.kind,
@@ -1034,7 +1048,7 @@ export async function getGraphForSubject(subject) {
   }
 
   if (!groups.predecessors.length && !groups.peers.length && !groups.successors.length) return null;
-  return { subject: entity.name, domain: (entity.domain || "").toUpperCase(), ...groups };
+  return { subject: entity.name, subjectId: entity.id, subjectImage: mapImage(entity.metadata), domain: (entity.domain || "").toUpperCase(), ...groups };
 }
 
 /** Durable L2 mix cache: most recent stored mix for this subject (6-month TTL). */

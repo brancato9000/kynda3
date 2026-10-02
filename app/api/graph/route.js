@@ -25,6 +25,7 @@ export async function POST(req) {
       return {
         title: it.title, creator: it.creator || null, year: it.year ? Number(it.year) || null : null,
         slotType: slot.slotType || it.slotType, reason: it.reason || null, imageUrl: it.imageUrl || null,
+        imageCredit: it.imageCredit || null, imageLicense: it.imageLicense || null, imagePage: it.imagePage || null,
       };
     }));
     return Response.json(graph);

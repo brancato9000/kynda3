@@ -40,6 +40,7 @@ Last full review: 2026-09-16.
 | 20 | Media long tail | parked | ~128 music cards with no preview anywhere; ~1,900 art cards with no confident image; Chappelle's Show and SNL have no lead image on Wikipedia. Correctly empty. |
 | 21 | Ledger v2 for dense pages | open | The 572-edge Beyoncé ledger is a wall. |
 | 22 | Share surface for `/s/*` pages | open | Unfurls are solved (V3-81); a public flag or share token per page is the remaining design. |
+| 25 | Influence map: phone interaction model | done | Tony, 2026-10-02 — built the same day. Today a tap travels, so on a phone you can't look at a relationship without the map redrawing around it. Flip it: **tap** opens the relationship card (evidence, or the bio on the center); **press and hold** re-centers the map on that subject. Desktop unchanged (hover shows, click travels). |
 
 ## Books
 

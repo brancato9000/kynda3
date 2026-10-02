@@ -25,7 +25,11 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
 
   useEffect(() => {
     if (!rootRef.current || !graph) return;
+    // Admin mode: signed in at /admin in this browser → curate pictures right on the map.
+    let adminToken = null;
+    try { adminToken = localStorage.getItem("kynda_admin_token"); } catch { /* storage blocked */ }
     const map = createInfluenceMap(rootRef.current, {
+      adminToken,
       subjectName,
       subjectBio,
       initialGraph: graph,
@@ -78,6 +82,8 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
         <div className="hint" data-k="hint">Hover for the evidence (or the center for a bio) · click to travel · drag a bubble to tug it · scroll to zoom</div>
         <div className="card" data-k="card" role="dialog" aria-live="polite" />
         <div className="toast" data-k="toast" />
+        <aside className="curator" data-k="curator" aria-label="Picture curation" hidden />
+        <div className="adminbadge" data-k="adminbadge" hidden>Curator</div>
         {!graph && (
           <div className="loading" role="status">
             {waiting && <i className="pulse" aria-hidden="true" />}{status}
@@ -160,6 +166,7 @@ const CSS = `
 .kmap .node.center .label { font-family: var(--display); font-size: 19px; fill: var(--fg); }
 .kmap .node.mix .label { font-size: 12.5px; font-weight: 500; fill: var(--fg); }
 .kmap .node:hover .disc, .kmap .node.hot .disc { fill-opacity: 1; }
+.kmap .node.pressing .ring { stroke: var(--gold); stroke-width: 3px; stroke-opacity: 1; transition: stroke-width .3s; }
 .kmap .node:focus { outline: none; }
 .kmap .node:focus-visible .ring { stroke: var(--gold); stroke-width: 2.5; }
 .kmap .edge { fill: none; }
@@ -191,6 +198,53 @@ const CSS = `
 .kmap .loading .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: kmapPulse 1.4s ease-in-out infinite; }
 @keyframes kmapPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .kmap .loading .pulse { animation: none; } }
+.kmap .card .credit { margin-top: 10px; font-family: var(--mono); font-size: 0.6rem; color: var(--faint); line-height: 1.5; }
+.kmap .card .credit a { color: var(--faint); text-decoration: none; }
+.kmap .card .credit a:hover { color: var(--muted); }
+.kmap .card .fix { background: none; border: 1px solid rgba(250,204,21,0.35); color: var(--gold); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
+.kmap .adminbadge { position: absolute; top: 18px; right: calc(max(16px, calc(50vw - 600px)) + 44px); z-index: 4; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(250,204,21,0.35); border-radius: 10px; padding: 2px 8px; pointer-events: none; }
+.kmap .adminbadge[hidden] { display: none; }
+
+/* Curator panel: slides over the right edge of the map. */
+.kmap .curator { position: absolute; top: 0; right: 0; bottom: 0; width: min(440px, 100%); z-index: 7; box-sizing: border-box; overflow-y: auto; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -18px 0 50px rgba(0,0,0,.45); padding: 18px 20px 28px; }
+.kmap .curator[hidden] { display: none; }
+.kmap .curator.busy { cursor: progress; }
+.kmap .curator.busy button { pointer-events: none; opacity: .6; }
+.kmap .curator .ch { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.kmap .curator .kind { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+.kmap .curator h3 { margin: 4px 0 2px; font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; }
+.kmap .curator .meta { font-family: var(--mono); font-size: 0.66rem; color: var(--muted); }
+.kmap .curator .x { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 20px; cursor: pointer; flex: none; }
+.kmap .curator .ctx { margin: 12px 0 0; font-size: 0.8rem; line-height: 1.5; color: rgba(226,232,240,0.7); }
+.kmap .curator .sec { margin: 20px 0 8px; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; }
+.kmap .curator .sec span { color: var(--faint); }
+.kmap .curator .cur { display: flex; gap: 14px; align-items: flex-start; }
+.kmap .curator .cur img { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; border: 2px solid var(--line); flex: none; background: var(--surface-2); }
+.kmap .curator .lic { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); line-height: 1.5; }
+.kmap .curator .lic.fu { color: #fbbf24; }
+.kmap .curator .src { font-size: 0.76rem; color: rgba(226,232,240,0.75); margin-top: 4px; }
+.kmap .curator a { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
+.kmap .curator .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.kmap .curator button { font-family: var(--mono); font-size: 0.66rem; }
+.kmap .curator .row button, .kmap .curator figure button, .kmap .curator form button { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; padding: 5px 11px; cursor: pointer; }
+.kmap .curator .row button:hover, .kmap .curator form button:hover { border-color: rgba(148,163,184,0.45); }
+.kmap .curator figure button { border-color: rgba(250,204,21,0.4); color: var(--gold); margin-top: auto; }
+.kmap .curator figure button:hover { background: rgba(250,204,21,0.08); }
+.kmap .curator .link { background: none; border: 0; color: var(--gold); text-decoration: underline; cursor: pointer; padding: 0; }
+.kmap .curator .empty { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.kmap .curator .status { margin: 0 0 8px; min-height: 1em; font-family: var(--mono); font-size: 0.66rem; color: var(--muted); }
+.kmap .curator .status:empty { display: none; }
+.kmap .curator .status.bad { color: #f87171; }
+.kmap .curator .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.kmap .curator figure { margin: 0; display: flex; flex-direction: column; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-width: 0; }
+.kmap .curator figure img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; background: var(--bg); }
+.kmap .curator figcaption { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
+.kmap .curator figcaption b { font-weight: 500; }
+.kmap .curator figcaption span { color: var(--muted); }
+.kmap .curator form { display: flex; gap: 8px; margin-top: 14px; }
+.kmap .curator input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; color: var(--fg); font-family: var(--body); font-size: 0.8rem; outline: none; }
+.kmap .curator input:focus { border-color: rgba(250,204,21,0.45); }
+.kmap .curator button:focus-visible, .kmap .curator a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .kmap .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 html:has(.kmap) { overflow-x: clip; }
