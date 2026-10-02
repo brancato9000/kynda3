@@ -1,0 +1,704 @@
+<title>Kynda Influence Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: one full-screen map; a slim top bar holds the trail and controls; quotes float over the map on hover or hold. */
+/* Kynda's own tokens (src/design/tokens.js). The product is dark-only, so this page commits to that one look. */
+:root {
+  --bg: #0f1016;
+  --surface: #161821;
+  --surface-2: #1c1f2b;
+  --line: rgba(148,163,184,0.16);
+  --fg: #e2e8f0;
+  --muted: rgba(148,163,184,0.7);
+  --faint: rgba(148,163,184,0.42);
+  --gold: #facc15;
+  --pred: #a8c8d8;
+  --peer: #e04040;
+  --succ: #8844cc;
+  --succ-text: #b48ae6;
+  --display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); overflow: hidden; }
+.app { height: 100%; display: flex; flex-direction: column; }
+
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 14px 20px 12px; border-bottom: 1px solid var(--line); background: var(--bg); position: relative; z-index: 3; }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.55rem; line-height: 1; white-space: nowrap; }
+.brand .tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+
+.trail { flex: 1 1 320px; min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.72rem; }
+.trail::-webkit-scrollbar { display: none; }
+.trail button { flex: none; background: none; border: 0; padding: 4px 6px; border-radius: 4px; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+.trail button:hover { color: var(--fg); background: var(--surface-2); }
+.trail button[aria-current="true"] { color: var(--gold); }
+.trail .sep { color: var(--faint); flex: none; }
+
+.controls { display: flex; align-items: center; gap: 8px; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.ctl:hover { color: var(--fg); border-color: rgba(148,163,184,0.35); }
+.ctl[aria-pressed="true"] { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+.ctl:focus-visible, .trail button:focus-visible, .card a:focus-visible, .card button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ctl svg { width: 13px; height: 13px; }
+
+.stage { position: relative; flex: 1; min-height: 0; }
+#web { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 52%, rgba(0,0,0,.5) 0%, #000 85%);
+          mask-image: radial-gradient(ellipse 60% 55% at 50% 52%, rgba(0,0,0,.5) 0%, #000 85%); }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#map:active { cursor: grabbing; }
+
+.legend { position: absolute; left: 20px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); pointer-events: none; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.keybtn { display: none; position: absolute; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 2; }
+.legend .mixkey { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; }
+.legend .mixkey:empty { display: none; }
+.legend .ringdot { width: 9px; height: 9px; background: none; border: 2px solid; box-sizing: border-box; }
+.legend .mixkey b { font-weight: 500; color: var(--fg); }
+.hint { position: absolute; right: 20px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); font-family: var(--mono); font-size: 0.64rem; color: var(--faint); text-align: right; pointer-events: none; }
+
+.subject-tag { position: absolute; left: 20px; top: 16px; max-width: min(420px, calc(100% - 40px)); pointer-events: none; }
+.subject-tag .eyebrow { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.subject-tag .count { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* Nodes */
+.node { cursor: pointer; }
+.node:active { cursor: grabbing; }
+.node.dead { cursor: default; }
+.node .disc { transition: fill-opacity .25s; }
+.node .ring { fill: none; }
+.node .pic { opacity: 0; transition: opacity .35s; pointer-events: none; }
+.pics-on .node .pic { opacity: 1; }
+.pics-on .node.has-pic .ring { stroke-width: 2.5px; stroke-opacity: 1; }
+.node .initials { font-family: var(--mono); font-size: 10px; fill: var(--bg); text-anchor: middle; dominant-baseline: central; pointer-events: none; transition: opacity .3s; }
+.pics-on .node.has-pic .initials { opacity: 0; }
+.node .label { font-family: var(--body); font-size: 11px; fill: rgba(226,232,240,0.86); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.node .sub { font-family: var(--mono); font-size: 9px; fill: var(--faint); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; pointer-events: none; }
+.node.center .label { font-family: var(--display); font-size: 19px; fill: var(--fg); }
+.node.center { cursor: grab; }
+.node.mix .label { font-size: 12.5px; font-weight: 600; fill: var(--fg); }
+.node:hover .disc, .node.hot .disc { fill-opacity: 1; }
+.node:focus { outline: none; }
+.node:focus-visible .ring { stroke: var(--gold); stroke-width: 2.5; }
+.edge { fill: none; }
+.edge-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: help; }
+.dim .node:not(.hot):not(.center) { opacity: .35; }
+.dim .edge:not(.hot) { opacity: .25; }
+
+/* Quote card */
+.card { box-sizing: border-box; max-height: calc(100% - 32px); overflow-y: auto; position: absolute; z-index: 5; width: min(360px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 16px 18px 14px; opacity: 0; transform: translateY(4px); transition: opacity .16s, transform .16s; pointer-events: none; }
+.card.open { opacity: 1; transform: none; pointer-events: auto; }
+.card .kind { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.card h2 { margin: 6px 0 2px; font-family: var(--display); font-weight: 400; font-size: 1.35rem; line-height: 1.15; text-wrap: balance; }
+.card .meta { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+.card .summary { margin: 10px 0 0; font-size: 0.84rem; line-height: 1.5; color: rgba(226,232,240,0.82); }
+.card blockquote { margin: 12px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); font-family: var(--display); font-style: italic; font-size: 1.02rem; line-height: 1.45; color: var(--fg); }
+.card cite { display: block; margin-top: 6px; font-family: var(--mono); font-style: normal; font-size: 0.64rem; color: var(--faint); }
+.card cite a { color: var(--muted); }
+.card .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 0.64rem; color: var(--faint); }
+.card .go { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; }
+.card .go:hover { border-color: var(--gold); color: var(--gold); }
+.card .x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; display: none; }
+.card.touch .x { display: block; }
+
+.toast { position: absolute; left: 50%; top: 18px; transform: translate(-50%, -8px); background: var(--surface-2); border: 1px solid var(--line); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; color: var(--fg); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 6; max-width: calc(100% - 32px); text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 1240px) { .hint { display: none; } }
+@media (max-width: 640px) {
+  .bar { padding: 10px 16px; gap: 8px 12px; }
+  .brand .tag { display: none; }
+  .brand h1 { font-size: 1.3rem; }
+  .bar { flex-wrap: wrap; row-gap: 4px; }
+  .trail { order: 3; flex: 1 1 100%; margin-left: -6px; }
+  .controls { order: 2; margin-left: auto; gap: 6px; }
+  .ctl { padding: 0; width: 32px; justify-content: center; }
+  .ctl .lbl { display: none; }
+  .subject-tag .eyebrow { display: none; }
+  .keybtn { display: inline-flex; }
+  .legend { display: none; flex-direction: column; gap: 8px; font-size: 0.62rem; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; z-index: 2; pointer-events: auto; }
+  .legend.open { display: flex; }
+  .legend .mixkey { flex-direction: column; gap: 8px; }
+  .hint { display: none; }
+  .legend { left: 16px; }
+  .subject-tag { left: 16px; top: 10px; }
+  .card { left: 16px !important; right: 16px; top: auto !important; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: auto; }
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><h1>Kynda</h1><span class="tag">Influence map · prototype</span></div>
+    <nav class="trail" id="trail" aria-label="Your path"></nav>
+    <div class="controls">
+      <button class="ctl" id="pics" aria-pressed="false" title="Show a picture inside each circle">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.3"/><path d="M3 12l3.5-3.5 2.5 2.5 2-2 2.5 2.5"/></svg><span class="lbl">Pictures</span></button>
+      <button class="ctl" id="replay" title="Build this map again">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a5 5 0 1 0 1.5-3.5"/><path d="M3 2.5V5h2.5"/></svg><span class="lbl">Replay</span></button>
+      <button class="ctl" id="copy" title="Copy your path as text" aria-label="Copy path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg><span class="lbl">Copy path</span></button>
+    </div>
+  </header>
+  <div class="stage" id="stage">
+    <canvas id="web" aria-hidden="true"></canvas>
+    <svg id="map" role="img" aria-label="Influence map"></svg>
+    <div class="subject-tag"><div class="eyebrow">Mapping</div><div class="count" id="count"></div></div>
+    <button class="ctl keybtn" id="keybtn" aria-expanded="false" aria-controls="legend">Key</button>
+    <div class="legend" id="legend">
+      <span><i style="background:var(--pred)"></i>Influences</span>
+      <span><i style="background:var(--peer)"></i>Peers &amp; partners</span>
+      <span><i style="background:var(--succ)"></i>Successors</span>
+      <span class="mixkey" id="mixkey"></span>
+      <span><i style="background:none;border:1px dashed var(--faint)"></i>Not mapped yet</span>
+    </div>
+    <div class="hint" id="hint">Hover for the evidence · click to travel · drag a bubble to tug it · scroll to zoom</div>
+    <div class="card" id="card" role="dialog" aria-live="polite"></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const GRAPHS = /*__DATA__*/;
+const THUMBS = /*__THUMBS__*/;
+const MIXES = /*__MIXES__*/;
+const MIX_THUMBS = /*__MIX_THUMBS__*/;
+const ROOT = "Kurt Vonnegut";
+
+const COLORS = { predecessor: "#a8c8d8", peer: "#e04040", successor: "#8844cc", canon: "#d4a72c" };
+const TEXT_COLORS = { predecessor: "#a8c8d8", peer: "#f07070", successor: "#b48ae6", canon: "#facc15" };
+const TYPE_LABEL = { predecessor: "Influence", peer: "Peer or partner", successor: "Successor", canon: "Their own work" };
+// KyndaMix slot vocabulary and colors, from src/design/tokens.js.
+const SLOTS = {
+  titan: ["Key Influence", "#ff8c32", "predecessor"], ghost: ["Influencia Obscura", "#94a3b8", "predecessor"],
+  geography: ["Local Roots", "#38bdf8", "peer"], culture: ["Beyond the Medium", "#a855f7", "predecessor"],
+  peer: ["Peer", "#fb7185", "peer"], essential: ["From the Canon", "#facc15", "canon"],
+  legacy: ["Legacy", "#34d399", "successor"], collaborator: ["Key Collaborator", "#818cf8", "peer"],
+  covers: ["Covered Them", "#2dd4bf", "predecessor"], covered_by: ["Covered By", "#e879f9", "successor"],
+};
+const CLAIM_LABELS = {
+  influenced_by: "influence", cited_as_influence: "cited influence", cross_medium_influence: "cross-medium influence",
+  same_scene: "shared scene", collaborated_with: "collaboration", produced_by: "production", member_of: "membership",
+  covers: "cover", covered_by: "covered by", used_gear: "gear", recorded_at: "recorded at", founded: "founded",
+  taught_at: "taught at", studied_under: "studied under", created_by: "created by",
+};
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const svg = d3.select("#map");
+const defs = svg.append("defs");
+defs.append("clipPath").attr("id", "circ").attr("clipPathUnits", "objectBoundingBox")
+  .append("circle").attr("cx", .5).attr("cy", .5).attr("r", .5);
+const glow = defs.append("filter").attr("id", "glow").attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%");
+glow.append("feGaussianBlur").attr("stdDeviation", 6).attr("result", "b");
+const fm = glow.append("feMerge"); fm.append("feMergeNode").attr("in", "b"); fm.append("feMergeNode").attr("in", "SourceGraphic");
+
+const world = svg.append("g");
+const gTrail = world.append("g");
+const gEdges = world.append("g");
+const gHits = world.append("g");
+const gNodes = world.append("g");
+const zoom = d3.zoom().scaleExtent([0.25, 4]).on("zoom", (e) => { world.attr("transform", e.transform); webView = e.transform; });
+svg.call(zoom).on("dblclick.zoom", null);
+
+const live = new Map();     // name -> node object currently on screen (incl. exiting)
+let center = ROOT;
+let trail = [ROOT];
+let trailPos = 0;
+let anim = null;
+
+const short = (s, n = 24) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+const initials = (s) => s.replace(/^(The|A|An) /, "").split(/\s+/).filter((w) => /^[A-Z0-9]/.test(w)).slice(0, 2).map((w) => w[0]).join("") || s[0];
+// Size: anything in the KyndaMix is a headliner; everything else scales with its evidence.
+const radius = (n) => n.mix ? 36 + Math.min(n.weight || 4, 10) * 1.2 : 9 + Math.min(n.weight || 0, 10) * 2.4;
+const CENTER_R = 54;
+const normT = (s) => String(s || "").toLowerCase().replace(/^(the|a|an) /, "").replace(/[^a-z0-9]+/g, " ").trim();
+const picOf = (d) => (d.mix && MIX_THUMBS[d.name]) || THUMBS[d.name] || null;
+
+function neighbors(name) {
+  const g = GRAPHS[name]; if (!g) return [];
+  const seen = new Set([name.toLowerCase()]); const out = [];
+  const groups = [["predecessors", "predecessor"], ["peers", "peer"], ["successors", "successor"]];
+  for (const [key, type] of groups) {
+    const items = [...(g[key] || [])].sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999) || b.weight - a.weight);
+    for (const it of items) {
+      const k = it.name.toLowerCase(); if (seen.has(k)) continue; seen.add(k);
+      out.push({ ...it, type });
+    }
+  }
+  const byTitle = new Map(out.map((n) => [normT(n.name), n]));
+  for (const c of MIXES[name] || []) {
+    if (c.slotType === "essential") continue; // their own canon stays off the map
+    const slot = SLOTS[c.slotType] || ["In the mix", "#facc15", "predecessor"];
+    let n = byTitle.get(normT(c.title));
+    if (!n) {
+      // Mix cards the claims graph doesn't hold yet (the subject's own canon, mainly) still belong on the map.
+      n = { name: c.title, creator: c.creator, year: c.year, type: slot[2], weight: 4, evidence: [], tier: "in the mix" };
+      out.push(n); byTitle.set(normT(c.title), n);
+    }
+    n.mix = { slot: c.slotType, label: slot[0], color: slot[1], reason: c.reason };
+  }
+  const rank = (n) => (n.type === "canon" ? 0 : n.mix ? 1 : 2);
+  const typeOrder = { canon: 0, predecessor: 1, peer: 2, successor: 3 };
+  return out.sort((a, b) => rank(a) - rank(b) || typeOrder[a.type] - typeOrder[b.type] || (a.year ?? 9999) - (b.year ?? 9999));
+}
+
+function size() { const r = svg.node().getBoundingClientRect(); return { w: r.width, h: r.height }; }
+
+// Settle a static layout for one subject, seeded from where things are now so persisting nodes barely move.
+function layout(name) {
+  const { w, h } = size();
+  const narrow = w < 640;
+  const span = narrow ? Math.max(h, 600) * 0.42 : Math.max(w, 900) * 0.36;
+  const rand = d3.randomLcg(name.length * 7919 + 13);
+  const old = live.get(name);
+  const nodes = [{ name, type: "center", r: CENTER_R, fx: 0, fy: 0 }];
+  let peerI = 0;
+  for (const n of neighbors(name)) {
+    const prev = live.get(n.name);
+    const t = n.type === "predecessor" ? -1 : n.type === "successor" ? 1 : 0;
+    const node = { ...n, r: radius(n), t, side: n.type === "peer" ? (peerI++ % 2 ? 1 : -1) : 0 };
+    const ox = old && prev ? prev.x - old.x : null, oy = old && prev ? prev.y - old.y : null;
+    if (narrow) { node.x = ox ?? (rand() - .5) * 260; node.y = oy ?? t * span + (rand() - .5) * 140; }
+    else { node.x = ox ?? t * span + (rand() - .5) * 160; node.y = oy ?? (rand() - .5) * 360; }
+    nodes.push(node);
+  }
+  const links = nodes.slice(1).map((n) => ({ source: nodes[0], target: n }));
+  const sim = d3.forceSimulation(nodes).stop()
+    .force("link", d3.forceLink(links).distance((l) => l.target.type === "canon" ? CENTER_R + l.target.r + 40 : 120 + l.target.r).strength((l) => l.target.type === "canon" ? 0.6 : 0.04))
+    .force("charge", d3.forceManyBody().strength(-70))
+    .force("collide", d3.forceCollide((d) => d.r + (d.type === "center" ? 34 : d.mix ? 34 : 26)).strength(0.9).iterations(2));
+  if (narrow) {
+    sim.force("y", d3.forceY((d) => (d.t || 0) * span).strength((d) => (d.type === "peer" ? 0.1 : 0.14)))
+       .force("x", d3.forceX((d) => (d.side || 0) * 150).strength((d) => (d.type === "peer" ? 0.12 : 0.05)));
+  } else {
+    sim.force("x", d3.forceX((d) => (d.t || 0) * span).strength((d) => (d.type === "peer" ? 0.12 : 0.14)))
+       .force("y", d3.forceY((d) => (d.side || 0) * 230).strength((d) => (d.type === "peer" ? 0.12 : 0.04)));
+  }
+  for (let i = 0; i < 320; i++) sim.tick();
+  return nodes;
+}
+
+function edgePath(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const sx = a.x + ux * a.cr, sy = a.y + uy * a.cr, tx = b.x - ux * b.cr, ty = b.y - uy * b.cr;
+  const bend = Math.min(40, len * 0.12);
+  return `M${sx},${sy}Q${(sx + tx) / 2 - uy * bend},${(sy + ty) / 2 + ux * bend} ${tx},${ty}`;
+}
+
+// Move to a subject: lay it out, then run one animation that exits, moves and builds nodes.
+function go(name, { push = true, build = true } = {}) {
+  if (!GRAPHS[name]) { toast(`Kynda hasn't mapped ${name} yet.`); return; }
+  hideCard(true);
+  if (wobble) { wobble.stop(); wobble = null; grabbed = null; for (const n of live.values()) { n.fx = n.fy = null; n.vx = n.vy = 0; } }
+  const prevCenter = center;
+  if (push && name !== center) { trail = trail.slice(0, trailPos + 1); trail.push(name); trailPos = trail.length - 1; }
+  center = name;
+  const target = layout(name);
+  const keep = new Set(target.map((n) => n.name));
+  const anchor = live.get(name) || { x: 0, y: 0 };
+  const now = performance.now();
+
+  // Shift the whole layout so the new center lands where its node already sits, then let the camera follow.
+  const shift = { x: anchor.x || 0, y: anchor.y || 0 };
+  let buildIdx = 0;
+  const firstBuild = live.size === 0 || !build;
+  target.forEach((t) => {
+    const x1 = t.x + shift.x, y1 = t.y + shift.y;
+    let n = live.get(t.name);
+    if (n) {
+      Object.assign(n, t, { x0: n.cx, y0: n.cy, x1, y1, s0: n.cs, s1: 1, cr0: n.ccr, r1: t.r, delay: 0, dur: 700, exiting: false });
+    } else {
+      const order = t.type === "center" ? 0 : ++buildIdx;
+      n = { ...t, cx: anchor.x || 0, cy: anchor.y || 0, cs: 0, ccr: t.r,
+            x0: anchor.x || 0, y0: anchor.y || 0, x1, y1, s0: 0, s1: 1, cr0: t.r, r1: t.r,
+            delay: (t.type === "center" ? 0 : (firstBuild ? 500 : 650) + order * Math.min(70, 2600 / target.length)), dur: 820 };
+      live.set(t.name, n);
+    }
+  });
+  for (const [k, n] of live) if (!keep.has(k)) Object.assign(n, { x0: n.cx, y0: n.cy, x1: n.cx + (n.cx - anchor.x) * 0.25, y1: n.cy + (n.cy - anchor.y) * 0.25, s0: n.cs, s1: 0, cr0: n.ccr, r1: n.ccr, delay: 0, dur: 420, exiting: true });
+
+  if (REDUCED) for (const n of live.values()) { n.delay = 0; n.dur = 1; }
+  lastCenter = prevCenter;
+  render();
+  fit(target, shift);
+  if (anim) anim.stop();
+  anim = d3.timer(() => frame(now));
+  updateTrail();
+  const slotsHere = [...new Map(target.filter((n) => n.mix).map((n) => [n.mix.slot, n.mix])).values()];
+  document.getElementById("mixkey").innerHTML = slotsHere.length ? `<b>KyndaMix:</b>` + slotsHere.map((m) => `<span><i class="ringdot" style="border-color:${m.color}"></i>${esc(m.label)}</span>`).join("") : "";
+  const nb = target.length - 1, mapped = target.slice(1).filter((n) => GRAPHS[n.name]).length;
+  document.getElementById("count").innerHTML = `<span style="font-family:var(--display);font-size:1.25rem;color:var(--fg)">${esc(name)}</span><br>${nb} connections · ${target.filter((n) => n.mix).length} in the KyndaMix · ${mapped} you can travel to`;
+}
+
+function fit(nodes, shift) {
+  const { w, h } = size();
+  const pad = 60;
+  const xs = nodes.flatMap((n) => [n.x - n.r - 40, n.x + n.r + 40]), ys = nodes.flatMap((n) => [n.y - n.r - 10, n.y + n.r + 40]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const k = Math.min(1.4, (w - pad * 2) / (x1 - x0), (h - pad * 2 - 30) / (y1 - y0));
+  const cx = (x0 + x1) / 2 + shift.x, cy = (y0 + y1) / 2 + shift.y;
+  svg.transition().duration(REDUCED ? 0 : 1100).ease(d3.easeCubicInOut)
+    .call(zoom.transform, d3.zoomIdentity.translate(w / 2 - cx * k, h / 2 + 10 - cy * k).scale(k));
+}
+
+let lastCenter = null;
+function render() {
+  const prevCenter = trail[trailPos - 1];
+  const data = [...live.values()];
+  const sel = gNodes.selectAll("g.node").data(data, (d) => d.name);
+  const enter = sel.enter().append("g").attr("class", "node").attr("tabindex", 0);
+  enter.append("circle").attr("class", "halo");
+  enter.append("circle").attr("class", "disc");
+  enter.append("image").attr("class", "pic").attr("clip-path", "url(#circ)").attr("preserveAspectRatio", "xMidYMid slice");
+  enter.append("text").attr("class", "initials");
+  enter.append("circle").attr("class", "ring");
+  enter.append("text").attr("class", "label");
+  enter.append("text").attr("class", "sub");
+  enter.on("pointerenter", onEnter).on("pointerleave", onLeave).on("pointerdown", onDown).on("click", onClick)
+       .on("focus", (e, d) => d.type !== "center" && showCard(d, e.currentTarget, false))
+       .on("blur", () => hideCard())
+       .on("keydown", (e, d) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); travel(d); } })
+       .call(drag);
+  sel.exit().remove();
+
+  const all = gNodes.selectAll("g.node");
+  all.classed("center", (d) => d.type === "center")
+     .classed("dead", (d) => d.type !== "center" && !GRAPHS[d.name])
+     .classed("has-pic", (d) => !!picOf(d))
+     .classed("mix", (d) => !!d.mix)
+     .attr("aria-label", (d) => d.type === "center" ? d.name : `${d.name}, ${TYPE_LABEL[d.type]}`);
+  all.select(".halo").attr("fill", "none").attr("stroke", (d) => d.mix ? d.mix.color : "none").attr("stroke-width", 2.2).attr("stroke-opacity", 1);
+  all.select(".disc")
+     .attr("fill", (d) => d.type === "center" ? "#1a1b22" : COLORS[d.type])
+     .attr("fill-opacity", (d) => d.type === "center" || d.mix ? 1 : 0.5 + Math.min(d.weight, 10) / 10 * 0.4);
+  all.select(".ring")
+     .attr("stroke", (d) => d.type === "center" ? "#facc15" : d.name === prevCenter ? "#facc15" : COLORS[d.type])
+     .attr("stroke-opacity", (d) => d.type === "center" ? 0.75 : d.name === prevCenter ? 0.9 : 0.85)
+     .attr("stroke-width", (d) => d.type === "center" ? 1.5 : d.name === prevCenter ? 2 : 1.2)
+     .attr("stroke-dasharray", (d) => d.type !== "center" && !GRAPHS[d.name] ? "3 3" : null);
+  all.select(".pic").attr("href", (d) => picOf(d)).style("display", (d) => picOf(d) ? null : "none");
+  all.select(".initials").text((d) => d.type === "center" ? "" : initials(d.name)).attr("fill", "#0f1016");
+  all.select(".label").text((d) => d.type === "center" ? d.name : short(d.name, d.mix ? 28 : 24));
+
+  all.select(".sub").text("");
+
+  // Edges: center to each live non-center node. Exiting nodes keep a fading edge to whoever was center.
+  const centerNode = live.get(center);
+  const edges = data.filter((d) => d.name !== center).map((d) => ({ id: d.name, a: d.exiting ? (live.get(lastCenter) || centerNode) : centerNode, b: d }));
+  gEdges.selectAll("path.edge").data(edges, (e) => e.id).join("path").attr("class", "edge")
+    .attr("stroke", (e) => e.b.name === prevCenter && !e.b.exiting ? "#facc15" : COLORS[e.b.type])
+    .attr("stroke-dasharray", (e) => e.b.type === "peer" ? "3 5" : e.b.type === "canon" ? "1 4" : null);
+  gHits.selectAll("path.edge-hit").data(edges.filter((e) => !e.b.exiting), (e) => e.id).join("path").attr("class", "edge-hit")
+    .on("pointerenter", (ev, e) => onEnter(ev, e.b)).on("pointerleave", onLeave).on("pointerdown", (ev, e) => onDown(ev, e.b))
+    .on("click", (ev, e) => onClick(ev, e.b));
+}
+
+const ease = d3.easeCubicOut, easeBack = d3.easeBackOut.overshoot(1.4);
+function frame(t0) {
+  const t = performance.now() - t0;
+  let busy = false;
+  for (const n of live.values()) {
+    const p = Math.max(0, Math.min(1, (t - n.delay) / n.dur));
+    if (p < 1) busy = true;
+    const e = ease(p);
+    n.cx = n.x0 + (n.x1 - n.x0) * e;
+    n.cy = n.y0 + (n.y1 - n.y0) * e;
+    n.cs = n.s0 + (n.s1 - n.s0) * (n.s1 > n.s0 ? easeBack(p) : e);
+    n.ccr = n.cr0 + (n.r1 - n.cr0) * e;
+    n.x = n.cx; n.y = n.cy; n.cr = n.ccr * Math.max(n.cs, 0.001);
+    n.labelP = Math.max(0, Math.min(1, (t - n.delay - n.dur * 0.6) / 300));
+  }
+  draw();
+  if (!busy) {
+    anim.stop(); anim = null;
+    for (const [k, n] of live) if (n.exiting) live.delete(k);
+    render();
+  }
+}
+
+function draw() {
+  gNodes.selectAll("g.node").each(function (d) {
+    const g = d3.select(this);
+    const s = Math.max(0, d.cs), r = d.ccr;
+    g.attr("transform", `translate(${d.cx},${d.cy}) scale(${s})`).style("opacity", d.exiting ? Math.max(0, d.cs) : null);
+    g.select(".disc").attr("r", r);
+    g.select(".ring").attr("r", r);
+    g.select(".halo").attr("r", d.mix ? r + 4.5 : 0);
+    g.select(".pic").attr("x", -r).attr("y", -r).attr("width", r * 2).attr("height", r * 2);
+    g.select(".initials").style("font-size", `${Math.max(8, r * 0.55)}px`);
+    g.select(".label").attr("y", d.type === "center" ? r + 26 : r + 14).style("opacity", d.labelP);
+    g.select(".sub").attr("y", r + 26).style("opacity", d.labelP);
+  });
+  gEdges.selectAll("path.edge").each(function (e) {
+    const a = e.a, b = e.b;
+    const el = d3.select(this);
+    if (!a || !b) return;
+    a.cr = a.ccr * Math.max(a.cs, 0.001); b.cr = b.ccr * Math.max(b.cs, 0.001);
+    el.attr("d", edgePath(a, b))
+      .attr("stroke-opacity", (b.exiting ? 0.45 * Math.max(0, b.cs) : 0.5 * Math.min(1, Math.max(0, b.cs))) * (b.name === trail[trailPos - 1] ? 1.6 : b.mix ? 1.5 : 0.8))
+      .attr("stroke-width", b.name === trail[trailPos - 1] && !b.exiting ? 2.2 : b.mix ? 2.4 : 0.8 + Math.min(b.weight || 0, 10) / 10 * 1.2);
+  });
+  gHits.selectAll("path.edge-hit").attr("d", (e) => edgePath(e.a, e.b));
+}
+
+// Rubber-band drag: the dragged bubble stretches against a spring, tugs the center and its
+// neighbours along through the connections, then everything wobbles back home on release.
+let wobble = null, dragging = false, grabbed = null;
+const STRETCH = 150;
+// Each node is a damped spring to its home. While one is grabbed, the others' homes shift
+// toward it in proportion to how close they sit, so they lean after it and lag on the way back.
+function springs() {
+  let nodes;
+  function force() {
+    const ox = grabbed ? grabbed.x - grabbed.hx : 0, oy = grabbed ? grabbed.y - grabbed.hy : 0;
+    const pullingCenter = grabbed && grabbed.type === "center";
+    for (const n of nodes) {
+      let w = 0;
+      if (pullingCenter && n !== grabbed) {
+        // The whole map follows the center; far bubbles hang on looser springs, so they trail and swing.
+        const d = Math.hypot(n.hx - grabbed.hx, n.hy - grabbed.hy);
+        w = 0.96;
+        n.k = 0.007 + 0.03 * Math.exp(-(d * d) / (2 * 170 * 170));
+      } else if (grabbed && n !== grabbed) {
+        const d2 = (n.hx - grabbed.hx) ** 2 + (n.hy - grabbed.hy) ** 2;
+        w = n.type === "center" ? 0.32 : 0.6 * Math.exp(-d2 / (2 * 190 * 190));
+      }
+      const k = n === grabbed ? 0.022 : (n.k || 0.03);
+      n.vx += (n.hx + ox * w - n.x) * k;
+      n.vy += (n.hy + oy * w - n.y) * k;
+    }
+  }
+  force.initialize = (ns) => { nodes = ns; };
+  return force;
+}
+function startWobble() {
+  const nodes = [...live.values()].filter((n) => !n.exiting);
+  for (const n of nodes) { n.x = n.cx; n.y = n.cy; n.hx = n.x1; n.hy = n.y1; n.vx = n.vx || 0; n.vy = n.vy || 0; }
+  if (wobble) wobble.stop();
+  wobble = d3.forceSimulation(nodes)
+    .alphaDecay(0.022).velocityDecay(0.07)
+    .force("springs", springs())
+    .force("bump", d3.forceCollide((n) => n.ccr + 6).strength(0.5))
+    .on("tick", () => { for (const n of nodes) { n.cx = n.x; n.cy = n.y; } draw(); })
+    .on("end", () => { for (const n of nodes) { n.cx = n.x = n.hx; n.cy = n.y = n.hy; n.vx = n.vy = 0; n.k = null; } draw(); wobble = null; });
+}
+const drag = d3.drag()
+  .clickDistance(5)
+  .subject((ev, d) => ({ x: d.cx, y: d.cy }))
+  .on("drag", (ev, d) => {
+    if (anim || d.exiting) return;
+    if (!dragging) {
+      // Only a real move starts the tug, so taps, clicks and press-and-hold still work.
+      clearTimeout(holdT); clearTimeout(hoverT); hideCard(true);
+      dragging = true;
+      if (!wobble) startWobble();
+      grabbed = d;
+      wobble.alphaTarget(0.35).restart();
+    }
+    if (!wobble) return;
+    if (d.type === "center") { d.fx = ev.x; d.fy = ev.y; return; } // the center goes wherever you take it
+    const dx = ev.x - d.hx, dy = ev.y - d.hy, dist = Math.hypot(dx, dy) || 1;
+    const k = (STRETCH * Math.tanh(dist / STRETCH)) / dist;
+    d.fx = d.hx + dx * k; d.fy = d.hy + dy * k;
+  })
+  .on("end", (ev, d) => {
+    if (!dragging) return;
+    dragging = false;
+    if (!wobble) return;
+    if (d.type === "center") {
+      // Dropping the center moves the whole map's home; the others swing in and settle around it.
+      const ox = d.x - d.hx, oy = d.y - d.hy;
+      for (const n of live.values()) { n.hx += ox; n.hy += oy; n.x1 += ox; n.y1 += oy; }
+    }
+    d.fx = d.fy = null;
+    grabbed = null;
+    wobble.alphaTarget(0).alpha(1).restart();
+  });
+
+// Interaction: hover (or press-and-hold on touch) shows the evidence; click or tap travels.
+let hoverT = null, hideT = null, holdT = null, held = false, cardFor = null;
+const card = document.getElementById("card");
+function onEnter(ev, d) {
+  if (dragging || ev.pointerType === "touch" || d.type === "center" || d.exiting) return;
+  clearTimeout(hideT); clearTimeout(hoverT);
+  hoverT = setTimeout(() => { if (!dragging) showCard(d, null, false); }, 500);
+}
+function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); hideT = setTimeout(() => hideCard(), 220); }
+function onDown(ev, d) {
+  if (ev.pointerType !== "touch" || d.type === "center") return;
+  held = false; clearTimeout(holdT);
+  const target = ev.currentTarget;
+  holdT = setTimeout(() => { held = true; showCard(d, target, true, ev); if (navigator.vibrate) try { navigator.vibrate(10); } catch (_) {} }, 420);
+  const cancel = () => { clearTimeout(holdT); window.removeEventListener("pointerup", cancel); window.removeEventListener("pointercancel", cancel); };
+  window.addEventListener("pointerup", cancel); window.addEventListener("pointercancel", cancel);
+}
+function onClick(ev, d) {
+  ev.stopPropagation();
+  if (held) { held = false; return; }
+  travel(d);
+}
+function travel(d) {
+  if (d.type === "center" || d.exiting) return;
+  if (!GRAPHS[d.name]) { toast(`Kynda hasn't mapped ${d.name} yet. Hover it to see the evidence.`); return; }
+  go(d.name);
+}
+card.addEventListener("pointerenter", () => clearTimeout(hideT));
+card.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") hideT = setTimeout(() => hideCard(), 220); });
+svg.on("click.bg", () => hideCard(true));
+
+function showCard(d, el, touch, ev) {
+  cardFor = d;
+  gNodes.selectAll("g.node").classed("hot", (n) => n === d);
+  gEdges.selectAll("path.edge").classed("hot", (e) => e.b === d);
+  d3.select("#stage").classed("dim", true);
+  const ev0 = (d.evidence || [])[0];
+  const normQ = (q) => q.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const quotes = [];
+  for (const x of d.evidence || []) {
+    if (!x.quote) continue;
+    const k = normQ(x.quote);
+    if (quotes.some((q) => { const j = normQ(q.quote); return j.includes(k) || k.includes(j); })) continue;
+    quotes.push(x); if (quotes.length === 2) break;
+  }
+  const rel = CLAIM_LABELS[d.claimType] || d.claimType || "";
+  const mapped = !!GRAPHS[d.name];
+  card.innerHTML = `
+    <button class="x" aria-label="Close">×</button>
+    <div class="kind" style="color:${d.mix ? d.mix.color : TEXT_COLORS[d.type]}">${d.mix ? esc(d.mix.label) : `${TYPE_LABEL[d.type]} · ${esc(rel)}`}</div>
+    <h2>${esc(d.name)}</h2>
+    ${d.creator || d.year ? `<div class="meta">${esc(d.creator || "")}${d.creator && d.year ? " · " : ""}${d.year ? fmtYear(d.year) : ""}</div>` : ""}
+    ${d.mix && d.mix.reason ? `<p class="summary">${esc(d.mix.reason)}</p>` : d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ""}
+    ${quotes.map((q) => `<blockquote>“${esc(q.quote.replace(/^["“]|["”]$/g, ""))}”<cite>${q.speaker ? esc(q.speaker) + " · " : ""}${q.url ? `<a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.publication || host(q.url))}</a>` : esc(q.publication || "")}</cite></blockquote>`).join("")}
+    ${!quotes.length && ev0 ? `<blockquote style="font-style:normal;font-family:var(--body);font-size:.84rem">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
+    <div class="foot"><span>${(d.evidence || []).length ? `${d.evidence.length} source${d.evidence.length === 1 ? "" : "s"} · ${esc(d.tier || "")}` : esc(d.type === "canon" ? "their own work" : "mix pick")}</span>
+      ${mapped ? `<button class="go">Travel to ${esc(short(d.name, 18))} →</button>` : `<span>Not mapped yet</span>`}</div>`;
+  card.classList.toggle("touch", touch);
+  card.querySelector(".x").onclick = () => hideCard(true);
+  const go_ = card.querySelector(".go"); if (go_) go_.onclick = () => travel(d);
+  // Place beside the node, clamped to the stage.
+  const st = document.getElementById("stage").getBoundingClientRect();
+  const nodeEl = gNodes.selectAll("g.node").filter((n) => n === d).node() || el;
+  if (!nodeEl) { cardFor = null; d3.select("#stage").classed("dim", false); return; }
+  const r = nodeEl.getBoundingClientRect();
+  card.style.left = "0px"; card.style.top = "0px"; card.classList.add("open");
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let x = r.right - st.left + 14, y = r.top - st.top + r.height / 2 - ch / 2;
+  if (x + cw > st.width - 16) x = r.left - st.left - cw - 14;
+  if (x < 16) x = Math.max(16, Math.min(st.width - cw - 16, r.left - st.left + r.width / 2 - cw / 2));
+  y = Math.max(16, Math.min(st.height - ch - 16, y));
+  card.style.left = x + "px"; card.style.top = y + "px";
+}
+function hideCard(force) {
+  if (!cardFor && !force) return;
+  cardFor = null; card.classList.remove("open");
+  d3.select("#stage").classed("dim", false);
+  gNodes.selectAll("g.node").classed("hot", false);
+  gEdges.selectAll("path.edge").classed("hot", false);
+}
+
+function updateTrail() {
+  const el = document.getElementById("trail");
+  el.innerHTML = "";
+  trail.forEach((n, i) => {
+    if (i) { const s = document.createElement("span"); s.className = "sep"; s.textContent = "→"; el.appendChild(s); }
+    const b = document.createElement("button"); b.textContent = n;
+    if (i === trailPos) b.setAttribute("aria-current", "true");
+    b.onclick = () => { trailPos = i; go(n, { push: false }); };
+    el.appendChild(b);
+  });
+  const cur = el.querySelector('[aria-current="true"]'); if (cur) cur.scrollIntoView({ inline: "nearest", block: "nearest" });
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function host(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (_) { return "source"; } }
+function fmtYear(y) { return y < 0 ? `${-y} BCE` : String(y); }
+
+document.getElementById("keybtn").onclick = (e) => {
+  const open = document.getElementById("legend").classList.toggle("open");
+  e.currentTarget.setAttribute("aria-expanded", String(open));
+};
+document.getElementById("pics").onclick = (e) => {
+  const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+  e.currentTarget.setAttribute("aria-pressed", String(on));
+  document.getElementById("stage").classList.toggle("pics-on", on);
+};
+document.getElementById("replay").onclick = () => {
+  for (const n of live.values()) if (n.name !== center) live.delete(n.name);
+  gNodes.selectAll("g.node").filter((d) => d.name !== center).remove();
+  gEdges.selectAll("path.edge").remove();
+  go(center, { push: false });
+};
+document.getElementById("copy").onclick = async () => {
+  const text = trail.slice(0, trailPos + 1).join(" → ");
+  try { await navigator.clipboard.writeText(text); toast("Path copied"); } catch (_) { toast(text); }
+};
+if (matchMedia("(hover: none)").matches) document.getElementById("hint").textContent = "Press and hold for the evidence · tap to travel · drag to tug";
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => go(center, { push: false }), 250); });
+
+go(ROOT, { push: false });
+
+// Background web: an endless jittered mesh (connectivity comes from hashing grid coordinates, so it never
+// runs out), held in place, with a slow wave rolling through it. Follows pan and zoom at a fraction, so it reads as a deeper layer.
+var webView = d3.zoomIdentity;
+(function web() {
+  const cv = document.getElementById("web"), ctx = cv.getContext("2d");
+  const GAP = 38, PARALLAX = 0.18;
+  const hash = (i, j, s) => { let h = (i * 374761393 + j * 668265263 + s * 2147483647) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  let w = 0, h = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect(); w = r.width; h = r.height;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  }
+  resize(); addEventListener("resize", resize);
+  const BUCKETS = 6;
+  function frame(t) {
+    const k = 1 + (webView.k - 1) * PARALLAX, gap = GAP * k;
+    const ox = webView.x * PARALLAX, oy = webView.y * PARALLAX;
+    const i0 = Math.floor(-ox / gap) - 1, j0 = Math.floor(-oy / gap) - 1;
+    const cols = Math.ceil(w / gap) + 3, rows = Math.ceil(h / gap) + 3;
+    const P = new Array(cols * rows);
+    const span = w * 0.8 + h * 0.6, period = 14000;
+    const front = -700 + ((t % period) / period) * (span + 1400); // enters and leaves off-screen, so the loop never pops
+    for (let a = 0; a < cols; a++) for (let b = 0; b < rows; b++) {
+      const i = i0 + a, j = j0 + b;
+      let x = ox + (i + (hash(i, j, 1) - .5) * .8) * gap, y = oy + (j + (hash(i, j, 2) - .5) * .8) * gap;
+      // the surface: two slow travelling waves; z lifts the point and sets its brightness
+      const z = Math.sin(x * 0.0042 + t * 0.00021) * Math.cos(y * 0.0051 - t * 0.00016) + 0.6 * Math.sin((x + y) * 0.0023 + t * 0.00013);
+      // the swell: one broad, smooth crest that rolls diagonally across the screen, lifting and lighting the web
+      const along = (x * 0.8 + y * 0.6) - front, band = Math.exp(-(along * along) / (2 * 230 * 230));
+      y += z * 8 - band * 14;
+      P[a * rows + b] = [x, y, (z + 1.6) / 3.2 * 0.8 + band * 0.6];
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    const paths = Array.from({ length: BUCKETS }, () => new Path2D());
+    const seg = (p, q) => { const l = Math.min(BUCKETS - 1, Math.max(0, Math.floor(((p[2] + q[2]) / 2) * BUCKETS))); paths[l].moveTo(p[0], p[1]); paths[l].lineTo(q[0], q[1]); };
+    for (let a = 0; a < cols - 1; a++) for (let b = 0; b < rows - 1; b++) {
+      const i = i0 + a, j = j0 + b, p = P[a * rows + b];
+      if (hash(i, j, 4) > 0.12) seg(p, P[(a + 1) * rows + b]);
+      if (hash(i, j, 5) > 0.12) seg(p, P[a * rows + b + 1]);
+      if (hash(i, j, 6) > 0.3) { if (hash(i, j, 7) > .5) seg(p, P[(a + 1) * rows + b + 1]); else seg(P[(a + 1) * rows + b], P[a * rows + b + 1]); }
+    }
+    ctx.lineWidth = 0.6;
+    for (let l = 0; l < BUCKETS; l++) { ctx.strokeStyle = `rgba(148,163,184,${0.022 + l * 0.026})`; ctx.stroke(paths[l]); }
+    for (let a = 0; a < cols; a++) for (let b = 0; b < rows; b++) {
+      const p = P[a * rows + b], big = hash(i0 + a, j0 + b, 9) > 0.93;
+      ctx.fillStyle = `rgba(168,200,216,${Math.min(0.5, (big ? 0.12 : 0.06) + p[2] * (big ? 0.22 : 0.12))})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], big ? 1.5 : 0.8, 0, 6.283); ctx.fill();
+    }
+  }
+  if (REDUCED) { frame(0); zoom.on("zoom.web", () => frame(0)); return; }
+  frame(performance.now());
+  let last = 0;
+  (function loop(t) { if (!document.hidden && t - last > 33) { last = t; frame(t); } requestAnimationFrame(loop); })(0);
+})();
+</script>

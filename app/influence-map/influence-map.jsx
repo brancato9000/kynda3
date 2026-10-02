@@ -1,0 +1,197 @@
+"use client";
+
+// Influence map (2026-10-01) — the first tab of a subject page. React owns
+// this markup; the engine owns the SVG, the canvas and every interaction
+// (AD-04). Full-bleed: the panel breaks out of the 880px reading column.
+
+import { useEffect, useRef } from "react";
+import { createInfluenceMap } from "./engine.js";
+
+async function fetchGraph(name) {
+  const res = await fetch("/api/graph", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subject: { name } }),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("graph failed");
+  return res.json();
+}
+
+export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject }) {
+  const rootRef = useRef(null);
+  const openRef = useRef(onOpenSubject);
+  openRef.current = onOpenSubject;
+
+  useEffect(() => {
+    if (!rootRef.current || !graph) return;
+    const map = createInfluenceMap(rootRef.current, {
+      subjectName,
+      subjectBio,
+      initialGraph: graph,
+      fetchGraph,
+      onOpenSubject: (name) => openRef.current?.(name),
+    });
+    return () => map.destroy();
+    // A new subject is a new map; the same subject's graph object refreshing is not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectName, !!graph]);
+
+  return (
+    <div className="kmap" ref={rootRef}>
+      <style>{CSS}</style>
+      <div className="stage" data-k="stage">
+        <canvas className="web" data-k="web" aria-hidden="true" />
+        <svg className="map" data-k="map" role="img" aria-label={`Influence map for ${subjectName}`} />
+        {/* The trail only appears once you've travelled — before that it would just repeat the page title. */}
+        <div className="trailbox" data-k="trailbox" hidden>
+          <nav className="trail" data-k="trail" aria-label="Your path" />
+          <button className="openpage" data-k="openpage" hidden />
+        </div>
+        <div className="menu">
+          <button className="burger" data-k="menubtn" aria-haspopup="true" aria-expanded="false" aria-label="Map options" title="Map options">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 4.5h10M3 8h10M3 11.5h10" /></svg>
+          </button>
+          <div className="menupanel" data-k="menupanel" hidden>
+            <button data-k="pics" aria-pressed="false">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5" /><circle cx="6" cy="7" r="1.3" /><path d="M3 12l3.5-3.5 2.5 2.5 2-2 2.5 2.5" /></svg>
+              <span>Pictures</span><i className="check" aria-hidden="true">✓</i>
+            </button>
+            <button data-k="replay">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 8a5 5 0 1 0 1.5-3.5" /><path d="M3 2.5V5h2.5" /></svg>
+              <span>Replay the build</span>
+            </button>
+            <button data-k="copy">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5" /><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" /></svg>
+              <span>Copy path</span>
+            </button>
+          </div>
+        </div>
+        <button className="keybtn" data-k="keybtn" aria-expanded="false">Key</button>
+        <div className="legend" data-k="legend">
+          <span className="count" data-k="count" />
+          <span><i style={{ background: "var(--pred)" }} />Influences</span>
+          <span><i style={{ background: "var(--peer)" }} />Peers &amp; partners</span>
+          <span><i style={{ background: "var(--succ)" }} />Successors</span>
+          <span className="mixkey" data-k="mixkey" />
+        </div>
+        <div className="hint" data-k="hint">Hover for the evidence (or the center for a bio) · click to travel · drag a bubble to tug it · scroll to zoom</div>
+        <div className="card" data-k="card" role="dialog" aria-live="polite" />
+        <div className="toast" data-k="toast" />
+      </div>
+    </div>
+  );
+}
+
+const CSS = `
+.kmap {
+  --bg: #0f1016; --surface: #161821; --surface-2: #1c1f2b; --line: rgba(148,163,184,0.16);
+  --fg: #e2e8f0; --muted: rgba(148,163,184,0.7); --faint: rgba(148,163,184,0.42); --gold: #facc15;
+  --pred: #a8c8d8; --peer: #e04040; --succ: #8844cc;
+  --display: 'Instrument Serif', Georgia, serif; --body: 'DM Sans', system-ui, sans-serif; --mono: 'DM Mono', ui-monospace, Menlo, monospace;
+  position: relative; width: 100vw; margin-left: calc(50% - 50vw);
+  /* Everything under the 48px subject bar: the map is the page. */
+  height: max(420px, calc(100svh - 48px)); display: flex; flex-direction: column;
+  background: var(--bg); color: var(--fg); font-family: var(--body);
+  border-bottom: 1px solid var(--line);
+}
+.kmap .trailbox { position: absolute; top: 10px; left: max(16px, calc(50vw - 600px)); right: 72px; z-index: 3; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kmap .trailbox[hidden] { display: none; }
+.kmap .trail { min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.72rem; background: rgba(15,16,22,0.82); border: 1px solid var(--line); border-radius: 14px; padding: 2px 6px; }
+.kmap .trail::-webkit-scrollbar { display: none; }
+.kmap .trail button { flex: none; background: none; border: 0; padding: 3px 5px; border-radius: 4px; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+.kmap .trail button:hover { color: var(--fg); background: var(--surface-2); }
+.kmap .trail button[aria-current="true"] { color: var(--gold); }
+.kmap .trail .sep { color: var(--faint); flex: none; }
+
+.kmap .menu { position: absolute; top: 10px; right: max(16px, calc(50vw - 600px)); z-index: 4; }
+.kmap .burger { width: 34px; height: 34px; border-radius: 17px; border: 1px solid var(--line); background: rgba(22,24,33,0.85); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.kmap .burger:hover, .kmap .burger[aria-expanded="true"] { color: var(--fg); border-color: rgba(148,163,184,0.4); }
+.kmap .burger svg { width: 16px; height: 16px; }
+.kmap .menupanel { position: absolute; top: 42px; right: 0; min-width: 190px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 14px 40px rgba(0,0,0,.5); padding: 6px; display: flex; flex-direction: column; }
+.kmap .menupanel[hidden] { display: none; }
+.kmap .menupanel button { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-radius: 6px; padding: 9px 10px; color: var(--fg); font-family: var(--body); font-size: 0.84rem; text-align: left; cursor: pointer; }
+.kmap .menupanel button:hover { background: var(--surface-2); }
+.kmap .menupanel svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
+.kmap .menupanel .check { margin-left: auto; font-style: normal; color: var(--gold); visibility: hidden; }
+.kmap .menupanel [aria-pressed="true"] .check { visibility: visible; }
+.kmap .burger:focus-visible, .kmap .menupanel button:focus-visible, .kmap .trail button:focus-visible, .kmap .card a:focus-visible, .kmap .card button:focus-visible, .kmap .openpage:focus-visible, .kmap .keybtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.kmap .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.kmap .web { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 52%, rgba(0,0,0,.5) 0%, #000 85%);
+          mask-image: radial-gradient(ellipse 60% 55% at 50% 52%, rgba(0,0,0,.5) 0%, #000 85%); }
+.kmap .map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.kmap .map:active { cursor: grabbing; }
+
+.kmap .legend { position: absolute; left: max(20px, calc(50vw - 600px)); bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); pointer-events: none; }
+.kmap .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.kmap .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.kmap .legend .mixkey { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; }
+.kmap .legend .mixkey:empty { display: none; }
+.kmap .legend .ringdot { width: 9px; height: 9px; background: none; border: 2px solid; box-sizing: border-box; }
+.kmap .legend .mixkey b { font-weight: 500; color: var(--fg); }
+.kmap .keybtn { display: none; position: absolute; left: 16px; bottom: 16px; z-index: 2; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.kmap .legend .count { color: var(--faint); text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.kmap .hint { position: absolute; right: max(20px, calc(50vw - 600px)); bottom: 16px; font-family: var(--mono); font-size: 0.64rem; color: var(--faint); text-align: right; pointer-events: none; }
+
+.kmap .openpage { flex: none; white-space: nowrap; background: var(--surface); border: 1px solid var(--line); color: var(--fg); border-radius: 14px; padding: 5px 12px; font-family: var(--mono); font-size: 0.68rem; cursor: pointer; }
+.kmap .openpage:hover { border-color: var(--gold); color: var(--gold); }
+
+.kmap .node { cursor: pointer; }
+.kmap .node:active { cursor: grabbing; }
+.kmap .node.center { cursor: grab; }
+.kmap .node .disc { transition: fill-opacity .25s; }
+.kmap .node .ring { fill: none; }
+.kmap .node .pic { opacity: 0; transition: opacity .35s; pointer-events: none; }
+.kmap .pics-on .node .pic { opacity: 1; }
+.kmap .pics-on .node.has-pic .ring { stroke-width: 2.5px; stroke-opacity: 1; }
+.kmap .node .initials { font-family: var(--mono); font-size: 10px; fill: var(--bg); text-anchor: middle; dominant-baseline: central; pointer-events: none; transition: opacity .3s; }
+.kmap .node.center .initials { display: none; }
+.kmap .pics-on .node.has-pic .initials { opacity: 0; }
+.kmap .node .label { font-family: var(--body); font-size: 11px; fill: rgba(226,232,240,0.86); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.kmap .node.center .label { font-family: var(--display); font-size: 19px; fill: var(--fg); }
+.kmap .node.mix .label { font-size: 12.5px; font-weight: 500; fill: var(--fg); }
+.kmap .node:hover .disc, .kmap .node.hot .disc { fill-opacity: 1; }
+.kmap .node:focus { outline: none; }
+.kmap .node:focus-visible .ring { stroke: var(--gold); stroke-width: 2.5; }
+.kmap .edge { fill: none; }
+.kmap .edge-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: help; }
+.kmap .dim .node:not(.hot):not(.center) { opacity: .35; }
+.kmap .dim .edge:not(.hot) { opacity: .25; }
+
+.kmap .card { box-sizing: border-box; max-height: calc(100% - 32px); overflow-y: auto; position: absolute; z-index: 5; width: min(360px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 16px 18px 14px; opacity: 0; transform: translateY(4px); transition: opacity .16s, transform .16s; pointer-events: none; }
+.kmap .card.open { opacity: 1; transform: none; pointer-events: auto; }
+.kmap .card .kind { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.kmap .card h2 { margin: 6px 0 2px; font-family: var(--display); font-weight: 400; font-size: 1.35rem; line-height: 1.15; text-wrap: balance; }
+.kmap .card .meta { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+.kmap .card .summary.bio { font-size: 0.88rem; line-height: 1.6; }
+.kmap .card .summary { margin: 10px 0 0; font-size: 0.84rem; line-height: 1.5; color: rgba(226,232,240,0.82); }
+.kmap .card blockquote { margin: 12px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); font-family: var(--display); font-style: italic; font-size: 1.02rem; line-height: 1.45; color: var(--fg); }
+.kmap .card blockquote.plain { font-style: normal; font-family: var(--body); font-size: .84rem; }
+.kmap .card cite { display: block; margin-top: 6px; font-family: var(--mono); font-style: normal; font-size: 0.64rem; color: var(--faint); }
+.kmap .card a { color: var(--muted); }
+.kmap .card .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 0.64rem; color: var(--faint); }
+.kmap .card .acts { display: flex; gap: 6px; }
+.kmap .card .go, .kmap .card .open { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
+.kmap .card .open { color: var(--muted); }
+.kmap .card .go:hover, .kmap .card .open:hover { border-color: var(--gold); color: var(--gold); }
+.kmap .card .x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; display: none; }
+.kmap .card.touch .x { display: block; }
+
+.kmap .toast { position: absolute; left: 50%; top: 14px; transform: translate(-50%, -8px); background: var(--surface-2); border: 1px solid var(--line); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; color: var(--fg); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 6; max-width: calc(100% - 32px); text-align: center; }
+.kmap .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+html:has(.kmap) { overflow-x: clip; }
+@media (max-width: 1240px) { .kmap .hint { display: none; } }
+@media (max-width: 640px) {
+  .kmap { height: max(380px, calc(100svh - 48px)); }
+  .kmap .keybtn { display: inline-flex; }
+  .kmap .legend { display: none; flex-direction: column; gap: 8px; left: 16px; bottom: 56px; font-size: 0.62rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; z-index: 2; pointer-events: auto; }
+  .kmap .legend.open { display: flex; }
+  .kmap .legend .mixkey { flex-direction: column; gap: 8px; }
+  .kmap .trailbox { left: 12px; right: 56px; }
+  .kmap .menu { right: 12px; }
+  .kmap .card { left: 16px !important; right: 16px; top: auto !important; bottom: 16px; width: auto; }
+}
+`;
