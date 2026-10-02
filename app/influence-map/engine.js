@@ -75,7 +75,10 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   // The page's own subject uses the page's bio (QID-matched); other centers fetch a Wikipedia summary.
   if (subjectBio?.text) bioCache.set(subjectName, Promise.resolve(subjectBio));
   let alive = true;
-  let picsOn = false;
+  // Pictures default on (2026-10-02); the menu turns them off.
+  let picsOn = true;
+  stage.classList.add("pics-on");
+  q("pics").setAttribute("aria-pressed", "true");
 
   const svg = d3.select(q("map"));
   const clipId = `kmap-circ-${Math.random().toString(36).slice(2, 8)}`;
