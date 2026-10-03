@@ -643,7 +643,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${bio?.description ? `<div class="meta">${esc(bio.description)}</div>` : ""}
       ${text ? `<p class="summary bio">${esc(text)}</p>` : `<p class="summary">No bio for ${esc(d.name)} yet.</p>`}
       ${creditLine(d)}
-      ${bio?.url || (d.name !== subjectName && onOpenSubject) || curating(d) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a>` : ""}</span>
+      ${bio?.url || (d.name !== subjectName && onOpenSubject) || curating(d) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener license">text CC BY-SA 4.0</a>` : ""}</span>
         <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}`;
     placeCard(d, touch);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);

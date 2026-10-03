@@ -747,6 +747,13 @@ function SubjectCard({ subject, onBioDone }) {
                 — Wikipedia: {subject.bio.articleTitle} ↗
               </a>
             )}
+            {/* Wikipedia's text is CC BY-SA: credit, license link, same terms for the excerpt (2026-10-03). */}
+            {subject.bio.source === "Wikipedia" && (
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer license"
+                style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.05em", color: "rgba(148,163,184,0.6)", textDecoration: "none", marginLeft: "10px" }}>
+                text CC BY-SA 4.0
+              </a>
+            )}
           </div>
         </>
       ) : (
