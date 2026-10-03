@@ -10,7 +10,7 @@
 
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixFingerprint } from "../../../src/lib/store.js";
-import { rateLimit, clientIp, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
+import { rateLimit, clientIp, isAdmin, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 import { enrichStoredMixMedia } from "../../../src/lib/pipeline/media.js";
 import { enrichMapImages } from "../../../src/lib/pipeline/map-images.js";
@@ -117,9 +117,12 @@ export async function POST(req) {
           return;
         }
 
-        // Travelling the map (Tony, 2026-10-02): the page follows the center
-        // but never generates a mix for a stop that has none — it says so.
-        if (cachedOnly) {
+        // No public action builds a map (Tony, 2026-10-03, opening the
+        // site): a search or a map stop with no saved mix gets "none" and
+        // the page offers "Ask Kynda to map this" (→ /api/request-map, the
+        // admin queue, a batch build). Only the admin key generates here —
+        // and even then the batch builder is about half the price.
+        if (cachedOnly || !isAdmin(req)) {
           send({ type: "none" });
           return;
         }

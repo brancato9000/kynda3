@@ -1362,7 +1362,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     if (!subject) return;
     setRequested("sending");
     try {
-      const r = await fetch("/api/request-map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: subject.name }) });
+      const r = await fetch("/api/request-map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: subject.name, wikidata_qid: subject.wikidata_qid, mbid: subject.mbid, description: subject.description, domain: subject.domain }) });
       setRequested(r.ok ? "sent" : "error");
     } catch { setRequested("error"); }
   }
@@ -1405,6 +1405,26 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
       if (runRef.current === run) { setPhase("idle"); setError(err.message); }
     }
   }
+
+  // A subject with no saved mix (a map stop, or — since 2026-10-03 — any
+  // unmapped search): a note and the request button, never a generation.
+  const noMixNote = noMix && subject && (
+
+            <div style={{ padding: "22px 24px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", display: "grid", gap: "14px" }}>
+              <div style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.85)" }}>
+                {graph.status === "ready"
+                  ? <>Kynda hasn't made a mix for <b>{subject.name}</b> yet. The map shows what we know so far.</>
+                  : <>Kynda hasn't mapped <b>{subject.name}</b> yet. Ask for it and it joins the queue for the next build.</>}
+              </div>
+              <div>
+                <button onClick={requestMap} disabled={requested === "sending" || requested === "sent"}
+                  style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold, borderRadius: "8px", padding: "9px 18px", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: requested === "sent" ? "default" : "pointer" }}>
+                  {requested === "sent" ? "Requested ✓ — thanks" : requested === "sending" ? "Sending…" : "Ask Kynda to map this"}
+                </button>
+                {requested === "error" && <span style={{ marginLeft: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.85)" }}>Couldn't send that — try again.</span>}
+              </div>
+            </div>
+  );
 
   const isMusician = musicianOf(subject);
   const subjectView = phase === "mixing" && !!subject;
@@ -1557,6 +1577,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
             </div>
           )}
 
+          {/* Under the map only for the subject searched or opened (an unmapped search, 2026-10-03);
+              travelling the map keeps the note on the Mix tab, so the map isn't interrupted. */}
+          {tab === "map" && noMix && !centerGraph && <div style={{ marginBottom: "28px" }}>{noMixNote}</div>}
+
           {/* The bio sits under the map: the map is the first thing a subject page shows. */}
           <div style={{ marginTop: tab === "map" ? 0 : "28px" }}>
             <SubjectCard key={subject.name} subject={subject} onBioDone={() => setBioDone(true)} />
@@ -1601,20 +1625,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
             </div>
           )}
 
-          {tab === "mix" && noMix && (
-            <div style={{ padding: "22px 24px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", display: "grid", gap: "14px" }}>
-              <div style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.85)" }}>
-                Kynda hasn't made a mix for <b>{subject.name}</b> yet. The map shows what we know so far.
-              </div>
-              <div>
-                <button onClick={requestMap} disabled={requested === "sending" || requested === "sent"}
-                  style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold, borderRadius: "8px", padding: "9px 18px", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: requested === "sent" ? "default" : "pointer" }}>
-                  {requested === "sent" ? "Requested ✓ — thanks" : requested === "sending" ? "Sending…" : "Ask Kynda to map this"}
-                </button>
-                {requested === "error" && <span style={{ marginLeft: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.85)" }}>Couldn't send that — try again.</span>}
-              </div>
-            </div>
-          )}
+          {tab === "mix" && noMix && noMixNote}
 
           {tab === "mix" && !noMix && !intro && !error && (
             <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>

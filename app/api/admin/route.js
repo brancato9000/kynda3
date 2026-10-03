@@ -1,22 +1,15 @@
 // Founder dashboard API (V3-27). Shared-secret auth: requests must carry
 // x-kynda-admin matching KYNDA_ADMIN_TOKEN. No token configured → disabled.
 
-import { getAdminOverview, actOnContribution, applySuggestedMedia, applyOfficialPageAttribution } from "../../../src/lib/store.js";
+import { getAdminOverview, setMapRequestStatus, actOnContribution, applySuggestedMedia, applyOfficialPageAttribution } from "../../../src/lib/store.js";
 import { proposeFlagFix, applyFlagFix } from "../../../src/lib/pipeline/fix.js";
 import { appendContributedCard } from "../../../src/lib/pipeline/contribute-card.js";
 import { q } from "../../../src/lib/db.js";
-import { rateLimit, clientIp } from "../../../src/lib/guard.js";
+import { rateLimit, clientIp, isAdmin } from "../../../src/lib/guard.js";
 
 export const maxDuration = 60;
 
-function authorized(req) {
-  const token = process.env.KYNDA_ADMIN_TOKEN;
-  if (!token) return false;
-  // Trim both sides: pasted tokens arrive with invisible trailing
-  // whitespace often enough that exact comparison reads as "broken login".
-  const provided = (req.headers.get("x-kynda-admin") || "").trim();
-  return provided.length > 0 && provided === token.trim();
-}
+const authorized = isAdmin;
 
 export async function GET(req) {
   if (!rateLimit(`admin:${clientIp(req)}`, { limit: 120, windowMs: 3_600_000 })) {
@@ -37,6 +30,13 @@ export async function POST(req) {
   if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   try {
     const { id, action, fixed_reason } = await req.json();
+    // Map requests (2026-10-03): approve marks a subject for the next batch
+    // build (scripts/experiments/requests-roster.mjs); decline drops it.
+    if (["approve_request", "decline_request", "reopen_request"].includes(action)) {
+      if (!id) return Response.json({ error: "id required" }, { status: 400 });
+      const status = { approve_request: "approved", decline_request: "declined", reopen_request: "pending" }[action];
+      return Response.json(await setMapRequestStatus(id, status));
+    }
     if (!id || !["approve", "reject", "fix", "apply_fix", "apply_media"].includes(action)) {
       return Response.json({ error: "id and action (approve|reject|fix|apply_fix|apply_media) required" }, { status: 400 });
     }

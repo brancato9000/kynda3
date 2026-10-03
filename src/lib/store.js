@@ -90,7 +90,9 @@ export async function upsertEntity({ name, kind = "other", domain = "other", mbi
 /** Log a search (feeds Zipf prioritization of the research queue). */
 export async function recordSearch(rawQuery, subject, tier) {
   if (!dbConfigured()) return;
-  const entityId = subject
+  const entityId = subject?.entityId
+    ? subject.entityId
+    : subject
     ? await upsertEntity({ name: subject.name, kind: subject.kind, domain: subject.domain, mbid: subject.mbid, wikidata_qid: subject.wikidata_qid })
     : null;
   await q(
@@ -942,7 +944,7 @@ export async function listApprovedContributions(subjectName) {
 
 export async function getAdminOverview() {
   if (!dbConfigured()) return null;
-  const [stats, searches, contributions] = await Promise.all([
+  const [stats, searches, contributions, mapRequests] = await Promise.all([
     q(`SELECT
         (SELECT count(*)::int FROM entities) AS entities,
         (SELECT count(*)::int FROM claims) AS claims,
@@ -956,12 +958,92 @@ export async function getAdminOverview() {
        ORDER BY ql.created_at DESC LIMIT 100`),
     q(`SELECT id, kind, status, subject_name, item_title, item_creator, slot_type, url, quote, comment, contributor, claim_id, created_at
        FROM contributions ORDER BY (status IN ('pending','confirmed')) DESC, created_at DESC LIMIT 100`),
+    listMapRequests().catch(() => []),
   ]);
   return {
     stats: stats.rows[0],
     searches: searches.rows,
     contributions: contributions.rows,
+    mapRequests,
   };
+}
+
+/**
+ * A search that names an already-mapped subject (Tony, 2026-10-03): served
+ * straight from the graph, no model call. Exact name match, case-insensitive;
+ * two mapped subjects sharing a name return null and search ranks as usual.
+ */
+export async function findMappedSubjectByName(query) {
+  if (!dbConfigured() || !query?.trim()) return null;
+  const r = await q(
+    `SELECT e.id, e.name, e.kind, COALESCE(e.domain_override, e.domain) AS domain, e.mbid, e.wikidata_qid,
+            e.metadata->>'synthesis_bio' AS synthesis_bio
+     FROM entities e
+     WHERE lower(e.name) = lower($1) AND EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id)
+     LIMIT 2`,
+    [query.trim()]
+  );
+  return r.rows.length === 1 ? r.rows[0] : null;
+}
+
+// ─── Map requests (Tony, 2026-10-03): visitors ask, Tony approves ──────────
+
+function mapRequestKey({ name, wikidata_qid, mbid }) {
+  if (wikidata_qid) return wikidata_qid;
+  if (mbid) return `mb:${mbid}`;
+  return `name:${String(name).trim().toLowerCase()}`;
+}
+
+/** One vote per requester per subject; repeats only refresh last_requested_at. */
+export async function recordMapRequest(subject, requester) {
+  if (!dbConfigured()) return null;
+  const r = await q(
+    `INSERT INTO map_requests (key, name, wikidata_qid, mbid, description, domain)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (key) DO UPDATE SET last_requested_at = now()
+     RETURNING id`,
+    [mapRequestKey(subject), subject.name, subject.wikidata_qid || null, subject.mbid || null,
+     subject.description || null, subject.domain || null]
+  );
+  const id = r.rows[0].id;
+  await q(
+    "INSERT INTO map_request_votes (request_id, requester) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+    [id, requester]
+  );
+  return id;
+}
+
+/** The admin queue: open requests ranked by distinct visitors, with a
+ * mapped flag so built ones drop out without a status change. */
+export async function listMapRequests({ statuses = ["pending", "approved"], limit = 200 } = {}) {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT mr.id, mr.name, mr.wikidata_qid, mr.mbid, mr.description, mr.domain, mr.status,
+            mr.first_requested_at, mr.last_requested_at,
+            (SELECT count(*)::int FROM map_request_votes v WHERE v.request_id = mr.id) AS votes,
+            EXISTS (
+              SELECT 1 FROM entities e JOIN mixes m ON m.subject_entity_id = e.id
+              WHERE (mr.wikidata_qid IS NOT NULL AND e.wikidata_qid = mr.wikidata_qid)
+                 OR (mr.mbid IS NOT NULL AND e.mbid = mr.mbid)
+                 OR (mr.wikidata_qid IS NULL AND mr.mbid IS NULL AND lower(e.name) = lower(mr.name))
+            ) AS mapped
+     FROM map_requests mr
+     WHERE mr.status = ANY($1)
+     ORDER BY votes DESC, mr.last_requested_at DESC
+     LIMIT $2`,
+    [statuses, limit]
+  );
+  return r.rows;
+}
+
+export async function setMapRequestStatus(id, status) {
+  if (!["pending", "approved", "declined"].includes(status)) throw new Error("unknown status");
+  const r = await q(
+    "UPDATE map_requests SET status = $2, decided_at = CASE WHEN $2 = 'pending' THEN NULL ELSE now() END WHERE id = $1",
+    [id, status]
+  );
+  if (!r.rowCount) throw new Error("request not found");
+  return { ok: true };
 }
 
 /**

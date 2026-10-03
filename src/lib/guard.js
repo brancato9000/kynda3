@@ -90,12 +90,39 @@ export async function searchCapReached() {
   if (!dbConfigured()) return false;
   try {
     const r = await q(
-      "SELECT count(*)::int AS n FROM query_log WHERE created_at > now() - interval '24 hours'"
+      "SELECT count(*)::int AS n FROM query_log WHERE created_at > now() - interval '24 hours' AND disambiguation_tier IS DISTINCT FROM 'mapped'"
     );
     return r.rows[0].n >= DAILY_SEARCH_CAP;
   } catch {
     return false;
   }
+}
+
+const DAILY_ASK_CAP = parseInt(process.env.KYNDA_DAILY_ASK_CAP || "200", 10);
+
+/** True when today's "Ask Kynda" budget (one model call each, 3-5¢) is
+ * spent. Logs the ask when it may proceed. Fails CLOSED: every ask costs. */
+export async function askCapReached(subjectName, candidate) {
+  if (!dbConfigured()) return process.env.NODE_ENV === "production";
+  try {
+    const r = await q("SELECT count(*)::int AS n FROM ask_log WHERE created_at > now() - interval '24 hours'");
+    if (r.rows[0].n >= DAILY_ASK_CAP) return true;
+    await q("INSERT INTO ask_log (subject_name, candidate) VALUES ($1, $2)", [subjectName, candidate]);
+    return false;
+  } catch (err) {
+    console.error("ask cap check failed — refusing:", err.message);
+    return true;
+  }
+}
+
+/** The founder's shared secret (V3-27): x-kynda-admin must match
+ * KYNDA_ADMIN_TOKEN. No token configured → nobody is admin. Trimmed on
+ * both sides — pasted tokens often carry invisible trailing whitespace. */
+export function isAdmin(req) {
+  const token = process.env.KYNDA_ADMIN_TOKEN;
+  if (!token) return false;
+  const provided = (req.headers.get("x-kynda-admin") || "").trim();
+  return provided.length > 0 && provided === token.trim();
 }
 
 export const CAPACITY_MESSAGE =

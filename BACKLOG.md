@@ -32,6 +32,13 @@ Last full review: 2026-10-03.
 | 13 | Fable 5.1 golden-set eval | parked | Superseded: Tony chose Opus 5 for maps after the blind side-by-side (V3-87). |
 | 14 | Rebuild `listening-map-build.mjs` | open | Lost with the session scratchpad. Walk v3, Rising, household subtraction, polyglot noise filter — spec in RUNS.md 2026-08-19. |
 
+## Opening the site
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 33 | Close the paid taps before dropping the password | done | 2026-10-03 (DECISIONS V3-90): search never builds a map, only the admin key can; visitors request maps into an `/admin` queue ranked by distinct visitors; approved ones → `scripts/experiments/requests-roster.mjs` → batch build; a search naming a mapped subject skips the model; "Ask Kynda" capped at 200/day site-wide. **Tony's clicks:** monthly spend limits in the Anthropic Console and on OpenRouter; then remove `KYNDA_SITE_PASSWORD` on Vercel once #32 is ready. |
+| 32 | Search-engine readiness (SEO) | open | Tony, 2026-10-03: the point of opening the site is for Google to crawl it and build authority. Audit the same day: **(1) the site password blocks crawlers** everywhere but `/demo/*`. **(2) Subject pages are an empty shell to a crawler:** `/s/radiohead` sends a good title and description, but the map, mix and connections load in the browser afterwards, so the HTML names none of them (0 mentions of Talking Heads). The print view (`/s/[slug]/print`) already builds the full connection list on the server from the graph, so the data path exists. Render a crawlable version of each subject's connections and receipts into the page. **(3) No `robots.txt`, no `sitemap.xml`** (both 404), so Google can't discover ~250 mapped subjects except through links. **(4) No canonical URLs**: `/s/<slug>` now opens any map stop, so thousands of thin unmapped pages could be indexed; mark them `noindex` (or canonical to the mapped page) and index mapped subjects only. **(5) No structured data** (schema.org `Person`/`MusicGroup`/`CreativeWork` with `sameAs` → Wikidata/Wikipedia/MusicBrainz) and no internal link mesh: each subject page should link, as plain links, to the mapped subjects it connects to, plus a browse index. **(6) Then:** Google Search Console + submit the sitemap (Tony's account), and watch which pages earn impressions. All free code work except the Search Console step. |
+
 ## Later — product
 
 | # | Item | Status | Notes |

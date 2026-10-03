@@ -216,6 +216,48 @@ export default function Admin() {
             ))}
           </div>
 
+          {/* Map requests (2026-10-03): visitors ask, nothing builds until approved */}
+          {(() => {
+            const reqs = (data.mapRequests || []).filter((r) => !r.mapped);
+            const approved = reqs.filter((r) => r.status === "approved").length;
+            return (
+              <>
+                <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "6px" }}>
+                  Map requests <span style={{ ...mono("12px", BASE.gold) }}>({reqs.length - approved} waiting · {approved} approved)</span>
+                </h2>
+                <div style={{ ...mono("11px"), marginBottom: "12px", lineHeight: 1.6 }}>
+                  Ranked by how many different visitors asked. Approved ones go into the next batch build; built ones drop off this list.
+                </div>
+                <div style={{ background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", overflow: "hidden", marginBottom: "40px" }}>
+                  {reqs.map((r) => (
+                    <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "13px", color: "rgba(226,232,240,0.85)", minWidth: 0 }}>
+                        <span style={{ ...mono("11px", BASE.gold), marginRight: "10px" }}>{r.votes}×</span>
+                        {r.name}
+                        {r.description && <span style={mono("10px")}> · {r.description}</span>}
+                        {r.wikidata_qid && <a href={`https://www.wikidata.org/wiki/${r.wikidata_qid}`} target="_blank" rel="noreferrer" style={{ ...mono("10px"), marginLeft: "8px" }}>{r.wikidata_qid}</a>}
+                      </span>
+                      <span style={{ display: "flex", gap: "8px" }}>
+                        {r.status === "approved" ? (
+                          <>
+                            <span style={mono("10px", BASE.gold)}>APPROVED</span>
+                            <button disabled={acting === r.id} onClick={() => act(r.id, "reopen_request")} style={{ ...mono("10px"), background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>undo</button>
+                          </>
+                        ) : (
+                          <>
+                            <button disabled={acting === r.id} onClick={() => act(r.id, "approve_request")} style={{ ...mono("10px", BASE.gold), background: "none", border: "1px solid rgba(250,204,21,0.3)", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>approve</button>
+                            <button disabled={acting === r.id} onClick={() => act(r.id, "decline_request")} style={{ ...mono("10px"), background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>decline</button>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                  {reqs.length === 0 && <div style={{ ...mono("12px"), padding: "14px 16px" }}>no requests waiting</div>}
+                </div>
+              </>
+            );
+          })()}
+
           {/* Searches */}
           <h2 style={{ fontFamily: FONTS.display, fontWeight: 400, fontSize: "22px", marginBottom: "12px" }}>
             Recent searches <span style={mono("12px")}>({data.stats.searches_total} all-time)</span>
