@@ -76,7 +76,9 @@ export async function entityContext(entityId) {
 async function articles(titles) {
   const d = await enwiki({
     action: "query", titles, redirects: "1", prop: "pageprops|pageimages|description|extracts",
-    piprop: "name", exintro: "1", explaintext: "1", exsentences: "2",
+    // pilicense any: a film's poster is non-free, and without this Wikipedia reports no image at all.
+    // Agents still only take Commons pictures (freePictureFor checks the host).
+    piprop: "name", pilicense: "any", exintro: "1", explaintext: "1", exsentences: "2",
   });
   return Object.values(d.query?.pages || {}).filter((p) => p.missing === undefined);
 }
@@ -135,8 +137,63 @@ async function freePictureFor(page) {
 
 const asCandidate = (source, info, extra = {}) => ({
   source, url: info.url, page: info.page || null, license: info.license || null,
-  credit: info.credit || null, fair_use: false, score: 0, ...extra,
+  credit: info.credit || null, fair_use: false, score: 0, aspect: info.aspect ?? null, ...extra,
 });
+
+// Shape (Tony, 2026-10-03): map bubbles are round. Wider than WIDE is a wordmark, banner or film
+// still — never applied on its own or pre-checked. Works prefer a poster/cover/jacket, which is
+// tall or square; anything wider than POSTERISH sends a work looking for one first.
+export const WIDE = 1.6;
+const POSTERISH = 1.25;
+const tooWide = (c) => (c?.aspect ?? 0) > WIDE;
+
+// The kind word Wikipedia uses to disambiguate a work's article, by the work's domain.
+const KIND_WORDS = { film: ["film"], music: ["album", "song"], literature: ["novel", "book", "play"], television: ["TV series"], comedy: ["TV series", "film"], theater: ["musical", "play"], art: ["painting"] };
+
+/**
+ * The work's own poster, cover or jacket from its Wikipedia article. With a credited creator this
+ * is the mix-card path (title + creator gates). Without one, the article must carry the exact title
+ * and say it is the right kind of thing for the work's domain; it applies on its own only when the
+ * article also names someone the work is connected to on the map.
+ */
+export async function posterFor(entity, ctx, { alsoTry = [] } = {}) {
+  const medium = MEDIUM[entity.domain] || null;
+  const creator = entity.metadata?.creator;
+  if (creator) {
+    const found = await findArticleImage(entity.name, creator, medium).catch(() => null);
+    const info = found ? await fileInfo(found.file).catch(() => null) : null;
+    if (info?.host === "commons") return { pick: asCandidate("enwiki", info, { title: found.article, description: "Matched by title and creator", identity: "work gates" }), sure: true };
+    if (info?.url) {
+      const cls = fairUseClass({ medium }, found.extract);
+      if (cls) return { pick: { source: "enwiki", url: info.url, page: info.page, license: cls.license, credit: `en.wikipedia (${found.article})`, title: found.article, description: "Matched by title and creator", fair_use: true, identity: "work gates", aspect: info.aspect ?? null }, sure: true };
+    }
+    // The credited creator can be wrong (a film credited to its composer) — fall through to title + kind.
+  }
+  const kinds = KIND_WORDS[entity.domain] || [];
+  // Exact-title articles of the right kind, including year-qualified ones ("Titanic (1997 film)").
+  const s = await enwiki({ action: "query", list: "search", srsearch: `intitle:"${entity.name}" ${kinds[0] || ""}`.trim(), srlimit: "6" }).catch(() => ({}));
+  const found = (s.query?.search || []).map((h) => h.title).filter((t) => plain(t) === plain(entity.name));
+  const titles = [...new Set([...alsoTry, ...kinds.map((k) => `${entity.name} (${k})`), ...found, entity.name])].slice(0, 12);
+  const pages = await articles(titles.join("|")).catch(() => []);
+  const test = MEDIUM_TEST[entity.domain] || WORKISH;
+  for (const t of titles) {
+    // Exact title first ("Titanic (1997 film)" must not resolve to the ship); a bare title may arrive via redirect.
+    const p = pages.find((x) => x.title === t) || (!/\(/.test(t) ? pages.find((x) => plain(x.title) === plain(t)) : null);
+    if (!p || !p.pageimage || "disambiguation" in (p.pageprops || {})) continue;
+    if (plain(p.title) !== plain(entity.name)) continue;
+    const said = `${p.description || ""} ${(p.extract || "").split(/(?<=[.!?])\s/)[0]}`;
+    if (!test.test(said)) continue;
+    if (entity.domain !== "music" && /\b(album|soundtrack|song|single|EP)\b/i.test(p.description || "")) continue; // "Succession (soundtrack)" isn't the show
+    const info = await fileInfo(p.pageimage).catch(() => null);
+    if (!info?.url) continue;
+    const mentions = ctx.connected.filter((n) => n && n.length > 3 && nrm(n) !== nrm(entity.name) && nrm(p.extract).includes(nrm(n)));
+    const base = { title: p.title, description: p.description || said.slice(0, 140), identity: mentions.length ? `poster · mentions ${mentions[0]}` : "poster · title + kind", score: 3 + mentions.length * 2 };
+    if (info.host === "commons") return { pick: asCandidate("enwiki", info, base), sure: mentions.length > 0 };
+    const cls = fairUseClass({ medium }, p.extract);
+    if (cls) return { pick: { source: "enwiki", url: info.url, page: info.page, license: cls.license, credit: `en.wikipedia (${p.title})`, fair_use: true, aspect: info.aspect ?? null, ...base }, sure: mentions.length > 0 };
+  }
+  return null;
+}
 
 // ── extra free sources, used only to fill the curator's choices ──
 async function commonsSearch(term, limit = 3) {
@@ -161,6 +218,7 @@ async function openverse(term, limit = 3) {
     url: x.thumbnail || x.url, page: x.foreign_landing_url || x.url,
     license: x.license === "pdm" ? "Public domain" : x.license === "cc0" ? "CC0" : `CC ${x.license.toUpperCase()} ${x.license_version || ""}`.trim(),
     credit: (x.creator || x.source || "Openverse").slice(0, 120),
+    aspect: x.width && x.height ? +(x.width / x.height).toFixed(3) : null,
   }, { title: x.title || null, description: `Openverse · ${x.source || ""}`.trim() }));
 }
 
@@ -213,17 +271,11 @@ export async function findEntityImage(entity, { query = null } = {}) {
   const candidates = [];
   let auto = null;
 
-  if (isWork(entity) && !query) {
-    const medium = MEDIUM[entity.domain] || null;
-    const found = await findArticleImage(entity.name, entity.metadata.creator, medium).catch(() => null);
-    const info = found ? await fileInfo(found.file).catch(() => null) : null;
-    if (info?.host === "commons") {
-      auto = asCandidate("enwiki", info, { title: found.article, description: "Matched by title and creator", identity: "work gates" });
-    } else if (info?.url) {
-      const cls = fairUseClass({ medium }, found.extract);
-      if (cls) auto = { source: "enwiki", url: info.url, page: info.page, license: cls.license, credit: `en.wikipedia (${found.article})`, title: found.article, description: "Matched by title and creator", fair_use: true, identity: "work gates" };
-    }
-    if (!auto && medium === "music") candidates.push(...await coverArt(entity.name, entity.metadata.creator).catch(() => []));
+  if (entity.kind === "work" && !query) {
+    const poster = await posterFor(entity, ctx).catch(() => null);
+    if (poster && poster.sure && !tooWide(poster.pick)) auto = poster.pick;
+    else if (poster) candidates.push({ ...poster.pick, score: (poster.pick.score || 0) + 2 });
+    if (!auto && isWork(entity) && MEDIUM[entity.domain] === "music") candidates.push(...await coverArt(entity.name, entity.metadata.creator).catch(() => []));
   }
 
   if (!auto) {
@@ -235,7 +287,7 @@ export async function findEntityImage(entity, { query = null } = {}) {
     if (entity.wikidata_qid && !query) {
       const wd = await wikidataFile(entity.wikidata_qid).catch(() => null);
       const info = wd ? await fileInfo(wd.file).catch(() => null) : null;
-      if (info?.host === "commons") auto = asCandidate("wikidata", info, { title: entity.wikidata_qid, description: "Confirmed Wikidata ID", identity: "wikidata id" });
+      if (info?.host === "commons" && !tooWide(info)) auto = asCandidate("wikidata", info, { title: entity.wikidata_qid, description: "Confirmed Wikidata ID", identity: "wikidata id" });
     }
     if (!auto) {
       if (!query) add(await articles(entity.name).catch(() => []));
@@ -256,7 +308,8 @@ export async function findEntityImage(entity, { query = null } = {}) {
         });
         // Auto only when the article is unmistakably theirs: their name, plus a shared role
         // word or a mention of someone they're connected to.
-        if (!auto && !query && id.nameOk && (id.shared.length || id.mentions.length)) auto = cand;
+        if (!auto && !query && id.nameOk && (id.shared.length || id.mentions.length) && !tooWide(cand)
+            && !(entity.kind === "work" && (cand.aspect ?? 0) > POSTERISH)) auto = cand;
         else candidates.push(cand);
         await pause(80);
       }
@@ -286,7 +339,7 @@ export async function findEntityImage(entity, { query = null } = {}) {
 export async function applyEntityImage(entityId, img, status) {
   await q(`UPDATE entities SET metadata = (metadata - 'image_status') || $2::jsonb, updated_at = now() WHERE id = $1`, [entityId, JSON.stringify({
     image_url: img.url, image_page: img.page || null, image_license: img.license || null, image_credit: img.credit || null,
-    image_source: img.source || null, image_identity: img.identity || null, image_fair_use: !!img.fair_use,
+    image_source: img.source || null, image_identity: img.identity || null, image_fair_use: !!img.fair_use, image_aspect: img.aspect ?? null,
     image_status: status, image_checked_at: new Date().toISOString(),
   })]);
 }
@@ -294,7 +347,7 @@ export async function applyEntityImage(entityId, img, status) {
 /** Take a picture off (curator) or record that there is no good one. */
 export async function clearEntityImage(entityId, { none = false } = {}) {
   await q(
-    `UPDATE entities SET metadata = (metadata - 'image_url' - 'image_page' - 'image_license' - 'image_credit' - 'image_source' - 'image_identity' - 'image_fair_use') || $2::jsonb, updated_at = now() WHERE id = $1`,
+    `UPDATE entities SET metadata = (metadata - 'image_url' - 'image_page' - 'image_license' - 'image_credit' - 'image_source' - 'image_identity' - 'image_fair_use' - 'image_aspect') || $2::jsonb, updated_at = now() WHERE id = $1`,
     [entityId, JSON.stringify({ image_status: none ? "none" : "removed", image_checked_at: new Date().toISOString() })]);
 }
 
@@ -302,9 +355,9 @@ export async function clearEntityImage(entityId, { none = false } = {}) {
 export async function saveCandidates(entityId, candidates) {
   for (const c of candidates) {
     await q(
-      `INSERT INTO image_candidates (entity_id, source, url, page, license, credit, title, description, fair_use, score)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (entity_id, url) DO NOTHING`,
-      [entityId, c.source, c.url, c.page, c.license, c.credit, c.title || null, [c.description, c.identity].filter(Boolean).join(" · ") || null, !!c.fair_use, c.score || 0]);
+      `INSERT INTO image_candidates (entity_id, source, url, page, license, credit, title, description, fair_use, score, aspect)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (entity_id, url) DO UPDATE SET aspect = COALESCE(image_candidates.aspect, EXCLUDED.aspect)`,
+      [entityId, c.source, c.url, c.page, c.license, c.credit, c.title || null, [c.description, c.identity].filter(Boolean).join(" · ") || null, !!c.fair_use, c.score || 0, c.aspect ?? null]);
   }
 }
 
@@ -437,9 +490,10 @@ export function rankForBulk(entity, cands) {
     // album of the same name (Cyrus Chestnut's "A Charlie Brown Christmas") is not the original.
     const coverArtist = c.source === "coverart" && !!entity.creator
       && nrm(desc).replace(/[^a-z0-9]+/g, " ").includes(nrm(entity.creator).replace(/[^a-z0-9]+/g, " ").trim().split(" ").pop());
-    const strong = (wiki && exact && !listy && fits) || (c.source === "coverart" && exact && coverArtist);
+    const wide = (c.aspect ?? 0) > WIDE; // wordmarks, banners, stills: never pre-checked
+    const strong = !wide && ((wiki && exact && !listy && fits) || (c.source === "coverart" && exact && coverArtist));
     const rank = (strong ? 100 : 0) + (wiki && exact ? 30 : 0) + (c.source === "coverart" ? 20 : 0) + (wiki ? 10 : 0)
-      + (nrm(c.title).includes(name.split(" ").pop() || "") ? 5 : 0) + (listy || workAboutThem ? -40 : 0) + (c.score || 0);
+      + (nrm(c.title).includes(name.split(" ").pop() || "") ? 5 : 0) + (listy || workAboutThem ? -40 : 0) + (wide ? -15 : 0) + (c.score || 0);
     return { c, strong, rank };
   }).sort((a, b) => b.rank - a.rank);
   const top = judged[0];

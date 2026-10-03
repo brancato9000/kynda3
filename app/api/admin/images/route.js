@@ -32,7 +32,7 @@ const current = (m) => (m?.image_url ? {
 // Every entity still awaiting a picture, with its best candidate and category (bulk review).
 async function pendingRanked() {
   const rows = (await q(
-    `SELECT ic.id, ic.entity_id, ic.source, ic.url, ic.page, ic.license, ic.credit, ic.title, ic.description, ic.fair_use, ic.score,
+    `SELECT ic.id, ic.entity_id, ic.source, ic.url, ic.page, ic.license, ic.credit, ic.title, ic.description, ic.fair_use, ic.score, ic.aspect,
             e.name, e.kind, e.domain, e.metadata->>'creator' AS creator
      FROM image_candidates ic JOIN entities e ON e.id = ic.entity_id
      WHERE ic.status = 'pending' AND e.metadata->>'image_url' IS NULL
@@ -54,7 +54,7 @@ async function entityView(id) {
   const e = (await q(`SELECT id, name, kind, domain, metadata FROM entities WHERE id = $1`, [id])).rows[0];
   if (!e) return null;
   const candidates = (await q(
-    `SELECT id, source, url, page, license, credit, title, description, fair_use, score
+    `SELECT id, source, url, page, license, credit, title, description, fair_use, score, aspect
      FROM image_candidates WHERE entity_id = $1 AND status = 'pending' ORDER BY score DESC, created_at LIMIT 12`, [id])).rows;
   const ctx = await entityContext(id);
   return {

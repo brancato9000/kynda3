@@ -147,14 +147,15 @@ async function fileInfo(file) {
     if (ALLOWLIST.test(license) && !unfitImage(ii)) {
       return {
         host: "commons", license, url: ii.thumburl || ii.url, page: ii.descriptionurl,
+        aspect: ii.width && ii.height ? +(ii.width / ii.height).toFixed(3) : null, // shape, for map bubbles
         credit: ((ii.extmetadata?.Artist?.value || "").replace(/<[^>]+>/g, "").trim() || "Wikimedia Commons").slice(0, 120),
       };
     }
     return null; // non-free ON COMMONS: no path
   }
-  const e = await enwiki({ action: "query", titles: `File:${file}`, prop: "imageinfo", iiprop: "url", iiurlwidth: "400" });
+  const e = await enwiki({ action: "query", titles: `File:${file}`, prop: "imageinfo", iiprop: "url|size", iiurlwidth: "400" });
   const ii = Object.values(e.query?.pages || {})[0]?.imageinfo?.[0];
-  return ii ? { host: "enwiki_nonfree", url: ii.thumburl || ii.url, page: ii.descriptionurl } : null;
+  return ii ? { host: "enwiki_nonfree", url: ii.thumburl || ii.url, page: ii.descriptionurl, aspect: ii.width && ii.height ? +(ii.width / ii.height).toFixed(3) : null } : null;
 }
 
 /** Which settled fair-use class covers this card, if any (V3-73..76). */

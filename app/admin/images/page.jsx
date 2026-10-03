@@ -114,7 +114,7 @@ export default function ImageQueue() {
                 {it.candidates.map((c) => (
                   <figure key={c.id} style={{ margin: 0, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "8px", display: "flex", flexDirection: "column", gap: "6px", minWidth: 0 }}>
                     <a href={c.page || c.url} target="_blank" rel="noreferrer" title="Open the source">
-                      <img src={c.url} alt="" loading="lazy" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", objectPosition: "50% 0%", borderRadius: "6px", display: "block", background: "#0f1016" }} />
+                      <img src={c.url} alt="" loading="lazy" style={{ width: "100%", aspectRatio: "1", objectFit: c.aspect > 1.6 ? "contain" : "cover", objectPosition: "50% 0%", borderRadius: "6px", display: "block", background: "#0f1016" }} />
                     </a>
                     <figcaption style={{ fontSize: "12px", lineHeight: 1.35, overflowWrap: "anywhere" }}>
                       <div>{c.title || c.source}</div>
@@ -232,10 +232,11 @@ function BulkView({ call }) {
               return (
                 <figure key={it.entity.id} style={{ margin: 0, background: BASE.surface, border: `1px solid ${on ? "rgba(52,211,153,0.55)" : "rgba(255,255,255,0.07)"}`, borderRadius: "10px", padding: "8px", display: "flex", flexDirection: "column", gap: "6px", minWidth: 0, opacity: on ? 1 : 0.72 }}>
                   <label style={{ position: "relative", cursor: "pointer", display: "block" }}>
-                    <img src={c.url} alt="" loading="lazy" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", objectPosition: "50% 0%", borderRadius: "7px", display: "block", background: "#0f1016" }} />
+                    <img src={c.url} alt="" loading="lazy" style={{ width: "100%", aspectRatio: "1", objectFit: c.aspect > 1.6 ? "contain" : "cover", objectPosition: "50% 0%", borderRadius: "7px", display: "block", background: "#0f1016" }} />
                     <input type="checkbox" checked={on} onChange={(e) => setChecked((x) => ({ ...x, [it.entity.id]: e.target.checked }))}
                       aria-label={`Use this picture for ${it.entity.name}`} style={{ position: "absolute", top: "8px", left: "8px", width: "20px", height: "20px", accentColor: "#34d399" }} />
                     {it.strong && (choice[it.entity.id] || 0) === 0 && <span style={{ position: "absolute", top: "8px", right: "8px", ...mono("9px", "#0f1016"), background: "rgba(52,211,153,0.9)", borderRadius: "8px", padding: "1px 6px" }}>STRONG</span>}
+                    {c.aspect > 1.6 && <span title="Wide pictures (logos, title cards) can't fill a round bubble; they're shown whole and small" style={{ position: "absolute", bottom: "8px", right: "8px", ...mono("9px", "#0f1016"), background: "rgba(251,191,36,0.9)", borderRadius: "8px", padding: "1px 6px" }}>WIDE {c.aspect.toFixed(1)}:1</span>}
                   </label>
                   <div style={{ fontFamily: FONTS.display, fontSize: "16px", lineHeight: 1.15, overflowWrap: "anywhere" }}>{it.entity.name}</div>
                   <div style={{ fontSize: "11.5px", lineHeight: 1.35, color: "rgba(226,232,240,0.8)", overflowWrap: "anywhere" }}>
