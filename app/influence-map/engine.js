@@ -236,10 +236,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       const x1 = t.x + shift.x, y1 = t.y + shift.y;
       let n = live.get(t.name);
       if (n) {
-        Object.assign(n, t, { x0: n.cx, y0: n.cy, x1, y1, s0: n.cs, s1: 1, cr0: n.ccr, r1: t.r, delay: 0, dur: 700, exiting: false });
+        // fx/fy cleared: the layout pins its center at the layout's own origin, and a former center
+        // carried that pin into the next map — the springs then yanked it toward a stale spot.
+        Object.assign(n, t, { x0: n.cx, y0: n.cy, x1, y1, s0: n.cs, s1: 1, cr0: n.ccr, r1: t.r, delay: 0, dur: 700, exiting: false, fx: null, fy: null, vx: 0, vy: 0, k: null });
       } else {
         const order = t.type === "center" ? 0 : ++buildIdx;
-        n = { ...t, cx: shift.x, cy: shift.y, cs: 0, ccr: t.r, x0: shift.x, y0: shift.y, x1, y1, s0: 0, s1: 1, cr0: t.r, r1: t.r,
+        n = { ...t, fx: null, fy: null, cx: shift.x, cy: shift.y, cs: 0, ccr: t.r, x0: shift.x, y0: shift.y, x1, y1, s0: 0, s1: 1, cr0: t.r, r1: t.r,
               delay: t.type === "center" ? 0 : (firstBuild ? 500 : 650) + order * Math.min(70, 2600 / target.length), dur: 820 };
         live.set(t.name, n);
       }
