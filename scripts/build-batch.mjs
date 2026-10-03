@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Corpus build on the V3-85/86 stack: disambiguate (Haiku) → maps via the
+// Corpus build on the V3-86/87 stack: disambiguate (Haiku) → maps via the
 // Anthropic Message Batches API (Opus 5, half price) → the same deterministic
 // verification and persistence as wave.mjs → Wikipedia reading (Sol) →
 // interview hunting (Sol) only where interviews plausibly exist.

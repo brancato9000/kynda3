@@ -1,0 +1,35 @@
+{
+  "requestedBy": "Tony, 2026-10-02 — pilot of the music pivot artists for the influence-map demo (shared influences of several mapped music subjects)",
+  "subjects": [
+    {
+      "name": "James Brown",
+      "kind": "person",
+      "domain": "music",
+      "wikidata_qid": "Q5950",
+      "mbid": "20ff3303-4fe2-4a47-a1b6-291e26aa3438",
+      "year": 1933,
+      "description": "American singer, songwriter and bandleader (1933–2006), the 'Godfather of Soul' and a founder of funk — Live at the Apollo, Papa's Got a Brand New Bag, Sex Machine, The Payback",
+      "rawQuery": "James Brown"
+    },
+    {
+      "name": "Joni Mitchell",
+      "kind": "person",
+      "domain": "music",
+      "wikidata_qid": "Q205721",
+      "mbid": "a6de8ef9-b1a1-4756-97aa-481bbb8a4069",
+      "year": 1943,
+      "description": "Canadian-American singer-songwriter and painter (born 1943, Fort Macleod, Alberta) — Blue, Court and Spark, The Hissing of Summer Lawns, Hejira, Mingus",
+      "rawQuery": "Joni Mitchell"
+    },
+    {
+      "name": "Marvin Gaye",
+      "kind": "person",
+      "domain": "music",
+      "wikidata_qid": "Q189758",
+      "mbid": "afdb7919-059d-43c1-b668-ba1d265e7e42",
+      "year": 1939,
+      "description": "American soul and R&B singer, songwriter and producer (1939–1984), Motown — What's Going On, Let's Get It On, I Heard It Through the Grapevine, Sexual Healing",
+      "rawQuery": "Marvin Gaye"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 // canvas; the React wrapper only supplies the markup (AD-04).
 //   - the map builds itself: center, then the KyndaMix headliners, then the rest
 //   - click travels in place (a free /api/graph read), leaving a gold thread back
-//   - hover (desktop, 500ms) or press-and-hold (touch) opens the evidence card
+//   - hover (desktop, 1s) or press-and-hold (touch) opens the evidence card
 //   - drag: bubbles stretch on a rubber band and spring home; the center goes
 //     wherever it's dropped and the map swings in after it
 //   - an endless background web with one slow swell rolling through it
@@ -114,6 +114,18 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     }
     return pending.get(name);
   }
+
+  // A work node travels to the artist who made it (Tony, 2026-10-02): influence
+  // claims usually name a record, and a record's own graph is two or three
+  // links, so tapping "What's Going On" should land on Marvin Gaye. Never
+  // re-enter the center (a subject's own work leads nowhere new); the work's
+  // own graph stays the fallback when its maker isn't mapped.
+  const WORK_KINDS = new Set(["work", "film", "tv_show", "book", "release", "recording"]);
+  function destOf(d) {
+    const maker = d.creator && (WORK_KINDS.has(d.kind) || !d.kind) ? d.creator : null;
+    return maker && normT(maker) !== normT(center) && normT(maker) !== normT(d.name) ? maker : d.name;
+  }
+  const isDead = (d) => missing.has(destOf(d)) && missing.has(d.name);
 
   function neighbors(name) {
     const g = graphs.get(name); if (!g) return [];
@@ -283,7 +295,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
     const all = gNodes.selectAll("g.node");
     all.classed("center", (d) => d.type === "center")
-      .classed("dead", (d) => d.type !== "center" && missing.has(d.name))
+      .classed("dead", (d) => d.type !== "center" && isDead(d))
       .classed("mix", (d) => !!d.mix)
       .attr("aria-label", (d) => (d.type === "center" ? d.name : `${d.name}, ${d.mix ? d.mix.label : TYPE_LABEL[d.type]}`));
     all.select(".halo").attr("fill", "none").attr("stroke", (d) => (d.mix ? d.mix.color : "none")).attr("stroke-width", 2.2);
@@ -294,7 +306,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       .attr("stroke", (d) => (d.type === "center" || d.name === prevCenter ? "#facc15" : COLORS[d.type]))
       .attr("stroke-opacity", (d) => (d.type === "center" ? 0.75 : d.name === prevCenter ? 0.9 : 0.85))
       .attr("stroke-width", (d) => (d.type === "center" ? 1.5 : d.name === prevCenter ? 2 : 1.2))
-      .attr("stroke-dasharray", (d) => (d.type !== "center" && missing.has(d.name) ? "3 3" : null));
+      .attr("stroke-dasharray", (d) => (d.type !== "center" && isDead(d) ? "3 3" : null));
     updatePics();
     all.select(".initials").text((d) => (d.type === "center" ? "" : initials(d.name)));
     all.select(".label").text((d) => (d.type === "center" ? d.name : short(d.name, d.mix ? 28 : 24)));
@@ -478,7 +490,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function onEnter(ev, d) {
     if (dragging || ev.pointerType === "touch" || d.exiting) return;
     clearTimeout(hideT); clearTimeout(hoverT);
-    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 500);
+    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 1000);
   }
   function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); hideT = setTimeout(() => hideCard(), 220); }
   // Phones (2026-10-02, Tony): a tap is for looking, a hold is for going. Tap opens the
@@ -509,14 +521,15 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   let travelling = null;
   async function travel(d) {
     if (d.type === "center" || d.exiting) return;
-    const name = d.name;
-    travelling = name;
-    const slow = setTimeout(() => toast(`Loading ${name}…`, true), 250);
-    const g = await loadGraph(name);
+    const dest = destOf(d);
+    travelling = dest;
+    const slow = setTimeout(() => toast(`Loading ${dest}…`, true), 250);
+    let name = dest, g = await loadGraph(dest);
+    if (!g && dest !== d.name) { name = d.name; g = await loadGraph(d.name); }
     clearTimeout(slow);
-    if (!alive || travelling !== name) return;
+    if (!alive || travelling !== dest) return;
     hideToast();
-    if (!g) { toast(`Kynda hasn't mapped ${name} yet.`); render(); return; }
+    if (!g) { toast(`Kynda hasn't mapped ${d.name} yet.`); render(); return; }
     go(name);
   }
   const onCardEnter = () => clearTimeout(hideT);
@@ -547,7 +560,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function showCard(d, touch) {
     if (d.type === "center") { showBioCard(d, touch); return; }
     cardFor = d;
-    loadGraph(d.name); // warm the next hop so travel is instant
+    const dest = destOf(d);
+    loadGraph(dest); // warm the next hop so travel is instant
     const ev0 = (d.evidence || [])[0];
     const normQ = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const quotes = [];
@@ -569,7 +583,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${!quotes.length && ev0 ? `<blockquote class="plain">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
       ${creditLine(d)}
       <div class="foot"><span>${n ? `${n} source${n === 1 ? "" : "s"} · ${esc(d.tier || "")}` : "mix pick"}</span>
-        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${!canTravel || missing.has(d.name) ? "" : `<button class="go">Travel →</button>`}</span></div>`;
+        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${!canTravel || isDead(d) ? "" : `<button class="go">${dest !== d.name && !missing.has(dest) ? `Travel to ${esc(dest)} →` : "Travel →"}</button>`}</span></div>`;
     const goBtn = card.querySelector(".go"); if (goBtn) goBtn.onclick = () => travel(d);
     const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);

@@ -59,7 +59,7 @@ export async function runResearchBatch(limit = 3, { log = console.log, model = R
   return totals;
 }
 
-// Interview hunting only where interviews plausibly exist (V3-86, Tony
+// Interview hunting only where interviews plausibly exist (V3-87, Tony
 // 2026-10-02): practices/concepts, foods and other non-creator subjects, and
 // anyone or anything whose life or making ended before 1900 return almost
 // nothing at ~$0.18 a hunt. Unknown years hunt (fail open).

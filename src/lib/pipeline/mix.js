@@ -119,7 +119,7 @@ export async function loadSubjectMembers(subject) {
 // either way — badge rates ARE the model eval.
 export const MIX_MODEL = process.env.KYNDA_MIX_MODEL || "claude-opus-5";
 
-// The prompt half of a mix, split out so the batch path (V3-86) sends the
+// The prompt half of a mix, split out so the batch path (V3-87) sends the
 // exact request the live path does.
 export function buildMixRequest(subject, members = [], { notes = [] } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];

@@ -329,7 +329,10 @@ export async function entitiesNeedingImages({ subject = null, limit = 200, reche
   let scope = `WITH ents AS (SELECT DISTINCT unnest(ARRAY[subject_id, object_id]) AS id FROM claims)`;
   if (subject) {
     params.push(subject);
-    scope = `WITH s AS (SELECT id FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1),
+    // Same resolution as the map (V3-85): the mapped subject, then the best-connected.
+    scope = `WITH s AS (SELECT e.id FROM entities e WHERE lower(e.name) = lower($1)
+               ORDER BY EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) DESC,
+                        (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) DESC, e.created_at LIMIT 1),
       ents AS (SELECT id FROM s UNION
                SELECT CASE WHEN c.subject_id = s.id THEN c.object_id ELSE c.subject_id END FROM claims c, s
                WHERE c.subject_id = s.id OR c.object_id = s.id)`;

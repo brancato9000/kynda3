@@ -124,16 +124,27 @@ async function findArticleImage(title, creator, medium = null) {
   return null;
 }
 
+// Wordmarks and banners can't fill a round map bubble or a card (2026-10-02:
+// The Chronic's "picture" was its 693×48 public-domain text logo, cropped to a
+// meaningless fragment). Shape is the test, not Commons' "text logo"
+// category — that also tags plain square covers and single labels, and TV
+// title cards are a settled class (V3-83). Tall images stay: people's
+// pictures are top-anchored.
+function unfitImage(ii) {
+  const w = ii?.width, h = ii?.height;
+  return !!(w && h && w / h > 3);
+}
+
 async function fileInfo(file) {
   const c = await (await fetch(
-    `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(`File:${file}`)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json`,
+    `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(`File:${file}`)}&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=800&format=json`,
     { headers: UA }
   )).json();
   const cp = Object.values(c.query?.pages || {})[0];
   if (cp?.imageinfo?.[0]) {
     const ii = cp.imageinfo[0];
     const license = ii.extmetadata?.LicenseShortName?.value || "";
-    if (ALLOWLIST.test(license)) {
+    if (ALLOWLIST.test(license) && !unfitImage(ii)) {
       return {
         host: "commons", license, url: ii.thumburl || ii.url, page: ii.descriptionurl,
         credit: ((ii.extmetadata?.Artist?.value || "").replace(/<[^>]+>/g, "").trim() || "Wikimedia Commons").slice(0, 120),
@@ -333,4 +344,4 @@ export async function enrichStoredMixMedia(subject, { deadline = Date.now() + 15
 
 // Shared with the map-image backfill (map-images.js): same identity gates,
 // same license allowlist, same fair-use class rules as the mix cards.
-export { enwiki, findArticleImage, fileInfo, fairUseClass, ALLOWLIST, UA };
+export { enwiki, findArticleImage, fileInfo, fairUseClass, ALLOWLIST, UA, unfitImage };

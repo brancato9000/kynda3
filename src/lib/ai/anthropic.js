@@ -150,7 +150,7 @@ export async function callHaiku({ system, user, schema, maxTokens = 2000 }) {
 }
 
 /**
- * Message Batches (V3-86): the same structured-output request as callModel,
+ * Message Batches (V3-87): the same structured-output request as callModel,
  * submitted in bulk at half price. Results usually land within the hour
  * (24h max). requests: [{ id, model, system, user, schema, maxTokens, effort }]
  * — ids must match ^[A-Za-z0-9_-]{1,64}$.
@@ -198,7 +198,7 @@ export async function collectBatch(batchId, { label = "batch", pollMs = 60_000, 
 }
 
 export const SONNET = "claude-sonnet-5";
-// Production readers (V3-85, Tony 2026-10-02): GPT-6 Sol via OpenRouter for
+// Production readers (V3-86, Tony 2026-10-02): GPT-6 Sol via OpenRouter for
 // Wikipedia/source reading and interview hunting — 100% quote-wall pass and
 // roughly 2–7× the confirmed yield of Sonnet 5/5.5 at the same list price
 // (reports/open-model-compare-2026-09-22.md, -09-29.md). Maps stay on Opus 5.

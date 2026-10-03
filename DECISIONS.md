@@ -449,7 +449,15 @@ member_of Paul Taylor"); moved as-is, direction untouched.
 
 **First run (Vonnegut's map):** 23 applied automatically (12 people/institutions by role, 11 works by the existing gates), 11 queued, 3 with nothing anywhere. Backfill: `node scripts/map-images.mjs [--subject Name] [--limit N]`.
 
-## V3-85 — GPT-6 Sol reads and hunts; the quality check learns work-subjects (2026-10-02)
+## V3-85 — Map travel: works lead to their makers; the mapped subject wins a name; rejections leave the map (2026-10-02)
+
+**Context:** Tony wants to demo leaping node to node, two to four degrees out ("so-and-so influenced this subject — jump to them — they also influenced these five others"). A zero-cost audit of the music subgraph found three things breaking the leap: influence claims usually name a *record*, and tapping a record travelled to the record's own two-or-three-link graph (James Brown is a cited influence on seven music subjects, mostly via *Sex Machine* and *Live at the Apollo*); travel resolved names to the oldest same-name entity, landing on sparse duplicates (*The Miseducation of Lauryn Hill*, the wrong Paul Taylor); and 51 self-influence claims (Bowie → *Low*, Kendrick → *DAMN.*, Groening → *Life in Hell*) sat on maps despite the V3-63 axiom.
+
+**Decision:** (1) A work node travels to its maker — the card says "Travel to {maker} →" — unless the maker is the current center or has no graph, in which case the work's own graph is the fallback. (2) Name resolution prefers the entity with a stored mix, then the best-connected, then the oldest. (3) A rejected review (the claim_state mechanism from 001, unused until now) suppresses a claim everywhere a claim is served: the map graph, the researcher's targets, and the path finder. Corrections are review rows, not deletes — attributed and reversible. (4) Own-work influence is gated deterministically at write time (harvest drop + `recordFinding` backstop), not just by prompt. Creatorship claims (`founded`, `produced_by`) and adaptations pointing back at their source author are deliberately not touched.
+
+**Amendment (same day, Tony's option 1):** a subject's own works are dropped from its own map in the graph read: works credited to the subject, joint credits included ("Kendrick Lamar & Travis Scott"); for a work subject, works by its creator. Kendrick's map carried *good kid, m.A.A.d city*, *Section.80* and three joint singles as dead-end peers. Known cost: collaborators linked only through a joint single (Travis Scott, SZA on Kendrick's map) leave with it until a direct collaboration claim exists. **Image shape (amends V3-84):** a picture more than 3:1 wide is refused at every Commons acceptance point; *The Chronic*'s 693×48 public-domain wordmark was rendering as a fragment. Shape, not Commons' "text logo" category, is the test: that category also tags plain square covers and single labels, and TV title cards are a settled class.
+
+## V3-86 — GPT-6 Sol reads and hunts; the quality check learns work-subjects (2026-10-02)
 
 **Context:** the open-model experiments (2026-09-16 to 09-29, ~$17 total) measured every candidate on Kynda's three jobs under the same prompts and gates. On reading Wikipedia, GPT-6 Sol confirmed 108 connections on the three benchmark pages with every quote real; Sonnet 5 confirmed ~78 with 74–85% real, Sonnet 5.5 37 with 100%. On interview hunting Sol confirmed 28 of 28 citations at $0.17/subject; Sonnet 5 found 4, Sonnet 5.5 9 at $0.28. A 20-subject run showed GPT-6 Luna finds about half of what Sol does, misses spread across every subject. Sol has the same list price as Sonnet ($2/$10). Reports: `reports/open-model-compare-2026-09-22.md`, `-09-29.md`; finance `kynda/cost-levers.md`.
 
@@ -459,7 +467,7 @@ member_of Paul Taylor"); moved as-is, direction untouched.
 
 **Accepted risks:** single-vendor dependency on OpenRouter/OpenAI for reading; the quote wall proves a quote exists, not that it documents the relation (unchanged, all models); research harness tested on 23 subjects, not hundreds — watch the first 50.
 
-## V3-86 — Opus maps by batch; interviews only where they exist (2026-10-02)
+## V3-87 — Opus maps by batch; interviews only where they exist (2026-10-02)
 
 **Context:** in a blind side-by-side of six subjects (Mitski, Frida Kahlo, In the Mood for Love, Katherine Dunham, Kurt Vonnegut, Detroit-style pizza), Tony strongly preferred Opus 5's map writing over GPT-6 Sol and Luna. Fact-checks agreed: source-backed connections Opus 61, Sol 50, Luna 28. But Opus maps now cost ~$0.18 (not July's $0.11), which put the 750-subject build at ~$330 against a $200 budget. About 93% of a map's cost is output (the map plus thinking), so prompt caching can't help.
 
