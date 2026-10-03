@@ -362,8 +362,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function visibleRect() {
     const { w, h } = size();
     const top = q("viewtoggle") && !q("viewtoggle").hidden ? 40 : 0;
-    if (!panelOpen) return { x: 0, y: top, w, h: h - top };
-    return panelSide() === "right" ? { x: 0, y: top, w: Math.max(200, w - panelW), h: h - top } : { x: 0, y: top, w, h: Math.max(160, h - panelH - top) };
+    const bottom = w > 640 && trail.length >= 2 ? 40 : 0; // desktop: the trail runs along the bottom
+    if (!panelOpen) return { x: 0, y: top, w, h: h - top - bottom };
+    return panelSide() === "right" ? { x: 0, y: top, w: Math.max(200, w - panelW), h: h - top - bottom } : { x: 0, y: top, w, h: Math.max(160, h - panelH - top) };
   }
   // Opening, closing or resizing the panel never moves the map (Tony, 2026-10-03): the camera
   // moves only when you drag or zoom, press ◎, or travel. ◎ frames whatever space is visible.
@@ -877,6 +878,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     });
     el.querySelector('[aria-current="true"]')?.scrollIntoView({ inline: "nearest", block: "nearest" });
     q("trailbox").hidden = trail.length < 2;
+    root.classList.toggle("has-trail", trail.length >= 2); // desktop: the legend steps up to make room for the trail
     const open = q("openpage");
     // With the page following the center, "Open X" would only repeat the header.
     open.hidden = !onOpenSubject || !!onCenter || center === subjectName;

@@ -305,6 +305,14 @@ const CSS = `
 
 html:has(.kmap) { overflow-x: clip; }
 @media (max-width: 1240px) { .kmap .hint { display: none; } }
+/* Desktop (Tony, 2026-10-03): no ring-colour key row; the trail runs along the bottom where it was,
+   with the one-line legend just above it. Phones keep the trail on top and the full key behind "Key". */
+@media (min-width: 641px) {
+  .kmap .legend .mixkey { display: none; }
+  .kmap .trailbox { top: auto; bottom: 12px; right: auto; max-width: calc(100% - 48px); }
+  .kmap.panel-open[data-panel="right"] .trailbox { right: auto; max-width: calc(100% - var(--panel-w, 380px) - 48px); }
+  .kmap.has-trail .legend { bottom: 56px; }
+}
 @media (max-width: 640px) {
   .kmap { height: max(380px, calc(100svh - 48px)); }
   .kmap .keybtn { display: inline-flex; }
