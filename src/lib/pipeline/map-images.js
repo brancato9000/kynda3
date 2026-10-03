@@ -409,6 +409,17 @@ const AGENT_RULES = CATEGORY_RULES.slice(5); // the people/organization/place ca
  * (a person or organization for agents, a work for works) and isn't a list or a work about them,
  * or an exact-title album cover.
  */
+// A thing, not a person/organization: if the pick's qualifier or description says this, it isn't
+// the person (Galileo the spacecraft, not Galileo the astronomer).
+const THING = /\b(spacecraft|space probe|mission|satellite|ship|aircraft|locomotive|vehicle|software|video game|asteroid|crater|planet|moon|horse|racehorse|film|movie|album|song|single|novel|book|play|musical|episode|series|painting|opera|typeface)\b/i;
+// A work with a known medium must be matched by an article about that medium.
+const MEDIUM_TEST = {
+  film: /\b(film|movie|documentary)\b/i, music: /\b(album|EP|single|song|soundtrack|mixtape|composition|symphony|opera)\b/i,
+  literature: /\b(novel|novella|book|poem|poetry|short story|essay|memoir|play|collection)\b/i,
+  television: /\b(television|TV|series|sitcom|miniseries|special|show)\b/i, art: /\b(painting|sculpture|fresco|mural|artwork|print|drawing)\b/i,
+  theater: /\b(play|musical|opera|ballet|revue|theatre|theater)\b/i,
+};
+
 export function rankForBulk(entity, cands) {
   const work = entity.kind === "work";
   const name = plain(entity.name);
@@ -418,8 +429,15 @@ export function rankForBulk(entity, cands) {
     const wiki = c.source === "wikidata" || c.source === "enwiki";
     const listy = LISTY.test(c.title || "") || LISTY.test(desc);
     const workAboutThem = !work && /\b\d{4} (film|novel|album|song|book|play)\b/i.test(desc);
-    const fits = work ? WORKISH.test(desc) : (PERSONISH.test(desc) || AGENT_RULES.some(([, test]) => test(desc, false))) && !workAboutThem;
-    const strong = (wiki && exact && !listy && fits) || (c.source === "coverart" && exact);
+    const qualifier = ((c.title || "").match(/\(([^)]*)\)\s*$/) || [])[1] || "";
+    const isThing = !work && (THING.test(qualifier) || THING.test(desc.split(/[(·]/)[0]));
+    const mediumOk = !work || !MEDIUM_TEST[entity.domain] || c.source === "coverart" || MEDIUM_TEST[entity.domain].test(`${qualifier} ${desc}`);
+    const fits = (work ? WORKISH.test(desc) : (PERSONISH.test(desc) || AGENT_RULES.some(([, test]) => test(desc, false))) && !workAboutThem && !isThing) && mediumOk;
+    // An album cover counts only when its artist is the work's credited creator — a tribute
+    // album of the same name (Cyrus Chestnut's "A Charlie Brown Christmas") is not the original.
+    const coverArtist = c.source === "coverart" && !!entity.creator
+      && nrm(desc).replace(/[^a-z0-9]+/g, " ").includes(nrm(entity.creator).replace(/[^a-z0-9]+/g, " ").trim().split(" ").pop());
+    const strong = (wiki && exact && !listy && fits) || (c.source === "coverart" && exact && coverArtist);
     const rank = (strong ? 100 : 0) + (wiki && exact ? 30 : 0) + (c.source === "coverart" ? 20 : 0) + (wiki ? 10 : 0)
       + (nrm(c.title).includes(name.split(" ").pop() || "") ? 5 : 0) + (listy || workAboutThem ? -40 : 0) + (c.score || 0);
     return { c, strong, rank };
