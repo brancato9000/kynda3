@@ -8,7 +8,7 @@
 import { callModel, SONNET } from "../ai/anthropic.js";
 import { fetchPageText, waybackSnapshot } from "../verify/evidence.js";
 import { quoteMatch } from "../verify/quoteMatch.js";
-import { upsertEntity, recordFinding } from "../store.js";
+import { upsertEntity, recordFinding, isOwnWorkInfluence } from "../store.js";
 import { findArticleTitle } from "../entities/wikipedia.js";
 import { q, dbConfigured } from "../db.js";
 
@@ -158,9 +158,13 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
     // names on either end, and self-referential claims are dropped before
     // they touch the graph.
     const selfRef = c.targetTitle.trim().toLowerCase() === c.subjectName.trim().toLowerCase();
-    if (c.targetKind === "other" || !validEntityShape(c.targetTitle) || !validEntityShape(c.subjectName) || selfRef) {
+    // An artist cannot influence themselves (Tony's axiom): the prompt forbids
+    // citing the subject's own work, but 51 such claims got through before
+    // this gate existed (2026-10-02 audit).
+    const ownWork = isOwnWorkInfluence(c.subjectName, c.targetCreator, c.claimType);
+    if (c.targetKind === "other" || !validEntityShape(c.targetTitle) || !validEntityShape(c.subjectName) || selfRef || ownWork) {
       summary.dropped += 1;
-      log(`    ⊘ dropped (${c.targetKind === "other" ? "kind:other" : selfRef ? "self-reference" : "shape"}): ${c.subjectName} → ${c.targetTitle}`);
+      log(`    ⊘ dropped (${c.targetKind === "other" ? "kind:other" : selfRef ? "self-reference" : ownWork ? "own work" : "shape"}): ${c.subjectName} → ${c.targetTitle}`);
       continue;
     }
     const match = quoteMatch(text, c.quote);
