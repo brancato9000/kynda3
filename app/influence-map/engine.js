@@ -3,7 +3,7 @@
 // canvas; the React wrapper only supplies the markup (AD-04).
 //   - the map builds itself: center, then the KyndaMix headliners, then the rest
 //   - click travels in place (a free /api/graph read), leaving a gold thread back
-//   - hover (desktop, 500ms) or press-and-hold (touch) opens the evidence card
+//   - hover (desktop, 1s) or press-and-hold (touch) opens the evidence card
 //   - drag: bubbles stretch on a rubber band and spring home; the center goes
 //     wherever it's dropped and the map swings in after it
 //   - an endless background web with one slow swell rolling through it
@@ -490,7 +490,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function onEnter(ev, d) {
     if (dragging || ev.pointerType === "touch" || d.exiting) return;
     clearTimeout(hideT); clearTimeout(hoverT);
-    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 500);
+    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 1000);
   }
   function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); hideT = setTimeout(() => hideCard(), 220); }
   // Phones (2026-10-02, Tony): a tap is for looking, a hold is for going. Tap opens the
