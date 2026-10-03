@@ -700,10 +700,35 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   document.addEventListener("keydown", onEsc);
   // A tap or click on empty map does nothing: the panel closes only with × (or Esc).
 
+  // "Ask Kynda to map this" in map mode (Tony, 2026-10-03, BACKLOG #34): an
+  // unmapped center (Chuck Mangione, one link back to Dizzy Gillespie) or a
+  // stop the map can't travel to offers the same request the Mix tab does —
+  // one vote in the admin queue (V3-90), never a generation.
+  const requested = new Map(); // name → "sending" | "sent" | "error"
+  function requestBlock(name, lead) {
+    if (!canTravel) return "";
+    const st = requested.get(name);
+    return `<div class="request"><p>${lead}</p><button class="ask"${st === "sending" || st === "sent" ? " disabled" : ""}>${st === "sent" ? "Requested ✓ — thanks" : st === "sending" ? "Sending…" : "Ask Kynda to map this"}</button>${st === "error" ? `<span class="err">Couldn't send that — try again.</span>` : ""}</div>`;
+  }
+  function wireRequest(d, ids, rerender) {
+    const btn = card.querySelector(".ask"); if (!btn) return;
+    btn.onclick = async () => {
+      requested.set(d.name, "sending"); rerender();
+      try {
+        const r = await fetch("/api/request-map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: d.name, ...ids }) });
+        requested.set(d.name, r.ok ? "sent" : "error");
+      } catch { requested.set(d.name, "error"); }
+      if (alive && cardFor === d) rerender();
+    };
+  }
+
   async function showBioCard(d, touch) {
     cardFor = d;
     const bio = await loadBio(d.name);
     if (!alive || cardFor !== d) return;
+    const cg = graphs.get(d.name);
+    const unmapped = cg?.hasMix === false;
+    const links = cg ? (cg.predecessors?.length || 0) + (cg.peers?.length || 0) + (cg.successors?.length || 0) : 0;
     const text = bio?.text ? (bio.text.length > 700 ? bio.text.slice(0, 700).replace(/\s+\S*$/, "") + "…" : bio.text) : null;
     card.innerHTML = `
       <button class="x" aria-label="Close">×</button>
@@ -712,18 +737,21 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${bio?.description ? `<div class="meta">${esc(bio.description)}</div>` : ""}
       ${text ? `<p class="summary bio">${esc(text)}</p>` : `<p class="summary">No bio for ${esc(d.name)} yet.</p>`}
       ${creditLine(d)}
+      ${unmapped ? requestBlock(d.name, `Kynda hasn't mapped ${esc(d.name)} yet${links <= 3 ? ", so this is as far as the map goes from here" : "; these are the connections other maps found"}. Ask, and it joins the queue for the next build.`) : ""}
       ${bio?.url || (d.name !== subjectName && onOpenSubject) || curating(d) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener license">text CC BY-SA 4.0</a>` : ""}</span>
         <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}`;
     placeCard(d, touch);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
     const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
+    if (unmapped) wireRequest(d, { wikidata_qid: cg.subjectQid || null, mbid: cg.subjectMbid || null, domain: (cg.domain || "").toLowerCase() || null }, () => showBioCard(d, touch));
   }
 
   function showCard(d, touch) {
     if (d.type === "center") { showBioCard(d, touch); return; }
     cardFor = d;
     const dest = destOf(d);
-    loadGraph(dest); // warm the next hop so travel is instant
+    // Warm the next hop so travel is instant; if it turns out to be a dead end, redraw with the request.
+    loadGraph(dest).then(() => { if (alive && cardFor === d && isDead(d) && canTravel && !card.querySelector(".request")) showCard(d, touch); });
     const ev0 = (d.evidence || [])[0];
     const normQ = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const quotes = [];
@@ -745,9 +773,11 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${quotes.map((x) => `<blockquote>“${esc(x.quote.replace(/^["“]|["”]$/g, ""))}”<cite>${x.speaker ? esc(x.speaker) + " · " : ""}${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.publication || host(x.url))}</a>` : esc(x.publication || "")}</cite></blockquote>`).join("")}
       ${!quotes.length && ev0 ? `<blockquote class="plain">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
       ${creditLine(d)}
+      ${canTravel && isDead(d) ? requestBlock(d.name, `Kynda hasn't mapped ${esc(d.name)} yet, so the map can't travel there.`) : ""}
       <div class="foot"><span>${n ? `${n} source${n === 1 ? "" : "s"} · ${esc(d.tier || "")}` : "mix pick"}</span>
         <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${!canTravel || isDead(d) ? "" : `<button class="go">${dest !== d.name && !missing.has(dest) ? `Travel to ${esc(dest)} →` : "Travel →"}</button>`}</span></div>`;
     const goBtn = card.querySelector(".go"); if (goBtn) goBtn.onclick = () => travel(d);
+    if (canTravel && isDead(d)) wireRequest(d, { domain: (d.domain || "").toLowerCase() || null }, () => showCard(d, touch));
     const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
     placeCard(d, touch);

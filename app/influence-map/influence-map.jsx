@@ -242,6 +242,11 @@ const CSS = `
 .kmap .card .go, .kmap .card .open { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
 .kmap .card .open { color: var(--muted); }
 .kmap .card .go:hover, .kmap .card .open:hover { border-color: var(--gold); color: var(--gold); }
+.kmap .card .request { margin-top: 14px; padding: 12px 14px; border: 1px solid rgba(250,204,21,0.25); border-radius: 10px; background: rgba(250,204,21,0.05); }
+.kmap .card .request p { margin: 0 0 10px; font-size: 0.82rem; line-height: 1.5; color: var(--fg); }
+.kmap .card .request .ask { background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.35); color: var(--gold); border-radius: 8px; padding: 7px 14px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.kmap .card .request .ask:disabled { cursor: default; opacity: 0.85; }
+.kmap .card .request .err { margin-left: 10px; font-family: var(--mono); font-size: 0.64rem; color: rgba(248,113,113,0.85); }
 .kmap .card .x { position: absolute; top: 10px; right: 12px; width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 20px; cursor: pointer; border-radius: 15px; }
 .kmap .card .x:hover { color: var(--fg); background: var(--surface-2); }
 .kmap .card h2 { padding-right: 32px; }
