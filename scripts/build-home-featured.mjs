@@ -34,6 +34,9 @@ const PER = Number(process.argv[2]) || 8;
 // 2026-10-03): her 600-connection map crushes the visualization, a poor
 // first impression from the home page's lead card.
 const EXCLUDE = new Set(["Beyoncé"]);
+// Topical leads: the first feature on a category's card. Madonna (Tony,
+// 2026-10-03): fresh off the VMAs, and the richest map among women in music.
+const LEAD = { music: "Madonna" };
 const FLOOR = 0.32;
 
 const rows = (await q(`
@@ -87,6 +90,13 @@ for (const domain of [...new Set(candidates.map((s) => s.domain))].sort()) {
   // Rotation order: a woman within the first two features.
   const firstW = picked.findIndex((s) => who(s) === "woman");
   if (firstW > 1) picked.splice(1, 0, ...picked.splice(firstW, 1));
+  const lead = LEAD[domain] && pool.find((s) => s.name === LEAD[domain]);
+  if (lead) {
+    const at = picked.indexOf(lead);
+    if (at >= 0) picked.splice(at, 1);
+    else picked.splice(picked.findLastIndex((s) => who(s) !== "woman"), 1); // make room: the weakest non-woman goes
+    picked.unshift(lead);
+  }
   out[domain] = picked.map((s) => s.name);
   const people = picked.filter((s) => who(s));
   const pw = people.filter((s) => who(s) === "woman").length;
