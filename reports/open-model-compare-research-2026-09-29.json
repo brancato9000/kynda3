@@ -1,0 +1,97 @@
+{
+  "Radiohead": {
+    "claude-sonnet-5-5": [
+      {
+        "target": "Geese",
+        "url": "https://www.stilllisteningmagazine.com/interviews/jfttggti876itd2dg9r18uq00h9ez8",
+        "speaker": "Max Bassin",
+        "degree": "first",
+        "status": "dead_link"
+      },
+      {
+        "target": "Geese",
+        "url": "https://diymag.com/interview/geese-projector-november-2021-interview",
+        "speaker": "Cameron Winter",
+        "degree": "first",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Geese",
+        "url": "https://stereogum.com/2154600/geese-disco-interview/interviews/band-to-watch",
+        "speaker": "Ryan Leas",
+        "degree": "second",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "In Rainbows",
+        "url": "https://www.rollingstone.com/music/music-news/the-making-of-radioheads-in-rainbows-187534/",
+        "speaker": "Nigel Godrich",
+        "degree": "first",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "The Bends",
+        "url": "https://www.gearslutz.com/board/q-a-with-producer-john-leckie/402563-radiohead-bends.html",
+        "speaker": "John Leckie",
+        "degree": "first",
+        "status": "dead_link"
+      }
+    ]
+  },
+  "Breaking Bad": {
+    "claude-sonnet-5-5": []
+  },
+  "Talking Heads": {
+    "claude-sonnet-5-5": [
+      {
+        "target": "Radio Head",
+        "url": "https://www.songfacts.com/facts/talking-heads/radio-head",
+        "speaker": "",
+        "degree": "third",
+        "status": "unverifiable"
+      },
+      {
+        "target": "Radio Head",
+        "url": "https://www.rollingstone.com/music/music-news/radiohead-david-byrne-rock-and-roll-hall-of-fame-induction-814063/",
+        "speaker": "David Byrne",
+        "degree": "first",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Radiohead",
+        "url": "https://www.rollingstone.com/music/music-news/radiohead-david-byrne-rock-and-roll-hall-of-fame-induction-814063/",
+        "speaker": "",
+        "degree": "second",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Remain in Light",
+        "url": "https://moredarkthanshark.org/eno_int_riu-nov80.html",
+        "speaker": "David Byrne",
+        "degree": "first",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Speaking in Tongues",
+        "url": "https://www.cooperhewitt.org/2016/07/22/speaking-in-tongues-2/",
+        "speaker": "",
+        "degree": "second",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Tibor Kalman",
+        "url": "https://www.cooperhewitt.org/2016/07/22/speaking-in-tongues-2/",
+        "speaker": "David Byrne",
+        "degree": "first",
+        "status": "quote_confirmed"
+      },
+      {
+        "target": "Tibor Kalman",
+        "url": "https://www.cooperhewitt.org/2016/07/22/speaking-in-tongues-2/",
+        "speaker": "",
+        "degree": "second",
+        "status": "quote_confirmed"
+      }
+    ]
+  }
+}

@@ -123,7 +123,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
  * deterministic metadata beats model-extracted. sourceNote is prepended to
  * the user message for source-class context (e.g. "this is newspaper OCR").
  */
-export async function harvestText({ url, text: rawText, model = SONNET, log = console.log, archivedUrl = null, publication: knownPublication = null, publishedDate: knownDate = null, sourceNote = "" }) {
+export async function harvestText({ url, text: rawText, model = SONNET, log = console.log, archivedUrl = null, publication: knownPublication = null, publishedDate: knownDate = null, sourceNote = "", dryRun = false }) {
   const text = rawText.slice(0, 60_000);
 
   // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.
@@ -149,7 +149,7 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
 
   const publication = knownPublication || extraction.publication || new URL(url).hostname.replace(/^www\./, "");
   const runId = `harvest_${Date.now().toString(36)}`;
-  const summary = { url, publication, extracted: extraction.claims.length, confirmed: 0, rejected: 0, subjects: new Set() };
+  const summary = { url, publication, extracted: extraction.claims.length, confirmed: 0, rejected: 0, subjects: new Set(), rows: [] };
 
   summary.dropped = 0;
   for (const c of extraction.claims) {
@@ -169,14 +169,15 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
       : { status: "unverifiable", reason: match.reason };
 
 
-    const subjectEntityId = await upsertEntity({
+    // dryRun (model experiments): run every gate, persist nothing.
+    const subjectEntityId = dryRun ? null : await upsertEntity({
       name: c.subjectName,
       kind: KIND_MAP[c.subjectKind] || "other",
       domain: c.subjectDomain,
     });
-    if (!subjectEntityId) continue;
+    if (!dryRun && !subjectEntityId) continue;
 
-    await recordFinding({
+    if (!dryRun) await recordFinding({
       subjectEntityId,
       finding: {
         targetTitle: c.targetTitle,
@@ -198,6 +199,7 @@ export async function harvestText({ url, text: rawText, model = SONNET, log = co
     const ok = verification.status === "quote_confirmed";
     summary[ok ? "confirmed" : "rejected"] += 1;
     summary.subjects.add(c.subjectName);
+    summary.rows.push({ subject: c.subjectName, target: c.targetTitle, targetCreator: c.targetCreator || "", targetKind: c.targetKind, claimType: c.claimType, speaker: c.speaker || "", degree: c.sourceDegree, quote: c.quote, ok, reason: ok ? "" : match.reason });
     log(`    ${ok ? "✓" : "✗"} ${c.subjectName} → ${c.targetTitle} [${c.claimType}] ${c.speaker ? `(${c.speaker}, ${c.sourceDegree})` : ""}`);
   }
 
