@@ -58,6 +58,9 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
           <button className="openpage" data-k="openpage" hidden />
         </div>
         <div className="menu">
+          <button className="burger" data-k="recenter" aria-label="Center the map" title="Center the map">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="5" /><circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none" /><path d="M8 1v2.2M8 12.8V15M1 8h2.2M12.8 8H15" /></svg>
+          </button>
           <button className="burger" data-k="menubtn" aria-haspopup="true" aria-expanded="false" aria-label="Map options" title="Map options">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 4.5h10M3 8h10M3 11.5h10" /></svg>
           </button>
@@ -89,7 +92,11 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
           <span className="mixkey" data-k="mixkey" />
         </div>
         <div className="hint" data-k="hint">Hover for the evidence (or the center for a bio) · click to travel · drag a bubble to tug it · scroll to zoom</div>
-        <div className="card" data-k="card" role="dialog" aria-live="polite" />
+        {/* Docked details panel: right on desktop, bottom on narrow screens; drag its edge to resize. */}
+        <aside className="card" data-k="card" aria-label="Details">
+          <div className="grip" data-k="grip" role="separator" tabIndex={0} aria-label="Resize the details panel (arrow keys)" />
+          <div className="cardbody" data-k="cardbody" aria-live="polite" />
+        </aside>
         <div className="toast" data-k="toast" />
         <aside className="curator" data-k="curator" aria-label="Picture curation" hidden />
         <div className="adminbadge" data-k="adminbadge" hidden>Curator</div>
@@ -115,7 +122,7 @@ const CSS = `
   background: var(--bg); color: var(--fg); font-family: var(--body);
   border-bottom: 1px solid var(--line);
 }
-.kmap .trailbox { position: absolute; top: 10px; left: max(16px, calc(50vw - 600px)); right: 72px; z-index: 3; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kmap .trailbox { position: absolute; top: 10px; left: max(16px, calc(50vw - 600px)); right: 116px; z-index: 3; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .kmap .trailbox[hidden] { display: none; }
 .kmap .trail { min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.72rem; background: rgba(15,16,22,0.82); border: 1px solid var(--line); border-radius: 14px; padding: 2px 6px; }
 .kmap .trail::-webkit-scrollbar { display: none; }
@@ -124,7 +131,7 @@ const CSS = `
 .kmap .trail button[aria-current="true"] { color: var(--gold); }
 .kmap .trail .sep { color: var(--faint); flex: none; }
 
-.kmap .menu { position: absolute; top: 10px; right: max(16px, calc(50vw - 600px)); z-index: 4; }
+.kmap .menu { position: absolute; top: 10px; right: max(16px, calc(50vw - 600px)); z-index: 4; display: flex; gap: 8px; }
 .kmap .burger { width: 34px; height: 34px; border-radius: 17px; border: 1px solid var(--line); background: rgba(22,24,33,0.85); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .kmap .burger:hover, .kmap .burger[aria-expanded="true"] { color: var(--fg); border-color: rgba(148,163,184,0.4); }
 .kmap .burger svg { width: 16px; height: 16px; }
@@ -180,11 +187,33 @@ const CSS = `
 .kmap .node:focus-visible .ring { stroke: var(--gold); stroke-width: 2.5; }
 .kmap .edge { fill: none; }
 .kmap .edge-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: help; }
-.kmap .dim .node:not(.hot):not(.center) { opacity: .35; }
-.kmap .dim .edge:not(.hot) { opacity: .25; }
 
-.kmap .card { box-sizing: border-box; max-height: calc(100% - 32px); overflow-y: auto; position: absolute; z-index: 5; width: min(360px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 16px 18px 14px; opacity: 0; transform: translateY(4px); transition: opacity .16s, transform .16s; pointer-events: none; }
-.kmap .card.open { opacity: 1; transform: none; pointer-events: auto; }
+/* Docked details panel (2026-10-03): never covers the map; the camera frames what's left visible. */
+.kmap .card { position: absolute; z-index: 5; box-sizing: border-box; background: var(--surface); visibility: hidden; transition: transform .35s cubic-bezier(.2,.7,.2,1), visibility 0s .35s; }
+.kmap .card.open { visibility: visible; transform: none; transition: transform .35s cubic-bezier(.2,.7,.2,1), visibility 0s; }
+.kmap[data-panel="right"] .card { top: 0; right: 0; bottom: 0; width: var(--panel-w, 380px); border-left: 1px solid var(--line); box-shadow: -12px 0 40px rgba(0,0,0,.35); transform: translateX(100%); }
+.kmap[data-panel="bottom"] .card { left: 0; right: 0; bottom: 0; height: var(--panel-h, 42%); border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.35); transform: translateY(100%); }
+.kmap .card.open { transform: none; }
+.kmap .cardbody { position: relative; height: 100%; overflow-y: auto; box-sizing: border-box; padding: 20px 24px 24px; }
+.kmap[data-panel="bottom"] .cardbody { padding-top: 22px; }
+.kmap .grip { position: absolute; z-index: 2; touch-action: none; }
+.kmap[data-panel="right"] .grip { left: -5px; top: 0; bottom: 0; width: 10px; cursor: ew-resize; }
+.kmap[data-panel="bottom"] .grip { top: -6px; left: 0; right: 0; height: 22px; cursor: ns-resize; }
+.kmap .grip::after { content: ""; position: absolute; background: rgba(148,163,184,0.35); border-radius: 3px; transition: background .15s; }
+.kmap[data-panel="right"] .grip::after { left: 4px; top: 50%; width: 3px; height: 44px; margin-top: -22px; }
+.kmap[data-panel="bottom"] .grip::after { top: 12px; left: 50%; width: 44px; height: 4px; margin-left: -22px; }
+.kmap .grip:hover::after, .kmap .grip:focus-visible::after { background: var(--gold); }
+.kmap .grip:focus-visible { outline: none; }
+/* Controls step out of the panel's way. */
+.kmap.panel-open[data-panel="right"] .menu { right: calc(var(--panel-w, 380px) + 16px); }
+.kmap.panel-open[data-panel="right"] .adminbadge { right: calc(var(--panel-w, 380px) + 102px); }
+.kmap.panel-open[data-panel="right"] .trailbox { right: calc(var(--panel-w, 380px) + 116px); }
+.kmap.panel-open[data-panel="right"] .legend { max-width: calc(100% - var(--panel-w, 380px) - 48px); }
+.kmap.panel-open .hint { display: none; }
+.kmap.panel-open[data-panel="bottom"] .keybtn { bottom: calc(var(--panel-h, 42%) + 14px); }
+.kmap.panel-open[data-panel="bottom"] .legend { bottom: calc(var(--panel-h, 42%) + 14px); }
+.kmap .node.hot .ring { stroke: var(--gold); stroke-width: 2.5px; stroke-opacity: 1; }
+.kmap .edge.hot { stroke-opacity: 0.9; }
 .kmap .card .kind { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
 .kmap .card h2 { margin: 6px 0 2px; font-family: var(--display); font-weight: 400; font-size: 1.35rem; line-height: 1.15; text-wrap: balance; }
 .kmap .card .meta { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
@@ -199,8 +228,9 @@ const CSS = `
 .kmap .card .go, .kmap .card .open { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
 .kmap .card .open { color: var(--muted); }
 .kmap .card .go:hover, .kmap .card .open:hover { border-color: var(--gold); color: var(--gold); }
-.kmap .card .x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; display: none; }
-.kmap .card.touch .x { display: block; }
+.kmap .card .x { position: absolute; top: 10px; right: 12px; width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 20px; cursor: pointer; border-radius: 15px; }
+.kmap .card .x:hover { color: var(--fg); background: var(--surface-2); }
+.kmap .card h2 { padding-right: 32px; }
 
 .kmap .toast { position: absolute; left: 50%; top: 14px; transform: translate(-50%, -8px); background: var(--surface-2); border: 1px solid var(--line); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; color: var(--fg); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 6; max-width: calc(100% - 32px); text-align: center; }
 .kmap .loading { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--mono); font-size: 0.74rem; color: var(--muted); pointer-events: none; }
@@ -211,7 +241,7 @@ const CSS = `
 .kmap .card .credit a { color: var(--faint); text-decoration: none; }
 .kmap .card .credit a:hover { color: var(--muted); }
 .kmap .card .fix { background: none; border: 1px solid rgba(250,204,21,0.35); color: var(--gold); border-radius: 12px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
-.kmap .adminbadge { position: absolute; top: 18px; right: calc(max(16px, calc(50vw - 600px)) + 44px); z-index: 4; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(250,204,21,0.35); border-radius: 10px; padding: 2px 8px; pointer-events: none; }
+.kmap .adminbadge { position: absolute; top: 18px; right: calc(max(16px, calc(50vw - 600px)) + 86px); z-index: 4; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(250,204,21,0.35); border-radius: 10px; padding: 2px 8px; pointer-events: none; }
 .kmap .adminbadge[hidden] { display: none; }
 
 /* Curator panel: slides over the right edge of the map. */
@@ -265,8 +295,7 @@ html:has(.kmap) { overflow-x: clip; }
   .kmap .legend { display: none; flex-direction: column; gap: 8px; left: 16px; bottom: 56px; font-size: 0.62rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; z-index: 2; pointer-events: auto; }
   .kmap .legend.open { display: flex; }
   .kmap .legend .mixkey { flex-direction: column; gap: 8px; }
-  .kmap .trailbox { left: 12px; right: 56px; }
+  .kmap .trailbox { left: 12px; right: 100px; }
   .kmap .menu { right: 12px; }
-  .kmap .card { left: 16px !important; right: 16px; top: auto !important; bottom: 16px; width: auto; }
 }
 `;

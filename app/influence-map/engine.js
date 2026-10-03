@@ -69,7 +69,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   // No fetchGraph = a sealed map (the public demo pages): clicking a bubble opens its card, nothing travels.
   const canTravel = !!fetchGraph;
   const q = (k) => root.querySelector(`[data-k="${k}"]`);
-  const stage = q("stage"), card = q("card");
+  // Cards live in a docked panel (Tony, 2026-10-03): right side on desktop, bottom on narrow
+  // screens, resizable, and the camera frames only the part of the map the panel leaves visible.
+  const stage = q("stage"), panel = q("card"), card = q("cardbody");
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const graphs = new Map([[subjectName, initialGraph]]);
   const missing = new Set();
@@ -211,7 +213,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (!alive) return;
     if (size().w === 0) { waitingForSize = true; pendingGo = { name, push, quiet }; return; } // hidden tab; the resize observer resumes us
     waitingForSize = false;
-    hideCard(true);
+    const keepPanel = panelOpen;
+    clearSelection();
     closeCurator();
     if (glide) { glide.stop(); glide = null; }
     if (wobble) { wobble.stop(); wobble = null; grabbed = null; for (const n of live.values()) { n.fx = n.fy = null; n.vx = n.vy = 0; } }
@@ -228,6 +231,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const now = performance.now();
     let buildIdx = 0;
     const firstBuild = live.size === 0;
+    zoomAfterBuild = true; // narrow screens ease in once the build finishes
     target.forEach((t) => {
       const x1 = t.x + shift.x, y1 = t.y + shift.y;
       let n = live.get(t.name);
@@ -244,7 +248,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (REDUCED) for (const n of live.values()) { n.delay = 0; n.dur = 1; }
     lastCenter = prevCenter;
     render();
-    fit(target, shift, firstBuild);
+    fit(target.map((t) => ({ x: t.x + shift.x, y: t.y + shift.y, r: t.r })), firstBuild);
+    if (keepPanel) setTimeout(() => { const c = live.get(name); if (alive && c && panelOpen) showCard(c, false); }, 50);
     if (anim) anim.stop();
     anim = d3.timer(() => frame(now));
     updateTrail();
@@ -254,18 +259,99 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
   // The first build frames the camera instantly, so the subject appears in the middle and the map grows
   // around it; after that the camera glides with each hop.
-  function fit(nodes, shift, instant) {
-    const { w, h } = size();
-    // Give the graph nearly the whole stage: small margins, plus room for the floating controls.
-    const narrow = w < 640, pad = narrow ? 12 : 28, lab = narrow ? 22 : 36;
+  // Frame the map inside the part of the stage the panel leaves visible. `nodes` are absolute positions.
+  function fit(nodes, instant) {
+    if (!nodes.length) return;
+    const v = visibleRect();
+    const narrow = v.w < 640, pad = narrow ? 12 : 28, lab = narrow ? 22 : 36;
     const xs = nodes.flatMap((n) => [n.x - n.r - lab, n.x + n.r + lab]), ys = nodes.flatMap((n) => [n.y - n.r - 10, n.y + n.r + lab]);
     const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    const k = Math.min(1.4, (w - pad * 2) / (x1 - x0), (h - pad * 2 - (narrow ? 60 : 44)) / (y1 - y0)); // room for the menu button and the legend
-    const cx = (x0 + x1) / 2 + shift.x, cy = (y0 + y1) / 2 + shift.y;
-    const to = d3.zoomIdentity.translate(w / 2 - cx * k, h / 2 + 10 - cy * k).scale(k);
+    const k = Math.min(1.4, (v.w - pad * 2) / (x1 - x0), (v.h - pad * 2 - (narrow ? 60 : 44)) / (y1 - y0)); // room for the menu button and the legend
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const to = d3.zoomIdentity.translate(v.x + v.w / 2 - cx * k, v.y + v.h / 2 + 10 - cy * k).scale(k);
     if (instant || REDUCED) { svg.interrupt(); svg.call(zoom.transform, to); return; }
-    svg.transition().duration(1100).ease(d3.easeCubicInOut).call(zoom.transform, to);
+    svg.transition().duration(instant === false ? 1100 : 700).ease(d3.easeCubicInOut).call(zoom.transform, to);
   }
+  // Re-frame the map as it stands (after the panel opens, closes or is resized).
+  const homes = () => [...live.values()].filter((n) => !n.exiting).map((n) => ({ x: n.x1 ?? n.cx, y: n.y1 ?? n.cy, r: n.r || n.ccr || 20 }));
+  function refit() { frameDefault("glide"); }
+  // The resting view. Wide screens: the whole map in the visible area. Narrow screens (Tony,
+  // 2026-10-03): the whole map is too small to read on a phone, so the map spans the visible
+  // width, centered on the subject, and you pan up and down — after the build has played zoomed out.
+  let zoomAfterBuild = false;
+  function frameDefault(how) {
+    const nodes = homes();
+    if (!nodes.length) return;
+    const v = visibleRect();
+    if (v.w >= 640) { fit(nodes, how); return; }
+    const pad = 12, lab = 22;
+    const x0 = Math.min(...nodes.map((n) => n.x - n.r - lab)), x1 = Math.max(...nodes.map((n) => n.x + n.r + lab));
+    const k = Math.min(2.2, (v.w - pad * 2) / (x1 - x0));
+    const c = live.get(center);
+    const cx = (x0 + x1) / 2, cy = c ? (c.y1 ?? c.cy) : 0;
+    const to = d3.zoomIdentity.translate(v.x + v.w / 2 - cx * k, v.y + v.h / 2 - cy * k).scale(k);
+    if (REDUCED) { svg.interrupt(); svg.call(zoom.transform, to); return; }
+    svg.transition().duration(how === "ease-in" ? 1400 : 800).ease(d3.easeCubicInOut).call(zoom.transform, to);
+  }
+
+  // ── The docked panel ──
+  const PANEL_KEY = "kynda_map_panel";
+  let panelOpen = false, panelW = 380, panelH = 0;
+  try { const p = JSON.parse(localStorage.getItem(PANEL_KEY) || "null"); if (p?.w) panelW = p.w; if (p?.h) panelH = p.h; } catch { /* storage blocked */ }
+  const panelSide = () => (size().w < 700 ? "bottom" : "right");
+  function clampPanel() {
+    const { w, h } = size();
+    panelW = Math.round(Math.max(280, Math.min(panelW, w * 0.6)));
+    panelH = Math.round(Math.max(150, Math.min(panelH || h * 0.42, h * 0.75)));
+  }
+  function applyPanel() {
+    clampPanel();
+    root.style.setProperty("--panel-w", `${panelW}px`);
+    root.style.setProperty("--panel-h", `${panelH}px`);
+    root.dataset.panel = panelSide();
+    root.classList.toggle("panel-open", panelOpen);
+    panel.classList.toggle("open", panelOpen);
+  }
+  function visibleRect() {
+    const { w, h } = size();
+    if (!panelOpen) return { x: 0, y: 0, w, h };
+    return panelSide() === "right" ? { x: 0, y: 0, w: Math.max(200, w - panelW), h } : { x: 0, y: 0, w, h: Math.max(160, h - panelH) };
+  }
+  function setPanel(open) {
+    if (open === panelOpen) return;
+    panelOpen = open;
+    applyPanel();
+    refit();
+  }
+  // Drag the panel's inner edge to resize it; the size is remembered in this browser.
+  const grip = q("grip");
+  grip.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    try { grip.setPointerCapture(e.pointerId); } catch { /* capture is a nicety; moves still arrive */ }
+    const st = stage.getBoundingClientRect();
+    const move = (ev) => {
+      if (panelSide() === "right") panelW = st.right - ev.clientX; else panelH = st.bottom - ev.clientY;
+      applyPanel();
+    };
+    const up = () => {
+      grip.removeEventListener("pointermove", move); grip.removeEventListener("pointerup", up); grip.removeEventListener("pointercancel", up);
+      try { localStorage.setItem(PANEL_KEY, JSON.stringify({ w: panelW, h: panelH })); } catch { /* storage blocked */ }
+      refit();
+    };
+    grip.addEventListener("pointermove", move); grip.addEventListener("pointerup", up); grip.addEventListener("pointercancel", up);
+  });
+  grip.addEventListener("keydown", (e) => {
+    // Keyboard resize: arrows grow or shrink the panel by 24px.
+    const right = panelSide() === "right";
+    const d = { ArrowLeft: right ? 24 : 0, ArrowRight: right ? -24 : 0, ArrowUp: right ? 0 : 24, ArrowDown: right ? 0 : -24 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    if (right) panelW += d; else panelH += d;
+    applyPanel(); refit();
+    try { localStorage.setItem(PANEL_KEY, JSON.stringify({ w: panelW, h: panelH })); } catch { /* storage blocked */ }
+  });
+  applyPanel();
+
 
   // A curator's choice wins, then the mix card's own art, then the backfill's pick.
   const picOf = (d) => (d.image?.status === "approved" && d.image.url) || d.mix?.image || d.image?.url || null;
@@ -355,6 +441,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       anim.stop(); anim = null;
       for (const [k, n] of live) if (n.exiting) live.delete(k);
       render();
+      if (zoomAfterBuild) { zoomAfterBuild = false; if (visibleRect().w < 640) frameDefault("ease-in"); }
     }
   }
 
@@ -465,7 +552,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       if (anim || d.exiting) return;
       if (!dragging) {
         // Only a real move starts the tug, so taps, clicks and press-and-hold still work.
-        clearTimeout(holdT); clearTimeout(hoverT); unpress(); hideCard(true);
+        clearTimeout(holdT); clearTimeout(hoverT); unpress();
         dragging = true;
         if (!wobble) startWobble();
         grabbed = d;
@@ -497,9 +584,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function onEnter(ev, d) {
     if (dragging || ev.pointerType === "touch" || d.exiting) return;
     clearTimeout(hideT); clearTimeout(hoverT);
-    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, 1000);
+    hoverT = setTimeout(() => { if (!dragging) showCard(d, false); }, panelOpen ? 320 : 1000);
   }
-  function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); hideT = setTimeout(() => hideCard(), 220); }
+  function onLeave(ev) { if (ev.pointerType === "touch") return; clearTimeout(hoverT); } // the panel stays; nothing pops away
   // Phones (2026-10-02, Tony): a tap is for looking, a hold is for going. Tap opens the
   // relationship card (the bio on the center); press and hold re-centers the map on that
   // bubble, with its ring lighting up while the hold registers. Desktop: hover shows, click travels.
@@ -539,10 +626,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (!g) { toast(`Kynda hasn't mapped ${d.name} yet.`); render(); return; }
     go(name);
   }
-  const onCardEnter = () => clearTimeout(hideT);
-  const onCardLeave = (e) => { if (e.pointerType !== "touch") hideT = setTimeout(() => hideCard(), 220); };
-  card.addEventListener("pointerenter", onCardEnter);
-  card.addEventListener("pointerleave", onCardLeave);
+  const menuPanelClosed = () => q("menupanel").hidden; // Esc closes the open menu first
+  const onEsc = (e) => { if (e.key === "Escape" && panelOpen && menuPanelClosed()) hideCard(true); };
+  document.addEventListener("keydown", onEsc);
   svg.on("click.bg", () => hideCard(true));
 
   async function showBioCard(d, touch) {
@@ -598,30 +684,25 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   }
 
   // Place the card beside its node, clamped to the stage, and dim everything else.
+  // Show a card in the docked panel and mark its bubble; the map itself is never covered.
   function placeCard(d, touch) {
+    clearSelection();
     gNodes.selectAll("g.node").classed("hot", (n) => n === d);
     gEdges.selectAll("path.edge").classed("hot", (e) => e.b === d);
-    stage.classList.add("dim");
-    card.classList.toggle("touch", touch);
-    card.querySelector(".x").onclick = () => hideCard(true);
-    const st = stage.getBoundingClientRect();
-    const nodeEl = gNodes.selectAll("g.node").filter((x) => x === d).node();
-    if (!nodeEl) { cardFor = null; stage.classList.remove("dim"); return; }
-    const r = nodeEl.getBoundingClientRect();
-    card.style.left = "0px"; card.style.top = "0px"; card.classList.add("open");
-    const cw = card.offsetWidth, ch = card.offsetHeight;
-    let x = r.right - st.left + 14, y = r.top - st.top + r.height / 2 - ch / 2;
-    if (x + cw > st.width - 16) x = r.left - st.left - cw - 14;
-    if (x < 16) x = Math.max(16, Math.min(st.width - cw - 16, r.left - st.left + r.width / 2 - cw / 2));
-    y = Math.max(16, Math.min(st.height - ch - 16, y));
-    card.style.left = x + "px"; card.style.top = y + "px";
+    const x = card.querySelector(".x"); if (x) x.onclick = () => hideCard(true);
+    card.scrollTop = 0;
+    setPanel(true);
   }
-  function hideCard(force) {
-    if (!cardFor && !force) return;
-    cardFor = null; card.classList.remove("open");
-    stage.classList.remove("dim");
+  function clearSelection() {
     gNodes.selectAll("g.node").classed("hot", false);
     gEdges.selectAll("path.edge").classed("hot", false);
+  }
+  // Closing is always deliberate now (×, Esc, a click on empty map, tapping the same bubble).
+  function hideCard(force) {
+    if (!force) return;
+    cardFor = null;
+    clearSelection();
+    setPanel(false);
   }
 
   // ── Admin overlay (2026-10-02): a signed-in curator fixes pictures in place while browsing.
@@ -769,6 +850,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     setMenu(false);
     go(center, { push: false });
   };
+  // ◎ Center: back to the resting view, wherever the map has been dragged, thrown or panned.
+  q("recenter").onclick = () => { setMenu(false); frameDefault("glide"); };
   q("copy").onclick = async () => {
     const text = trail.slice(0, trailPos + 1).join(" → ");
     setMenu(false);
@@ -896,8 +979,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   raf = requestAnimationFrame(loop);
   resizeWeb();
 
+  // The panel opens with the subject's About text (Tony, 2026-10-03), framed in from the first frame.
+  panelOpen = true;
+  applyPanel();
   go(subjectName, { push: false });
   lastW = size().w;
+  { const c = live.get(subjectName); if (c) showCard(c, false); }
 
   return {
     // Browser Back/Forward: step along the trail if the stop is on it, else travel there.
@@ -918,8 +1005,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       if (glide) glide.stop();
       svg.interrupt();
       clearTimeout(hoverT); clearTimeout(hideT); clearTimeout(holdT); clearTimeout(rz); clearTimeout(toastT);
-      card.removeEventListener("pointerenter", onCardEnter);
-      card.removeEventListener("pointerleave", onCardLeave);
+      document.removeEventListener("keydown", onEsc);
       document.removeEventListener("pointerdown", closeMenuOutside);
       document.removeEventListener("keydown", closeMenuOnEsc);
       svg.selectAll("*").remove();
