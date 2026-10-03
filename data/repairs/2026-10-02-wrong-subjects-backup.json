@@ -1,0 +1,2684 @@
+{
+ "mixes": [
+  {
+   "id": "05b792ea-4281-4c30-8dcd-9ece578fcfd4",
+   "subject_entity_id": "650788f5-5b9f-49ba-8d73-06da4dabc807",
+   "payload": {
+    "intro": "John Meyer is a Dutch guitarist whose documented footprint runs through the band Arthur & the Cronies, a name rooted in the Netherlands' rich beat and garage tradition. Because hard documentation on Meyer himself is thin, this mix maps the ecosystem a Dutch rock guitarist of his lineage almost inevitably absorbed: the Shadows-and-Berry school of guitar, the Indorock underground, the Nederbeat scene of The Hague and Amsterdam, and the garage revivalists who kept that sound alive.",
+    "slots": [
+     {
+      "slotType": "titan",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1960",
+         "title": "Apache",
+         "medium": "music",
+         "reason": "Hank Marvin's clean, echo-drenched Stratocaster instrumental was the founding text for virtually every Dutch guitarist of the beat era. In the Netherlands, 'Apache' and the Shadows' instrumental style merged with the local Indorock movement to define what electric guitar meant before Beatlemania arrived. Any Dutch player emerging from the beat-group tradition, Meyer included, learned this vocabulary first: melodic lead lines, tremolo arm phrasing, and tight rhythm interplay.",
+         "creator": "The Shadows",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/f/fd/Apache_by_Bert_Weedon_UK_single_side-A.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Apache_by_Bert_Weedon_UK_single_side-A.png",
+         "imageCredit": "en.wikipedia (Apache (instrumental))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/1ecdca8d-1b89-32ac-8263-226dab2b9932",
+          "detail": "first released 1960",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1958",
+         "title": "Johnny B. Goode",
+         "medium": "music",
+         "reason": "Berry's double-stop riffing was the other pillar of Dutch beat guitar. Nederbeat bands like Q65 and The Outsiders built their sets on Berry covers before writing originals, and the raw, riff-forward garage style that a band name like Arthur & the Cronies signals descends directly from this record. Berry's economy — one guitar carrying rhythm, lead, and hook simultaneously — remained the template for small Dutch combos playing dance halls and youth clubs through the 1960s.",
+         "creator": "Chuck Berry",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/Johnny_B_Goode_by_Chuck_Berry_US_single_side-A.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Johnny_B_Goode_by_Chuck_Berry_US_single_side-A.png",
+         "imageCredit": "Chess Records",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/39ba4a68-ef38-37ca-a94c-29fec221c738",
+          "detail": "first released 1993-01-13",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1965",
+         "title": "(I Can't Get No) Satisfaction",
+         "medium": "music",
+         "reason": "x",
+         "creator": "The Rolling Stones",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/7/7f/Satisfaction-us.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Satisfaction-us.jpg",
+         "imageCredit": "en.wikipedia ((I Can't Get No) Satisfaction)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/0d7fe492-8c0b-48e4-8dfc-680821027b17",
+          "detail": "first released 1965-09",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "ghost",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1960",
+         "title": "Rollin' Rock",
+         "medium": "music",
+         "reason": "The hidden root of all Dutch guitar playing is Indorock: Indo-European musicians who arrived from the former Dutch East Indies and played rock and roll in Dutch venues years before it was mainstream. The Tielman Brothers' ferocious live act — playing guitars behind their heads and with their teeth long before Hendrix — made them legends in Dutch and German clubs. Their multi-guitar attack shaped an entire generation of Netherlands players who saw them in person.",
+         "creator": "The Tielman Brothers",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1968",
+         "title": "CQ",
+         "medium": "music",
+         "reason": "Amsterdam's Outsiders ended their run with this strange, home-grown psychedelic album that sank without trace on release and was rediscovered decades later by garage collectors. Wally Tax and Ronnie Splinter pushed Dutch beat into abrasive, experimental territory that anticipated punk. For any guitarist working in the Dutch garage lineage, 'CQ' represents the underground high-water mark of the national scene — obscure at home, now canonized by crate-diggers worldwide.",
+         "creator": "The Outsiders",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/f41d7d9c-b18b-3229-9562-71eb08f184aa",
+          "detail": "first released 1968",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "geography",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1966",
+         "title": "Revolution",
+         "medium": "music",
+         "reason": "The Hague was the epicenter of Dutch rock, and Q65's debut album is its rawest document: snarling R&B-derived garage with Frank Nuyens and Joop Roelofs trading distorted guitar lines. Q65 proved a Dutch band could match British beat groups in intensity, and their records became the local benchmark for aggressive guitar playing. Any Dutch guitarist active in or after the Nederbeat era worked in a national scene whose sound and standards Q65 helped set.",
+         "creator": "Q65",
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/0d1a0018-15fb-3f27-b96d-cba345b8e810",
+          "detail": "first released 1966",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1973",
+         "title": "Radar Love",
+         "medium": "music",
+         "reason": "Golden Earring, also from The Hague, showed Dutch rock musicians a path from local beat-group beginnings to international careers. George Kooymans' driving riff on 'Radar Love' became the most famous Dutch guitar part ever recorded, hitting charts in the US and UK. For working guitarists in the Netherlands, the band's decades-long run defined what longevity looked like at home: the club circuit, national radio, and the possibility of breaking beyond the Dutch market.",
+         "creator": "Golden Earring",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/8/82/Radar_love.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "geography",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Radar_love.jpg",
+         "imageCredit": "en.wikipedia (Radar Love)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/e4e3caa9-01ff-485c-a0aa-b905ba00b65c",
+          "detail": "first released 1991",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1969",
+         "title": "Venus",
+         "medium": "music",
+         "reason": "",
+         "creator": "Shocking Blue",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/1/1a/Shocking_blue_venus_Dutch_vinyl.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "geography",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Shocking_blue_venus_Dutch_vinyl.png",
+         "imageCredit": "en.wikipedia (Venus (Shocking Blue song))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/7a0da468-b94e-4d2e-97ba-de5ce12140c6",
+          "detail": null,
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "culture",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1966",
+         "title": "Blow-Up",
+         "medium": "film",
+         "reason": "Antonioni's swinging-London film crystallized the visual culture surrounding the beat scene that Dutch bands inhabited — and its famous club sequence features The Yardbirds, with Jeff Beck smashing his guitar on screen. The film circulated widely in the Netherlands and shaped how European musicians and audiences understood the iconography of the electric guitarist: the mod styling, the destructive theatricality, the guitar as cultural object rather than mere instrument.",
+         "creator": "Michelangelo Antonioni",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/1052",
+          "detail": "directed by Michelangelo Antonioni (1966)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1969",
+         "title": "Turks fruit",
+         "medium": "literature",
+         "reason": "Wolkers' novel was the defining literary expression of the Dutch counterculture — sexually frank, anti-bourgeois, and rooted in the same Amsterdam milieu of Provo happenings and youth rebellion that fed the Nederbeat scene. The book and Paul Verhoeven's 1973 film adaptation articulated the generational rupture that Dutch rock musicians were living through, giving the scene's rebellion a national voice beyond music and shaping the cultural air any Dutch player breathed.",
+         "creator": "Jan Wolkers",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://openlibrary.org/works/OL1713944W",
+          "detail": "first published 1969",
+          "method": "openlibrary_search",
+          "source": "Open Library",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1968",
+         "title": "Fanclub",
+         "medium": "television",
+         "reason": "",
+         "creator": "Wim van der Linden",
+         "crossing": "television television television collided with the Dutch beat scene through Fanclub, the VPRO pop programme where Wim van der Linden's film-maker's eye framed local guitar bands with the same jump-cut irreverence as British pop cinema. Groups from the Nederbeat circuit gained their first national visual identity there, turning provincial club acts into recognisable faces and cementing beat music as part of Dutch youth culture rather than an import curiosity.,",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "peer",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1965",
+         "title": "Wasted Words",
+         "medium": "music",
+         "reason": "The Motions were The Hague's answer to the British Invasion, with Robbie van Leeuwen's guitar work driving one of the toughest singles of the Nederbeat era. They played the same Dutch club and youth-center circuit as every guitar band of the period, competing directly with Q65 and Golden Earring for local supremacy. 'Wasted Words' captures the exact sonic environment a Dutch garage guitarist operated in: fuzzed rhythm playing, terse solos, and R&B urgency.",
+         "creator": "The Motions",
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": [
+           {
+            "score": 100,
+            "title": "Wasted Words: The Havoc 45s",
+            "artistCredit": "The Motions"
+           },
+           {
+            "score": 92,
+            "title": "Wasted Words / I’ll Follow the Sun",
+            "artistCredit": "The Motions"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1967",
+         "title": "Your Body Not Your Soul",
+         "medium": "music",
+         "reason": "From Grolloo in the rural north, Cuby + Blizzards proved Dutch bands could master electric blues, with guitarist Eelco Gelling earning a reputation as the country's finest blues player — he later joined Golden Earring. Their success expanded what Dutch guitarists were expected to handle, pushing the scene from three-chord beat toward extended blues soloing. Any Dutch guitarist of the era measured themselves against Gelling's fluid, B.B. King-informed lead style.",
+         "creator": "Cuby + Blizzards",
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": [
+           {
+            "score": 100,
+            "title": "L.S.D. (Got A Million Dollars) / Your Body, Not Your Soul",
+            "artistCredit": "Cuby + Blizzards"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1969",
+         "title": "Blues Dimension",
+         "medium": "music",
+         "reason": "Blues Dimension, formed around Herman Brood in Eindhoven, worked the same southern Dutch club circuit as the beat groups of the late sixties, playing extended R&B sets in dancehalls and youth centres. Their sole album documents the moment Nederbeat's beat-group formula hardened into heavier blues-rock, the shift that pushed contemporaries either toward progressive ambition or back to Dutch-language pop.",
+         "creator": "Blues Dimension",
+         "crossing": null,
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/d6654743-827e-4864-bca9-1a89889d425e",
+          "detail": "first released 1968",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "collaborator",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1960",
+         "title": "Kom van dat dak af",
+         "medium": "music",
+         "reason": "Koelewijn recorded the first genuine Dutch-language rock and roll hit and then became the ubiquitous producer and songwriter behind decades of Netherlands pop and rock, shepherding countless club-circuit bands through Dutch studios. While Meyer's specific studio collaborators are not well documented, Koelewijn's orbit defined the professional infrastructure — producers, labels like Bovema and Phonogram, session norms — through which Dutch guitar bands of his era passed.",
+         "creator": "Peter Koelewijn",
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/7ba426c7-c5c3-4be6-93eb-344e1f391709",
+          "detail": "first released 1989",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1967",
+         "title": "Ben ik te min",
+         "medium": "music",
+         "reason": "Armand was the Dutch scene's protest-singing connector, an Eindhoven figure who worked across the national circuit and whose hit gave the counterculture its anthem. The Dutch rock world of this size was densely interconnected: bands shared bills, backing musicians, and studios constantly. Armand's career illustrates the collaborative web — regional scenes feeding national television shows like Moef Ga Ga — within which a working guitarist like Meyer and his bandmates operated.",
+         "creator": "Armand",
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/ba1a407e-1676-410f-8c82-76c6151101e3",
+          "detail": "first released 1999",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1968",
+         "title": "Zoom",
+         "medium": "music",
+         "reason": "Rob de Nijs came out of the same beat-group ecosystem, fronting De Lords before turning solo, and relied on the arrangers, session guitarists and producers who circulated between Dutch bands in the sixties. That shared pool of studio partners in Hilversum meant beat musicians repeatedly backed singers like him, and this record shows the crossover between guitar-band players and mainstream Dutch-language pop production.",
+         "creator": "Rob de Nijs",
+         "crossing": null,
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "legacy",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1985",
+         "title": "Lysergic Emanations",
+         "medium": "music",
+         "reason": "The 1980s garage revival canonized the Dutch sixties underground: New York's Fuzztones covered Q65's 'The Life I Live' and built their aesthetic on exactly the fuzz-drenched Nederbeat sound that bands in Meyer's lineage played. This album demonstrates how the Dutch garage tradition — once purely local — became international collector currency, ensuring that even obscure Netherlands bands and their guitarists found new audiences decades after their club-circuit heyday.",
+         "creator": "The Fuzztones",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/3/34/Lysergic_Emanations.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "legacy",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Lysergic_Emanations.jpg",
+         "imageCredit": "en.wikipedia (Lysergic Emanations)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/e94faa0d-543a-3f69-8639-9a45f4a2461b",
+          "detail": "first released 1985",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "2014",
+         "title": "Springlevend",
+         "medium": "music",
+         "reason": "De Kik, led by Dave von Raven of The Kik, revived Nederbeat wholesale in the 2010s: Dutch-language beat music played on vintage gear, explicitly honoring the sixties Netherlands scene. Their success proved the domestic guitar-band tradition still resonates, and they regularly performed with and celebrated surviving Nederbeat veterans. They represent the living continuation of the ecosystem — Dutch club circuits, national radio, beat guitar — that shaped players like Meyer.",
+         "creator": "De Kik",
+         "slotType": "legacy"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "source": "generated",
+   "model_version": "claude-fable-5",
+   "created_at": "2026-07-15T06:14:07.511Z"
+  },
+  {
+   "id": "5c2a7e5c-f4c9-4b69-8224-c056db5c255d",
+   "subject_entity_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "payload": {
+    "intro": "Psycho emerged from the early-1980s Boston hardcore underground, the scene documented on Modern Method's compilations and centered on clubs like the Rat and Gallery East. Their fast, darkly comic, horror-tinged punk sat alongside the city's tougher straight-edge bands while looking back to first-wave hardcore and B-movie culture. This mix traces the Boston lineage forward and backward.",
+    "slots": [
+     {
+      "slotType": "titan",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1980",
+         "title": "Group Sex",
+         "medium": "music",
+         "reason": "The template for the East Coast bands that followed: fourteen songs in fifteen minutes, sarcastic lyrics, and Keith Morris's bark. Circle Jerks' brevity and gallows humor set the pace for Boston bands like Psycho, whose sub-minute blasts and joke-titled songs follow the same compression logic. Group Sex circulated widely through the early-80s tape and fanzine network that connected LA hardcore to Boston's Rat and Gallery East scenes.``",
+         "creator": "Circle Jerks",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/3/37/Circle_Jerks_-_Group_Sex.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Circle_Jerks_-_Group_Sex.jpg",
+         "imageCredit": "en.wikipedia (Group Sex (album))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/8f5c4731-688f-3612-b5fe-318842359579",
+          "detail": "first released 1980-11",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1981",
+         "title": "Damaged",
+         "medium": "music",
+         "reason": "Black Flag's SST debut was the record that made hardcore a national network rather than a local quirk, and their relentless touring brought the sound to Boston venues where the local scene coalesced. The album's mix of rage, self-loathing and dark comedy — 'TV Party,' 'Six Pack' — licensed the kind of humor Boston bands like Psycho ran with while keeping the tempo brutal.",
+         "creator": "Black Flag",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/0/00/Black_Flag_-_Damaged_cover.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Black_Flag_-_Damaged_cover.jpg",
+         "imageCredit": "en.wikipedia (Damaged (Black Flag album))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/2cf40300-0f67-3136-9b84-57104f1f7a50",
+          "detail": "first released 1981-11-16",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1982",
+         "title": "Hear Nothing See Nothing Say Nothing",
+         "medium": "music",
+         "reason": "",
+         "creator": "Discharge",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/9/97/Discharge-hearseesay.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Discharge-hearseesay.jpg",
+         "imageCredit": "en.wikipedia (Hear Nothing See Nothing Say Nothing)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/0958d25b-84ad-46a1-9df6-011b77fc99c8",
+          "detail": "first released 2006",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "ghost",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1983",
+         "title": "Kill from the Heart",
+         "medium": "music",
+         "reason": "Austin's Dicks were a cult item in the early-80s hardcore tape network: bluesy, swampy, queer and openly political, fronted by Gary Floyd. Bands who wanted hardcore to be weirder than uniform thrash — Psycho among the Boston oddballs — drew on this kind of outsider record, which showed hardcore could carry sleaze, horror atmosphere and theatricality without slowing down.",
+         "creator": "The Dicks",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1988",
+         "title": "Land of Rape and Honey",
+         "medium": "music",
+         "reason": "By the late 80s, Boston's grimier hardcore acts were absorbing industrial abrasion, sampled dialogue and horror-film atmosphere. Ministry's Chicago record fused metal guitar with tape collage and made bleak sonic ugliness a compositional tool. That crossover — punk speed plus machine noise and B-movie sample culture — maps onto the darker, more grotesque direction later Psycho material took.",
+         "creator": "Ministry",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": [
+           {
+            "score": 100,
+            "title": "The Land of Rape and Honey",
+            "artistCredit": "Ministry"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "geography",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1982",
+         "title": "This Is Boston, Not L.A.",
+         "medium": "music",
+         "reason": "Modern Method Records' compilation is the founding document of Boston hardcore, gathering Jerry's Kids, The Freeze, Gang Green, The Proletariat and others as a declaration of local independence from California hardcore. Psycho belonged to exactly this Rat/Gallery East ecosystem of Boston bands, and the record remains the essential map of the scene's personnel, labels and geography.",
+         "creator": "Various Artists",
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": [
+           {
+            "score": 100,
+            "title": "This Is Boston Not L.A.",
+            "artistCredit": "Various Artists"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1983",
+         "title": "Is This My World?",
+         "medium": "music",
+         "reason": "Jerry's Kids came straight out of the same Boston circuit and the This Is Boston, Not L.A. roster, cutting one of the fastest and most chaotic full-lengths of the era for Modern Method's X-Claim imprint. Members circulated between Boston bands constantly, and this album defines the frantic, slightly unhinged local sound Psycho operated within.",
+         "creator": "Jerry's Kids",
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/0c5a466c-c7fe-3faf-9927-6dbcdfae8c68",
+          "detail": "first released 1983",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1982",
+         "title": "Kill for Christ",
+         "medium": "music",
+         "reason": "Boston hardcore's other pillar alongside SSD and Jerry's Kids, cut for Xclaim! and drawn from the same Massachusetts basement circuit Psycho worked. The F.U.'s bluntly satirical lyrics about Reagan-era piety and their shift toward metallic tempos map the exact path Boston bands took mid-decade, giving Psycho's gore-comic thrash its local grammar of sarcasm and speed.",
+         "creator": "The F.U.'s",
+         "crossing": null,
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/1809d7c5-c3a9-3ecc-913a-ae4b1d99effb",
+          "detail": "first released 1982",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "culture",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1974",
+         "title": "The Texas Chain Saw Massacre",
+         "medium": "film",
+         "reason": "Hardcore's horror wing fed on grindhouse and drive-in cinema, and Hooper's film was the touchstone: cheap, relentless, physically exhausting, funny in the worst way. Bands with names and song titles built from splatter imagery — Psycho very much included, borrowing from Hitchcock outright — drew their artwork, samples and stage humor from this vein of American exploitation film.",
+         "creator": "Tobe Hooper",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/a/a0/The_Texas_Chain_Saw_Massacre_%281974%29_theatrical_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "culture",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/a/a0/The_Texas_Chain_Saw_Massacre_%281974%29_theatrical_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (The Texas Chain Saw Massacre)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/30497",
+          "detail": "directed by Tobe Hooper (1974)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1960",
+         "title": "Psycho",
+         "medium": "film",
+         "reason": "The band's name points directly at Hitchcock's 1960 shocker, the film that dragged psychological horror into mainstream cinema with the Bates Motel, Bernard Herrmann's shrieking strings and a murder in a shower. Punk bands raiding horror cinema for names and iconography treated it as shared vocabulary; the title alone signals the grotesque comedy and menace hardcore loved to weaponize.",
+         "creator": "Alfred Hitchcock",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "url": "https://en.wikipedia.org/wiki/Psycho",
+          "status": "documented",
+          "excerpt": "Michael \"Psycho\" Sykes, video game character in Crysis The Psycho, video game character in Until Dawn Psycho Weasel, film character in Who Framed Roger Rabbit == Film == Psycho (franchise), an American horror thriller film franchise based on the Bloch novel Psycho (1960 film), a film by Alfred Hitchcock Psycho (1998…",
+          "articleTitle": "Psycho"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/539",
+          "detail": "directed by Alfred Hitchcock (1960)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1978",
+         "title": "Dawn of the Dead",
+         "medium": "film",
+         "reason": "Romero's mall-set zombie satire supplied hardcore with its central joke: consumer America as shuffling corpse. Psycho's splatter humor, song titles and horror-comic artwork sit inside the video-era gore canon Romero legitimized, and the film's cheap-effects excess became the visual shorthand for bands who wanted to disgust and amuse in the same three minutes.",
+         "creator": "George A. Romero",
+         "crossing": "film to hardcore punk",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/6/63/Dawn_of_the_dead.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "culture",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Dawn_of_the_dead.jpg",
+         "imageCredit": "en.wikipedia (Dawn of the Dead (1978 film))",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/923",
+          "detail": "directed by George A. Romero (1978)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "peer",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1986",
+         "title": "Another Wasted Night",
+         "medium": "music",
+         "reason": "Gang Green were Psycho's direct Boston contemporaries, also appearing on This Is Boston, Not L.A. before signing to Taang! Records. Their beer-soaked, joke-heavy thrash shared audiences, bills and label ecology with Psycho, and Another Wasted Night captures the mid-80s moment when Boston hardcore was speeding up, getting metallic, and refusing to take itself seriously.",
+         "creator": "Gang Green",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/5/5d/Gang-green-another-wasted-night.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "peer",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Gang-green-another-wasted-night.jpg",
+         "imageCredit": "en.wikipedia (Another Wasted Night)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/a85bf1cb-78e4-39e7-879c-5992be5c1c36",
+          "detail": "first released 1986",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1983",
+         "title": "Land of the Lost",
+         "medium": "music",
+         "reason": "The Freeze came from Cape Cod into Boston's hardcore core, sharing the This Is Boston, Not L.A. tracklist and the Modern Method orbit. Clif Croce's warped lyrics and the band's melodic, sardonic take on hardcore made them the scene's other great oddball act, playing the same rooms and bills as Psycho throughout the early and mid 1980s.",
+         "creator": "The Freeze",
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/a79cb4c1-e036-3f63-a524-eebed837c5ca",
+          "detail": "first released 1992",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1984",
+         "title": "Drop Dead",
+         "medium": "music",
+         "reason": "Recorded in Weymouth, Massachusetts, Siege's demo pushed Boston hardcore to a tempo and vocal shriek nobody had attempted, becoming the acknowledged bridge to grindcore. They shared the same small New England club economy and rehearsal-tape circulation as Psycho in the mid-eighties, and both bands' extremity explains why Napalm Death-era listeners later went digging through Massachusetts tapes.",
+         "creator": "Siege",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/b/bd/Siege_drop_dead_1994_relapse.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "peer",
+         "imagePage": "https://en.wikipedia.org/wiki/File:Siege_drop_dead_1994_relapse.jpg",
+         "imageCredit": "en.wikipedia (Drop Dead (album))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/c09f949d-56a3-3939-9c12-993921327a8b",
+          "detail": "first released 1984",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "essential",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1988",
+         "title": "Rest Home for Robots",
+         "medium": "music",
+         "reason": "A definitive document of the band's grotesque, hyper-fast, humor-drenched hardcore, packing dozens of short blasts into a single record. It shows how far Boston hardcore had mutated by the late 80s: horror-movie imagery, cartoonish disgust, and tempos pushed toward grindcore while keeping the local scene's punk crudeness and sarcasm fully intact.",
+         "creator": "Psycho",
+         "slotType": "essential"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1990",
+         "title": "Bland Ambition",
+         "medium": "music",
+         "reason": "A later full-length that consolidates the band's approach: absurdist song titles, songs measured in seconds, and a sneering attitude toward American consumer life. It captures the Boston band at the point where hardcore, thrash and proto-grind overlapped, and remains a key reference for collectors tracing the city's noisier, funnier underground beyond the famous X-Claim roster.",
+         "creator": "Psycho",
+         "slotType": "essential"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1999",
+         "title": "The Bloody Best of Psycho",
+         "medium": "music",
+         "reason": "A retrospective gathering the Boston band's scattered singles, demos and compilation tracks from the mid-1980s onward, the format in which most listeners actually encountered them since their output was spread across small local labels and tape trading rather than a steady album run. It documents the shift from thrashing Boston-style hardcore to the horror-comic sludge and gore-obsessed lyrical persona the band built its cult reputation on.",
+         "creator": "Psycho",
+         "crossing": null,
+         "slotType": "essential"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "collaborator",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1986",
+         "title": "Where the Wild Things Are",
+         "medium": "music",
+         "reason": "Taang! Records, founded by Curtis Casella in the Boston area, was the label network that documented the city's hardcore bands through the mid and late 80s, releasing and reissuing material from across the scene Psycho inhabited. Slapshot's debut is one of the imprint's defining Boston records, showing the label's role as the connective tissue between the city's bands, studios and audiences.",
+         "creator": "Slapshot",
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1988",
+         "title": "Drop Acid",
+         "medium": "music",
+         "reason": "Boston's late-80s studio and label infrastructure — Taang!, Fort Apache and the local engineers who recorded nearly everyone — connected hardcore bands to the emerging noise-rock generation. Bullet LaVolta's debut, made in that same Boston circuit, shows the city's hardcore energy being pushed toward heavier, wilder rock, and shares personnel networks and venues with Psycho's era.",
+         "creator": "Bullet LaVolta",
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "source": "MusicBrainz",
+          "status": "not_found",
+          "candidates": []
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1987",
+         "title": "Answer the Call",
+         "medium": "music",
+         "reason": "Kilslug, led by Larry Lifeless, came out of the same late-1980s Boston underground as Psycho and shared bills, personnel orbits and the Taang!/local-label ecosystem with them. Their crawling, deliberately ugly slowed-down hardcore pushed the same nihilist horror aesthetic Psycho worked in, and the two bands' overlapping circles helped make Boston a place where noise-rock sludge and thrash coexisted rather than splitting apart.",
+         "creator": "Kilslug",
+         "crossing": null,
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/c4a22d39-2dbe-4d40-80e1-aeaf3e93e9c8",
+          "detail": "first released 1986",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "legacy",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1987",
+         "title": "Scum",
+         "medium": "music",
+         "reason": "Napalm Death built grindcore out of exactly the material Psycho traded in: sub-minute songs, blast tempos, and hardcore's disgust turned into pure velocity. The transatlantic tape-trading network moved American hardcore records into Birmingham and British extreme records back to Boston, making Scum the definitive statement of the style toward which bands like Psycho were already racing.",
+         "creator": "Napalm Death",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/0/02/NapalmDeathScum.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "legacy",
+         "imagePage": "https://en.wikipedia.org/wiki/File:NapalmDeathScum.jpg",
+         "imageCredit": "en.wikipedia (Scum (Napalm Death album))",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/ed677402-a3d0-4c1f-99c0-81eed8bfbbb5",
+          "detail": "first released 1986-08-11",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1989",
+         "title": "Horrified",
+         "medium": "music",
+         "reason": "Michigan's Repulsion fused hardcore speed with splatter-film lyrics and buzzsaw guitar, effectively codifying gore-grind. Their horror-comic aesthetic and blistering brevity carry forward the same lineage Psycho worked in on the East Coast, and Horrified became the record every later gore-obsessed hardcore and death metal band cited when explaining where the sound came from.",
+         "creator": "Repulsion",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/2/22/HorrifiedRepulsion.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "legacy",
+         "imagePage": "https://en.wikipedia.org/wiki/File:HorrifiedRepulsion.jpg",
+         "imageCredit": "en.wikipedia (Horrified)",
+         "imageLicense": "fair use — cover art thumbnail (class rule V3-73)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://musicbrainz.org/release-group/12e26259-5b9d-3af8-8ba9-4fe40b166de1",
+          "detail": "first released 1989",
+          "method": "musicbrainz_release_group",
+          "source": "MusicBrainz",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "source": "generated",
+   "model_version": "claude-opus-5",
+   "created_at": "2026-07-29T17:14:53.316Z"
+  },
+  {
+   "id": "9dcf0c2e-ef5a-4301-8552-959c91d8ce77",
+   "subject_entity_id": "1fad88f5-8d90-4268-bccd-cf636e3617b6",
+   "payload": {
+    "intro": "Zeffirelli's 1977 miniseries fused Renaissance painting, Italian neorealist religious cinema and Lew Grade's transatlantic all-star TV epic model. This mix traces the Italian Jesus films that preceded it, the Florentine art training behind its compositions, and the passion-film wave it made possible.",
+    "slots": [
+     {
+      "slotType": "titan",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1964",
+         "title": "The Gospel According to St. Matthew",
+         "medium": "film",
+         "reason": "The unavoidable reference point for any Italian filmmaker approaching the Gospels after 1964. Pasolini shot in the stony poverty of Basilicata with non-professional actors and a Christ of fierce, unsentimental austerity. Zeffirelli's miniseries answers it directly: same insistence on a Middle Eastern, dust-and-rock Judea rather than Hollywood spectacle, but with a lyrical, painterly warmth and a professional star cast where Pasolini used peasants.",
+         "creator": "Pier Paolo Pasolini",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/2/2b/Pasolini_Gospel_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/2/2b/Pasolini_Gospel_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (The Gospel According to St. Matthew (film))",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/24192",
+          "detail": "directed by Pier Paolo Pasolini (1965)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1961",
+         "title": "King of Kings",
+         "medium": "film",
+         "reason": "The blue-eyed, Technicolor Hollywood Christ played by Jeffrey Hunter, shot in Spain with a Miklos Rozsa score, established the template of the Jesus epic that Zeffirelli's serial both inherited and corrected. Robert Powell's piercing gaze and the emphasis on Jesus as a compelling public figure preaching to crowds descend from Ray's model; the six-hour television format allowed Zeffirelli the narrative room Ray lacked.",
+         "creator": "Nicholas Ray",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/c/c4/KingofKings.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/c/c4/KingofKings.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (King of Kings (1961 film))",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/36362",
+          "detail": "directed by Nicholas Ray (1961)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1927",
+         "title": "The King of Kings",
+         "medium": "film",
+         "reason": "DeMille's silent epic set the template Zeffirelli both inherited and pushed against: reverent tableaux staged after devotional painting, a Jesus introduced through the healed eyes of a blind child, and a huge international release aimed at church audiences rather than art houses. Zeffirelli's producer Lew Grade pitched Jesus of Nazareth in that same evangelical-spectacle tradition, and the series repeats DeMille's tactic of framing miracles as painterly revelation.",
+         "creator": "Cecil B. DeMille",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Kingofkings_poster.gif/960px-Kingofkings_poster.gif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "titan",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Kingofkings_poster.gif",
+         "imageCredit": "Pathe",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/49633",
+          "detail": "directed by Cecil B. DeMille (1927)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "ghost",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1975",
+         "title": "Il Messia",
+         "medium": "film",
+         "reason": "Rossellini's final feature, made in the same mid-1970s moment, is the film almost nobody sees: an austere, didactic Jesus stripped of miracles and mysticism, part of his late television project to teach history through drama. Made for Italian and French TV audiences, it shows the pedagogical, small-screen religious cinema Zeffirelli was working alongside, and its flat, ceremonial staging is the opposite pole to Zeffirelli's painterly emotion.",
+         "creator": "Roberto Rossellini",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/8430",
+          "detail": "directed by Roberto Rossellini (1975)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "geography",
+      "candidates": [
+       {
+        "item": {
+         "via": "Luchino Visconti",
+         "year": "1948",
+         "title": "La terra trema",
+         "medium": "film",
+         "reason": "Zeffirelli began in Italian cinema as Visconti's assistant, working on films and later designing his opera productions in Milan and Rome. Visconti's Sicilian fishing-village epic, shot with locals speaking dialect, taught him the neorealist discipline of real faces and real places that resurfaces decades later in the Tunisian and Moroccan locations and weathered peasant crowds of the Nazareth scenes.",
+         "creator": "Luchino Visconti",
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/43445",
+          "detail": "directed by Luchino Visconti (1949)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": "Suso Cecchi d'Amico",
+         "year": "1948",
+         "title": "Bicycle Thieves",
+         "medium": "film",
+         "reason": "The Roman neorealist milieu that trained Zeffirelli's generation: non-professional faces, dust, poverty photographed as documentary fact. Suso Cecchi d'Amico, who co-wrote Jesus of Nazareth, was part of De Sica and Zavattini's Rome screenwriting circle in exactly these years. The Galilean village scenes of the series — cramped houses, worn clothing, weathered peasant faces — descend directly from this postwar Italian habit of ennobling the poor.",
+         "creator": "Vittorio De Sica",
+         "crossing": null,
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "via": "Suso Cecchi d'Amico",
+          "hop1": {
+           "url": "https://en.wikipedia.org/wiki/Jesus_of_Nazareth_(TV_series)",
+           "kind": "mention",
+           "excerpt": "Jesus of Nazareth (Italian: Gesù di Nazareth) is a 1977 epic television drama serial directed by Franco Zeffirelli and co-written by Anthony Burgess and Suso Cecchi d'Amico, which dramatizes the birth, life, ministry, crucifixion and resurrection of Jesus.",
+           "articleTitle": "Jesus of Nazareth (TV series)"
+          },
+          "hop2": {
+           "url": "https://en.wikipedia.org/wiki/Suso_Cecchi_d'Amico",
+           "excerpt": "Cecchi d'Amico worked with virtually all of the most celebrated post-war Italian film directors, and wrote or co-wrote many award-winning films—among them: Franco Zeffirelli: The Taming of the Shrew, Brother Sun, Sister Moon Luchino Visconti: Bellissima, Rocco and His Brothers, Senso, Ludwig, The Leopard, Conversati…",
+           "articleTitle": "Suso Cecchi d'Amico"
+          },
+          "status": "documented_via"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/5156",
+          "detail": "directed by Vittorio De Sica (1948)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1960",
+         "title": "La Dolce Vita",
+         "medium": "film",
+         "reason": "Made in the same Cinecittà-and-Rome industry where Zeffirelli worked as a designer and director, Fellini's film opens with a helicoptered statue of Christ over Rome — the Italian cinema's ongoing argument with Catholic iconography. The Roman studio craftsmen, costume houses and location networks Fellini relied on were the identical infrastructure Zeffirelli drew on for Jesus of Nazareth's Tunisian and Moroccan shoots.",
+         "creator": "Federico Fellini",
+         "crossing": null,
+         "slotType": "geography"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/439",
+          "detail": "directed by Federico Fellini (1960)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "culture",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1305",
+         "title": "Scrovegni Chapel frescoes",
+         "medium": "art",
+         "reason": "Zeffirelli trained in art and architecture in Florence and repeatedly composed his Gospel scenes as living Italian painting. Giotto's Padua cycle is the foundational visual telling of Christ's life: grouped figures, restrained gesture, human grief in the Lamentation. The framing of the Nativity, the Deposition and the mourning around the cross in the miniseries reads as animated trecento fresco.",
+         "creator": "Giotto",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "reason": "no confident Wikidata match; this check awards but never convicts",
+          "status": "skipped"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": "Anthony Burgess",
+         "year": "1979",
+         "title": "Man of Nazareth",
+         "medium": "literature",
+         "reason": "Burgess co-wrote the miniseries teleplay and afterwards turned his research into this novel, a wry, linguistically inventive life of Jesus set against Roman politics. Reading it reveals what he brought to Zeffirelli: dense first-century political texture, Pharisee and Zealot debate, and dialogue that keeps Jesus verbally formidable rather than merely serene — the script's intellectual spine.",
+         "creator": "Anthony Burgess",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "url": "https://en.wikipedia.org/wiki/Jesus_of_Nazareth_(TV_series)",
+          "status": "documented",
+          "excerpt": "Jesus of Nazareth (Italian: Gesù di Nazareth) is a 1977 epic television drama serial directed by Franco Zeffirelli and co-written by Anthony Burgess and Suso Cecchi d'Amico, which dramatizes the birth, life, ministry, crucifixion and resurrection of Jesus.",
+          "articleTitle": "Jesus of Nazareth (TV series)"
+         },
+         "attribution": {
+          "url": "https://openlibrary.org/works/OL261780W",
+          "detail": "first published 1977",
+          "method": "openlibrary_search",
+          "source": "Open Library",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1443",
+         "title": "Annunciation, Convent of San Marco",
+         "medium": "art",
+         "reason": "Zeffirelli, a Florentine, repeatedly said he composed sacred scenes as a painter would, and the series' Nativity and Annunciation staging — pale light, austere architecture, hands and downcast eyes doing the emotional work — follows the Dominican fresco tradition of his own city. Fra Angelico's insistence on devotional clarity over drama explains the deliberate stillness that critics noticed in Robert Powell's performance.",
+         "creator": "Fra Angelico",
+         "crossing": "Florentine fresco painting into television direction",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "reason": "no confident Wikidata match; this check awards but never convicts",
+          "status": "skipped"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "peer",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1974",
+         "title": "Moses the Lawgiver",
+         "medium": "television",
+         "reason": "The immediate precedent within the same production world: an Italian-British biblical serial made for RAI and Lew Grade's ITC, starring Burt Lancaster, shot in Israel with a sprawling international cast. Its commercial success is what led Grade to commission a life of Christ on the same lavish scale, and Zeffirelli's serial repeats its formula of star casting plus desert authenticity.",
+         "creator": "Gianfranco De Bosio",
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/tv/288111",
+          "detail": "created by Gianfranco De Bosio (1974)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1973",
+         "title": "Jesus Christ Superstar",
+         "medium": "film",
+         "reason": "The other major 1970s screen Jesus, filmed in Israel with a rock score by Andrew Lloyd Webber and Tim Rice, and controversial for its youthful, anguished Christ and sympathetic Judas. It marks the decade's appetite for reimagining the Passion for a mass audience, the cultural climate in which a six-hour prime-time Gospel serial could become an international television event.",
+         "creator": "Norman Jewison",
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/12545",
+          "detail": "directed by Norman Jewison (1973)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1968",
+         "title": "Odissea",
+         "medium": "television",
+         "reason": "The Italian television epic that proved RAI could mount multi-part literary spectacle with international co-production money and dubbed all-star casting. Rossi shot Homer on Mediterranean locations with the same Cinecittà craft base Zeffirelli used a decade later, and its success established the sceneggiato format — long-form, prestige, culturally canonical — that made a six-hour Gospel serial commercially plausible for RAI and Lew Grade together.",
+         "creator": "Franco Rossi",
+         "crossing": null,
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/tv/19401",
+          "detail": "created by Piero Schivazappa, Franco Rossi, Mario Bava (1968)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "collaborator",
+      "candidates": [
+       {
+        "item": {
+         "via": "Maurice Jarre",
+         "year": "1962",
+         "title": "Lawrence of Arabia",
+         "medium": "film",
+         "reason": "Maurice Jarre composed the score for Jesus of Nazareth, whose solemn, modal main theme became inseparable from the images. Lean's desert epic is where Jarre's gift for vast, yearning melody over sand and sky first won him an Oscar and defined a whole grammar of Middle Eastern screen music — the same expansive orchestral language he later brought to Zeffirelli's Judea.",
+         "creator": "David Lean",
+         "slotType": "collaborator"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/947",
+          "detail": "directed by David Lean (1962)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": "Suso Cecchi d'Amico",
+         "year": "1963",
+         "title": "The Leopard",
+         "medium": "film",
+         "reason": "Suso Cecchi d'Amico co-wrote the Jesus of Nazareth screenplay and was postwar Italy's most important screenwriter, Visconti's regular collaborator. The Leopard shows her command of history as human drama — private lives caught in political upheaval — the very craft she brought to structuring the Gospels for television alongside Anthony Burgess and Zeffirelli.",
+         "creator": "Luchino Visconti",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/2/28/OLeopardo.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "collaborator",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/2/28/OLeopardo.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (The Leopard (1963 film))",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "via": "Suso Cecchi d'Amico",
+          "hop1": {
+           "url": "https://en.wikipedia.org/wiki/Jesus_of_Nazareth_(TV_series)",
+           "kind": "mention",
+           "excerpt": "Jesus of Nazareth (Italian: Gesù di Nazareth) is a 1977 epic television drama serial directed by Franco Zeffirelli and co-written by Anthony Burgess and Suso Cecchi d'Amico, which dramatizes the birth, life, ministry, crucifixion and resurrection of Jesus.",
+           "articleTitle": "Jesus of Nazareth (TV series)"
+          },
+          "hop2": {
+           "url": "https://en.wikipedia.org/wiki/Suso_Cecchi_d'Amico",
+           "excerpt": "Cecchi d'Amico worked with virtually all of the most celebrated post-war Italian film directors, and wrote or co-wrote many award-winning films—among them: Franco Zeffirelli: The Taming of the Shrew, Brother Sun, Sister Moon Luchino Visconti: Bellissima, Rocco and His Brothers, Senso, Ludwig, The Leopard, Conversati…",
+           "articleTitle": "Suso Cecchi d'Amico"
+          },
+          "status": "documented_via"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/1040",
+          "detail": "directed by Luchino Visconti (1963)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": "Suso Cecchi d'Amico",
+         "year": "1960",
+         "title": "Rocco and His Brothers",
+         "medium": "film",
+         "reason": "Screenwriter Suso Cecchi d'Amico, co-author of Jesus of Nazareth with Anthony Burgess, was Visconti's constant collaborator, and this family tragedy shows her method: biblical fraternal structure, Cain and Abel logic, moral weight carried by domestic scenes. That instinct for treating sacred archetypes as family drama shapes the series' handling of Mary, Joseph, Judas and the disciples as recognisable, quarrelling kin.",
+         "creator": "Luchino Visconti",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/e/eb/RoccoFratelliPoster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "collaborator",
+         "imagePage": "https://en.wikipedia.org/wiki/File:RoccoFratelliPoster.jpg",
+         "imageCredit": "en.wikipedia (Rocco and His Brothers)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "via": "Suso Cecchi d'Amico",
+          "hop1": {
+           "url": "https://en.wikipedia.org/wiki/Jesus_of_Nazareth_(TV_series)",
+           "kind": "mention",
+           "excerpt": "Jesus of Nazareth (Italian: Gesù di Nazareth) is a 1977 epic television drama serial directed by Franco Zeffirelli and co-written by Anthony Burgess and Suso Cecchi d'Amico, which dramatizes the birth, life, ministry, crucifixion and resurrection of Jesus.",
+           "articleTitle": "Jesus of Nazareth (TV series)"
+          },
+          "hop2": {
+           "url": "https://en.wikipedia.org/wiki/Suso_Cecchi_d'Amico",
+           "excerpt": "Cecchi d'Amico worked with virtually all of the most celebrated post-war Italian film directors, and wrote or co-wrote many award-winning films—among them: Franco Zeffirelli: The Taming of the Shrew, Brother Sun, Sister Moon Luchino Visconti: Bellissima, Rocco and His Brothers, Senso, Ludwig, The Leopard, Conversati…",
+           "articleTitle": "Suso Cecchi d'Amico"
+          },
+          "status": "documented_via"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/8422",
+          "detail": "directed by Luchino Visconti (1960)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "legacy",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "2004",
+         "title": "The Passion of the Christ",
+         "medium": "film",
+         "reason": "The next global phenomenon of Christ on screen, shot in Italy in Aramaic and Latin with Caravaggesque lighting. Gibson's film pushes the Passion into extreme physical realism, but it inherits Zeffirelli's core conviction that the Gospels demand ancient languages, Mediterranean locations and painterly composition — and that a reverent Jesus film can find an enormous mainstream audience.",
+         "creator": "Mel Gibson",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/c/c4/The_Passion_of_the_Christ_poster.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "legacy",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/c/c4/The_Passion_of_the_Christ_poster.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (The Passion of the Christ)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/615",
+          "detail": "directed by Mel Gibson (2004)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "2013",
+         "title": "The Bible",
+         "medium": "television",
+         "reason": "The History Channel miniseries produced by Downey and Mark Burnett revived the long-form scripture serial for a new generation of viewers, drawing tens of millions in the United States. Its structure — sweeping episodes from Genesis to the Resurrection, aired as event television around Easter — follows the broadcasting model Zeffirelli's 1977 serial created and that networks have replayed at Holy Week ever since.",
+         "creator": "Roma Downey",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/The_Bible_-_Title_Card.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "legacy",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:The_Bible_-_Title_Card.jpg",
+         "imageCredit": "PCraig",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/tv/43899",
+          "detail": "starring Roma Downey; credited (2013)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "source": "generated",
+   "model_version": "claude-opus-5",
+   "created_at": "2026-07-31T05:53:00.201Z"
+  },
+  {
+   "id": "7c04f229-78d7-4225-a7fd-300ca68469c9",
+   "subject_entity_id": "4d5d6043-195f-4e22-9ec3-30a170c00193",
+   "payload": {
+    "intro": "Lucile Watson turned the Broadway dowager into a screen archetype: Montreal-born, Academy-trained, she moved from Clyde Fitch and Belasco-era stagecraft to MGM and Warner Bros., peaking with her Oscar-nominated turn opposite Bette Davis in Watch on the Rhine. This mix traces the theatrical roots of her imperious matriarchs, her Canadian-expatriate cohort, and the character actresses who inherited the type.",
+    "slots": [
+     {
+      "slotType": "titan",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1905",
+         "title": "The Girl of the Golden West",
+         "medium": "theater",
+         "reason": "Watson came up in the Broadway system Belasco dominated, where naturalistic staging, painstaking rehearsal and the star-vehicle 'type' were codified. Belasco's insistence that actors be cast to a fixed persona and drilled in exact business shaped the era's stock company culture that produced Watson's specialty: the impeccably upholstered matriarch whose authority is conveyed by stillness, diction and a single raised eyebrow.",
+         "creator": "David Belasco",
+         "slotType": "titan"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.wikidata.org/wiki/Q7736602",
+          "detail": "screenwriter: David Belasco",
+          "method": "wikidata_creator_property",
+          "source": "Wikidata",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1907",
+         "title": "The Truth",
+         "medium": "theater",
+         "reason": "Fitch was the dominant American dramatist of Watson's formative years, writing brittle drawing-room comedies about society women, money and manners. His plays established the vocabulary of the well-bred antagonist that Watson would later carry into sound film, and it was a Fitch property that supplied the title and material of her earliest screen appearance during the silent era in New York.",
+         "creator": "Clyde Fitch",
+         "slotType": "titan"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "reason": "no confident Wikidata match; this check awards but never convicts",
+          "status": "skipped"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": "Charles Frohman",
+         "year": "1898",
+         "title": "Trelawny of the 'Wells'",
+         "medium": "theater",
+         "reason": "",
+         "creator": "Arthur Wing Pinero",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/TrelawnyWells.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "titan",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:TrelawnyWells.jpg",
+         "imageCredit": "Wikimedia Commons",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.wikidata.org/wiki/Q7837980",
+          "detail": "author: Arthur Wing Pinero",
+          "method": "wikidata_creator_property",
+          "source": "Wikidata",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "ghost",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1902",
+         "title": "The Girl with the Green Eyes",
+         "medium": "theater",
+         "reason": "Fitch's jealousy melodrama is the forgotten hinge of Watson's career: its 1916 silent adaptation, shot in the East, marked her first film work two decades before Hollywood claimed her. The play's hothouse study of possessiveness within a wealthy family anticipates the smothering mothers and social gatekeepers she perfected, and it links her directly to the Fitch repertory most modern viewers have never encountered.",
+         "creator": "Clyde Fitch",
+         "slotType": "ghost"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "reason": "no confident Wikidata match; this check awards but never convicts",
+          "status": "skipped"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1939",
+         "title": "No Time for Comedy",
+         "medium": "theater",
+         "reason": "Behrman's high-comedy craftsmanship defined the Theatre Guild milieu Watson worked in between film contracts, where American actors learned to play wit as social armour rather than farce. His plays about writers, wives and worldly older women supplied precisely the register Watson brought to screen matriarchs: urbane, unsentimental, and lethal in an aside delivered over a teacup.",
+         "creator": "S. N. Behrman",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/2/25/No_Time_for_Comedy-_1940-_Poster.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "ghost",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/2/25/No_Time_for_Comedy-_1940-_Poster.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (No Time for Comedy)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "reason": "no confident Wikidata match; this check awards but never convicts",
+          "status": "skipped"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "geography",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1930",
+         "title": "The Divorcee",
+         "medium": "film",
+         "reason": "Shearer, like Watson, was a Montreal native who built a career in the United States, and both women passed through MGM in the 1930s — they appear together in the studio's all-female showpiece of the decade. Shearer's Oscar-winning turn as a modern wife is the counterweight to Watson's older generation: the same Anglo-Montreal export route, two different faces of American screen womanhood.",
+         "creator": "Norma Shearer",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/The_Divorcee_-_Rotogravure_One_Sheet_27_X_41.jpg/960px-The_Divorcee_-_Rotogravure_One_Sheet_27_X_41.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "geography",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:The_Divorcee_-_Rotogravure_One_Sheet_27_X_41.jpg",
+         "imageCredit": "Lubin Publishing Co. and MGM",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/80708",
+          "detail": "TMDB credits Robert Z. Leonard",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1930",
+         "title": "Min and Bill",
+         "medium": "film",
+         "reason": "Dressler, born in Cobourg, Ontario, was the other great Canadian character woman on the MGM lot, and her late-career stardom proved that middle-aged, unglamorous authority could carry a picture. Her Oscar-winning waterfront brawler cleared commercial ground for performers like Watson, whose formidable dowagers were similarly sold on presence and voice rather than youth or beauty.",
+         "creator": "Marie Dressler",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/9/9d/Min_and_bill_1930_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "geography",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/9/9d/Min_and_bill_1930_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (Min and Bill)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/85505",
+          "detail": "TMDB credits George W. Hill",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1929",
+         "title": "Coquette",
+         "medium": "film",
+         "reason": "Pickford, born in Toronto, was the other great Canadian-born woman who built an American career by leaving the country early, as the Montreal-raised Watson did when she enrolled at the American Academy of Dramatic Arts. Coquette, Pickford's talkie debut and Oscar win, marked the moment stage-trained speech became the industry's currency — precisely the shift that made Watson's theatre diction a Hollywood asset after 1930.",
+         "creator": "Mary Pickford",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Coquettemp.jpg/960px-Coquettemp.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "geography",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Coquettemp.jpg",
+         "imageCredit": "United Artists",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/85507",
+          "detail": "TMDB credits Sam Taylor",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "culture",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1920",
+         "title": "The Age of Innocence",
+         "medium": "literature",
+         "reason": "Wharton supplied the literary blueprint for the world Watson embodied on film: old New York's tribal matriarchs, whose power lies in seating plans, calling cards and the withholding of approval. The novel's Mrs. Mingott and Mrs. van der Luyden are the ancestors of the mothers Watson played opposite Carole Lombard and Bette Davis, women who enforce class boundaries without raising their voices.",
+         "creator": "Edith Wharton",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Age_of_Innocence_%281st_ed_dust_jacket%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "culture",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Age_of_Innocence_(1st_ed_dust_jacket).jpg",
+         "imageCredit": "Unknown authorUnknown author; Anonymous artist",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://openlibrary.org/works/OL98491W",
+          "detail": "first published 1920",
+          "method": "openlibrary_search",
+          "source": "Open Library",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1939",
+         "title": "The Little Foxes",
+         "medium": "literature",
+         "reason": "Hellman is the direct dramatic link in Watson's career: the actress created a role in Hellman's anti-fascist play on Broadway and repeated it on screen for her Academy Award nomination. This earlier Hellman work, about a rapacious Southern family, shows the playwright's method — moral rot exposed through domestic argument — that gave Watson her richest material as a mother forced to choose sides.",
+         "creator": "Lillian Hellman",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/6/69/The-Little-Foxes-1939-FE.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "culture",
+         "imagePage": "https://en.wikipedia.org/wiki/File:The-Little-Foxes-1939-FE.jpg",
+         "imageCredit": "en.wikipedia (The Little Foxes)",
+         "imageLicense": "fair use — book jacket thumbnail (class rule V3-76)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "url": "https://en.wikipedia.org/wiki/Lucile_Watson",
+          "status": "documented",
+          "excerpt": "In perhaps her most acclaimed performance, Watson portrayed Fanny Farrelly in playwright Lillian Hellman's antifascist dramatic stage play Watch on the Rhine on Broadway in 1941.",
+          "articleTitle": "Lucile Watson"
+         },
+         "attribution": {
+          "url": "https://openlibrary.org/works/OL895003W",
+          "detail": "first published 1939",
+          "method": "openlibrary_search",
+          "source": "Open Library",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1922",
+         "title": "Etiquette",
+         "medium": "literature",
+         "reason": "Watson's stock-in-trade was the woman who rules a drawing room by knowing exactly what is done. Post's bestseller codified that authority for a mass American readership in the same decade Watson was perfecting it on Broadway, supplying audiences with the shared rulebook that let a single raised eyebrow read as devastating judgment. Her dowagers are Post's arbiters given flesh.",
+         "creator": "Emily Post",
+         "crossing": "literature to film",
+         "slotType": "culture"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://openlibrary.org/works/OL41371773W",
+          "detail": "first published 2014",
+          "method": "openlibrary_search",
+          "source": "Open Library",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "peer",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1935",
+         "title": "Ruggles of Red Gap",
+         "medium": "film",
+         "reason": "Boland was Watson's closest professional rival and colleague in the social-comedy line; both were Broadway veterans imported for their diction, and both appear in MGM's celebrated all-female ensemble of 1939. Boland's flighty, ambitious Mrs. Floud is the comic obverse of Watson's granite matrons — the same era's demand for grand ladies played for laughs rather than for chill.",
+         "creator": "Mary Boland",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Ruggles_of_Red_Cap_%281935_poster%29.jpg/960px-Ruggles_of_Red_Cap_%281935_poster%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "peer",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Ruggles_of_Red_Cap_(1935_poster).jpg",
+         "imageCredit": "\"Copyright 1935 by Paramount Productions, Inc.\"",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/36006",
+          "detail": "TMDB credits Leo McCarey",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1939",
+         "title": "Drums Along the Mohawk",
+         "medium": "film",
+         "reason": "Oliver occupied the adjacent niche in the same studio years: the tart, imposing older woman whose stage training made her indispensable to prestige literary adaptations. Her Oscar-nominated frontier widow, and her Aunt Betsey and Miss Pross elsewhere, map the exact market Watson competed in — character actresses hired for authority, delivering the film's moral verdict in a few scenes.",
+         "creator": "Edna May Oliver",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/5/50/Drumsalongthemohawk.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "peer",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/5/50/Drumsalongthemohawk.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (Drums Along the Mohawk)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/73194",
+          "detail": "TMDB credits John Ford",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1939",
+         "title": "Gone with the Wind",
+         "medium": "film",
+         "reason": "Crews, like Watson, came from long stage service and coaching work before settling into Hollywood's market for older women of breeding; her Aunt Pittypat arrived the same year as Watson's mothers in Made for Each Other and The Women. The two divided a narrow field between them, Crews taking the fluttering variety and Watson the steel-spined one, and both were cast for voices trained in theatres.",
+         "creator": "Laura Hope Crews",
+         "crossing": null,
+         "slotType": "peer"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/770",
+          "detail": "TMDB credits Victor Fleming",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "essential",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1943",
+         "title": "Watch on the Rhine",
+         "medium": "film",
+         "reason": "Watson's definitive performance, reprising the Broadway role she originated in Lillian Hellman's play: Fanny Farrelly, the imperious Washington matriarch whose complacency is shattered when her daughter arrives from Europe with an anti-Nazi husband. It brought Watson her only Academy Award nomination, opposite Bette Davis and Paul Lukas, and distilled her whole persona — hauteur cracking into moral courage.",
+         "creator": "Lucile Watson",
+         "slotType": "essential"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/68440",
+          "detail": "TMDB credits Herman Shumlin",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1939",
+         "title": "The Women",
+         "medium": "film",
+         "reason": "As Mrs. Morehead, mother to Norma Shearer's wronged wife, Watson delivers the film's coolest counsel in George Cukor's all-female adaptation of Clare Boothe Luce's play. Amid a cast of 130 women, her few scenes anchor the picture morally, showing how economically she could establish generational wisdom and class certainty — the role that fixed her Hollywood type for the next decade.",
+         "creator": "Lucile Watson",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Poster_-_Women%2C_The_01.jpg/960px-Poster_-_Women%2C_The_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "essential",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Poster_-_Women,_The_01.jpg",
+         "imageCredit": "Employee(s) of MGM",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/22490",
+          "detail": "TMDB credits George Cukor",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1945",
+         "title": "The Thin Man Goes Home",
+         "medium": "film",
+         "reason": "As Nick Charles's mother, Watson got to invert her usual formula: the disapproving matriarch who is quietly the shrewdest person in the house, sizing up her son's drinking and his wife with the same unhurried appraisal. It shows her range inside the dowager type, playing warmth and reproach at once opposite William Powell and Myrna Loy in small-town Sycamore Springs.",
+         "creator": "Lucile Watson",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/The_Thin_Man_Goes_Home_%281944_film_poster%29.png/960px-The_Thin_Man_Goes_Home_%281944_film_poster%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "essential",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:The_Thin_Man_Goes_Home_(1944_film_poster).png",
+         "imageCredit": "Loew's Inc.",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "not_applicable"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/14594",
+          "detail": "TMDB credits Richard Thorpe",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "collaborator",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1942",
+         "title": "Now, Voyager",
+         "medium": "film",
+         "reason": "Davis was Watson's co-star in Watch on the Rhine, playing the daughter to Watson's Fanny Farrelly at Warner Bros. Made a year earlier, this film is the mirror image of their pairing — Davis as a daughter crushed by a tyrannical Boston mother — and demonstrates exactly why the studio matched her with Watson: no one played the war between generations of well-bred women better.",
+         "creator": "Bette Davis",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Now%2C_Voyager_%281942_poster%29.jpg/960px-Now%2C_Voyager_%281942_poster%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "collaborator",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Now,_Voyager_(1942_poster).jpg",
+         "imageCredit": "Vitagraph Inc., a subsidiary of Warner Bros. at the time of publication.",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/32847",
+          "detail": "TMDB credits Irving Rapper",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1945",
+         "title": "Confidential Agent",
+         "medium": "film",
+         "reason": "Shumlin directed Lillian Hellman's plays on Broadway, including the anti-fascist drama in which Watson created Fanny Farrelly, and he was brought to Hollywood to direct the screen version. This Graham Greene adaptation, again with Charles Boyer and Lauren Bacall, is his other film and shows the stage-bred, dialogue-first approach that made Watson's theatrical performance translate intact to celluloid.",
+         "creator": "Herman Shumlin",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/en/c/c5/Confidential_Agent2.jpeg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "slotType": "collaborator",
+         "imagePage": "https://upload.wikimedia.org/wikipedia/en/c/c5/Confidential_Agent2.jpeg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+         "imageCredit": "en.wikipedia (Confidential Agent)",
+         "imageLicense": "fair use — film poster thumbnail (class rule V3-74)"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/160660",
+          "detail": "directed by Herman Shumlin (1945)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1940",
+         "title": "The Philadelphia Story",
+         "medium": "film",
+         "reason": "Cukor directed Watson in The Women, where he handled a cast of only women and trusted stage-trained players to carry long comic exchanges without cutting away. The Philadelphia Story shows the method that served Watson: drawing-room blocking, Broadway timing, class manners as the engine of every joke. His reputation for guiding actresses made him the studio director best suited to her theatre-bred style.",
+         "creator": "George Cukor",
+         "crossing": null,
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/The-Philadelphia-Story-%281940%29.jpg/960px-The-Philadelphia-Story-%281940%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "collaborator",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:The-Philadelphia-Story-(1940).jpg",
+         "imageCredit": "MGM",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/981",
+          "detail": "directed by George Cukor (1940)",
+          "method": "tmdb_credits",
+          "source": "TMDB",
+          "status": "verified"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "slotType": "legacy",
+      "candidates": [
+       {
+        "item": {
+         "via": null,
+         "year": "1962",
+         "title": "The Manchurian Candidate",
+         "medium": "film",
+         "reason": "Lansbury inherited and darkened the archetype Watson refined: the mother whose social authority becomes a weapon against her own child. Arriving at MGM in the 1940s while Watson was still working there, Lansbury played women older than herself and turned the imperious matriarch into something genuinely predatory in the same year Watson died — the type's logical, terrifying endpoint.",
+         "creator": "Angela Lansbury",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/The_Manchurian_Candidate_%281962_poster%29.jpg/960px-The_Manchurian_Candidate_%281962_poster%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "legacy",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:The_Manchurian_Candidate_(1962_poster).jpg",
+         "imageCredit": "\"Copyright © 1962 United Artists Corporation\"",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/982",
+          "detail": "TMDB credits John Frankenheimer",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       },
+       {
+        "item": {
+         "via": null,
+         "year": "1940",
+         "title": "Rebecca",
+         "medium": "film",
+         "reason": "Anderson, another stage-trained import specializing in commanding older women, shows how the Watson mould could be pushed toward menace: Mrs. Danvers rules a house through custom and memory rather than affection. Working the same Hollywood market in the same years, Anderson carried the theatrical dowager into gothic territory, extending the type Watson had made respectable in drawing-room drama.",
+         "creator": "Judith Anderson",
+         "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Rebecca_%281939_poster%29.jpeg/960px-Rebecca_%281939_poster%29.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+         "slotType": "legacy",
+         "imagePage": "https://commons.wikimedia.org/wiki/File:Rebecca_(1939_poster).jpeg",
+         "imageCredit": "\"© 1939 by United Artists Corporation.\"",
+         "imageLicense": "Public domain"
+        },
+        "verification": {
+         "citations": [],
+         "connection": {
+          "status": "undocumented"
+         },
+         "attribution": {
+          "url": "https://www.themoviedb.org/movie/223",
+          "detail": "TMDB credits Alfred Hitchcock",
+          "source": "TMDB",
+          "status": "not_found"
+         }
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "source": "generated",
+   "model_version": "claude-opus-5",
+   "created_at": "2026-07-31T06:41:10.514Z"
+  }
+ ],
+ "claims": [
+  {
+   "id": "c15a2ac9-6b57-4dcf-8154-346e6a80cd59",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "63d09f63-d310-4669-80f0-71f764f0f6a5",
+   "claim_type": "collaborated_with",
+   "slot_affinity": [
+    "collaborator"
+   ],
+   "summary": "Where the Wild Things Are (Slapshot) — collaborator for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:47.914Z",
+   "updated_at": "2026-07-29T17:14:47.914Z"
+  },
+  {
+   "id": "1573d123-7a76-45c9-8713-7b34273aa87f",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "b0f538bf-6a80-4775-af50-8f94ed4e2d8f",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "ghost"
+   ],
+   "summary": "Land of Rape and Honey (Ministry) — ghost for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:13.836Z",
+   "updated_at": "2026-07-29T17:14:13.836Z"
+  },
+  {
+   "id": "7f8bef8d-a103-4c87-8455-39dd6aaf280f",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "c73c51f1-1b18-460c-82c7-72231bc93395",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "titan"
+   ],
+   "summary": "Group Sex (Circle Jerks) — titan for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:02.632Z",
+   "updated_at": "2026-07-29T17:14:02.632Z"
+  },
+  {
+   "id": "ad19fb78-d33b-4bbe-ad17-601b695118bf",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "15ce7b0b-902a-4fee-953e-a38a286fb9de",
+   "claim_type": "same_scene",
+   "slot_affinity": [
+    "peer"
+   ],
+   "summary": "Land of the Lost (The Freeze) — peer for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:36.808Z",
+   "updated_at": "2026-07-29T17:14:36.808Z"
+  },
+  {
+   "id": "86df7669-2fee-4a72-9ea1-709e6267b04d",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "02a92023-afe7-44f7-b7ec-3c3c27b96614",
+   "claim_type": "cross_medium_influence",
+   "slot_affinity": [
+    "culture"
+   ],
+   "summary": "The Texas Chain Saw Massacre (Tobe Hooper) — culture for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:25.637Z",
+   "updated_at": "2026-07-29T17:14:25.637Z"
+  },
+  {
+   "id": "9d18120c-211d-4f29-abe7-34a1e1346785",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "76eeec0b-7016-4cd3-b331-78f34246e216",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "titan"
+   ],
+   "summary": "Damaged (Black Flag) — titan for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:06.342Z",
+   "updated_at": "2026-07-29T17:14:06.342Z"
+  },
+  {
+   "id": "defe0996-430e-4ddc-86da-7f866018c8df",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "8edfbe7f-24d5-483c-962a-e7f84d4b8ed8",
+   "claim_type": "same_scene",
+   "slot_affinity": [
+    "peer"
+   ],
+   "summary": "Another Wasted Night (Gang Green) — peer for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:32.953Z",
+   "updated_at": "2026-07-29T17:14:32.953Z"
+  },
+  {
+   "id": "424a294c-c633-45bf-9096-f0772e01771e",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "ba87e29b-c8bf-43d6-87b6-57f3088bd325",
+   "claim_type": "same_scene",
+   "slot_affinity": [
+    "geography"
+   ],
+   "summary": "This Is Boston, Not L.A. (Various Artists) — geography for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:17.937Z",
+   "updated_at": "2026-07-29T17:14:17.937Z"
+  },
+  {
+   "id": "459e3719-3652-4d83-a018-b40002d44ed8",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "bec6bdfb-0a0a-482b-a015-ccfefe02222e",
+   "claim_type": "collaborated_with",
+   "slot_affinity": [
+    "collaborator"
+   ],
+   "summary": "Drop Acid (Bullet LaVolta) — collaborator for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:51.873Z",
+   "updated_at": "2026-07-29T17:14:51.873Z"
+  },
+  {
+   "id": "78314a4b-9195-4536-907f-9c7441b2d496",
+   "subject_id": "d9a8a0dc-19ef-42f8-b00a-daed9918595f",
+   "object_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "legacy"
+   ],
+   "summary": "Horrified (Repulsion) — legacy for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:44.244Z",
+   "updated_at": "2026-07-29T17:14:44.244Z"
+  },
+  {
+   "id": "f9102e40-ff09-4a88-9c4f-4bc9c9912583",
+   "subject_id": "33fce904-4a38-43bd-98e5-d3b8ed1eb08b",
+   "object_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "legacy"
+   ],
+   "summary": "Scum (Napalm Death) — legacy for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:40.578Z",
+   "updated_at": "2026-07-29T17:14:40.578Z"
+  },
+  {
+   "id": "fce961b6-c0c3-48c7-b98a-f733e428194f",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "eef903d2-b9c4-4752-b2ac-43852407b1ed",
+   "claim_type": "cross_medium_influence",
+   "slot_affinity": [
+    "culture"
+   ],
+   "summary": "Psycho (Alfred Hitchcock) — culture for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:29.357Z",
+   "updated_at": "2026-07-29T17:14:29.357Z"
+  },
+  {
+   "id": "86739a36-6c16-4987-8f07-fc82a08c63f9",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "c1da09ae-02a2-4f96-823f-111cc0a01263",
+   "claim_type": "same_scene",
+   "slot_affinity": [
+    "geography"
+   ],
+   "summary": "Is This My World? (Jerry's Kids) — geography for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:21.772Z",
+   "updated_at": "2026-07-29T17:14:21.772Z"
+  },
+  {
+   "id": "e00fab23-86bc-4423-a081-d0b6eaac808b",
+   "subject_id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "object_id": "12af520d-f501-4602-bd39-564993d65c1c",
+   "claim_type": "influenced_by",
+   "slot_affinity": [
+    "ghost"
+   ],
+   "summary": "Kill from the Heart (The Dicks) — ghost for Psycho",
+   "origin": "runtime_generation",
+   "model_version": "claude-opus-5",
+   "agent_run_id": null,
+   "created_at": "2026-07-29T17:14:10.012Z",
+   "updated_at": "2026-07-29T17:14:10.012Z"
+  }
+ ],
+ "entities": [
+  {
+   "id": "1fad88f5-8d90-4268-bccd-cf636e3617b6",
+   "kind": "work",
+   "domain": "television",
+   "name": "Jesus of Nazareth",
+   "sort_name": null,
+   "year_start": 1977,
+   "year_end": null,
+   "mbid": null,
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": "Q470572",
+   "wikipedia_title": null,
+   "metadata": {
+    "image_checked_at": "2026-10-02T22:42:11.710Z"
+   },
+   "created_at": "2026-07-31T05:51:39.471Z",
+   "updated_at": "2026-07-31T05:51:39.471Z",
+   "domain_override": null,
+   "active_from": null
+  },
+  {
+   "id": "4d5d6043-195f-4e22-9ec3-30a170c00193",
+   "kind": "person",
+   "domain": "film",
+   "name": "Lucile Watson",
+   "sort_name": null,
+   "year_start": 1879,
+   "year_end": 1962,
+   "mbid": null,
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": "Q267829",
+   "wikipedia_title": null,
+   "metadata": {
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Lucile_Watson_1953.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "image_page": "https://commons.wikimedia.org/wiki/File:Lucile_Watson_1953.JPG",
+    "image_credit": "Florence Vandamm (1883-1966)",
+    "image_license": "Public domain"
+   },
+   "created_at": "2026-07-31T06:39:44.257Z",
+   "updated_at": "2026-07-31T06:39:44.257Z",
+   "domain_override": null,
+   "active_from": 1916
+  },
+  {
+   "id": "650788f5-5b9f-49ba-8d73-06da4dabc807",
+   "kind": "person",
+   "domain": "music",
+   "name": "John Meyer",
+   "sort_name": null,
+   "year_start": 1943,
+   "year_end": 2002,
+   "mbid": "1de58dc2-da08-4b09-9984-8a476bf678f1",
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": null,
+   "wikipedia_title": null,
+   "metadata": {
+    "active_lookup": "miss",
+    "image_checked_at": "2026-10-02T22:43:20.568Z"
+   },
+   "created_at": "2026-07-15T06:11:43.310Z",
+   "updated_at": "2026-07-15T06:11:43.310Z",
+   "domain_override": null,
+   "active_from": null
+  },
+  {
+   "id": "8ec211a1-717c-4455-861a-b87daf43e3ce",
+   "kind": "group",
+   "domain": "music",
+   "name": "Psycho",
+   "sort_name": null,
+   "year_start": null,
+   "year_end": null,
+   "mbid": "c42f679a-ee9d-4623-9bcd-83f63af6cc07",
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": null,
+   "wikipedia_title": null,
+   "metadata": {
+    "year_lookup": "miss",
+    "image_status": "removed",
+    "image_checked_at": "2026-10-02T22:56:51.582Z"
+   },
+   "created_at": "2026-07-29T17:11:54.837Z",
+   "updated_at": "2026-10-02T22:56:51.787Z",
+   "domain_override": null,
+   "active_from": null
+  },
+  {
+   "id": "972c42f4-55b2-415d-bb73-7b4cb38c8558",
+   "kind": "work",
+   "domain": "film",
+   "name": "Fargo",
+   "sort_name": null,
+   "year_start": 1996,
+   "year_end": null,
+   "mbid": null,
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": "Q222720",
+   "wikipedia_title": null,
+   "metadata": {
+    "creator": "Noah Hawley",
+    "image_checked_at": "2026-10-03T02:51:00.227Z"
+   },
+   "created_at": "2026-07-29T18:44:36.366Z",
+   "updated_at": "2026-10-03T02:50:03.719Z",
+   "domain_override": null,
+   "active_from": null
+  },
+  {
+   "id": "bcb9e3ae-aed1-493f-b0cc-b75c4650bb89",
+   "kind": "person",
+   "domain": "music",
+   "name": "Phoebe Waller-Bridge",
+   "sort_name": null,
+   "year_start": null,
+   "year_end": null,
+   "mbid": "24c237bf-332e-4341-ac03-1566d08c6b41",
+   "tmdb_id": null,
+   "openlibrary_id": null,
+   "wikidata_qid": null,
+   "wikipedia_title": null,
+   "metadata": {},
+   "created_at": "2026-10-03T03:52:59.322Z",
+   "updated_at": "2026-10-03T03:52:59.322Z",
+   "domain_override": null,
+   "active_from": null
+  }
+ ]
+}

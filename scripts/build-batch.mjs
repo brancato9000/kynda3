@@ -8,7 +8,9 @@
 //   node scripts/build-batch.mjs subjects.tsv --resolve-only   (match names, review, stop)
 //   node scripts/build-batch.mjs --resume build-state-<stamp>.json
 //
-// Lines in subjects.tsv: "Category\tName". Subjects with a stored map are
+// Lines in subjects.tsv: "Category\tName[\tQID]". A Wikidata ID in the third
+// column skips search ("Movies\tPsycho\tQ163038"); otherwise the category
+// steers search and ranking. Subjects with a stored map are
 // skipped. State (subjects + batch id + per-subject progress) is written to
 // build-state-<stamp>.json after every step, so a sleeping laptop or a
 // crash resumes with --resume instead of re-buying the batch.
@@ -27,7 +29,7 @@ try {
 // Bound a single interview hunt's tail cost (Sol averages ~$0.18).
 process.env.KYNDA_RESEARCH_MAX_USD ||= "0.6";
 
-const { disambiguate } = await import("../src/lib/pipeline/disambiguate.js");
+const { disambiguate, categoryMismatch } = await import("../src/lib/pipeline/disambiguate.js");
 const { buildMixRequest, finishMix, generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, MIX_MODEL } = await import("../src/lib/pipeline/mix.js");
 const { persistMixRun, recordSearch, getStoredMix } = await import("../src/lib/store.js");
 const { harvestSubjectWikipedia } = await import("../src/lib/pipeline/harvest.js");
@@ -54,21 +56,22 @@ if (resumePath) {
 } else {
   const listPath = args.find((a) => !a.startsWith("--") && a !== flag("--budget"));
   if (!listPath) { console.error("usage: build-batch.mjs subjects.tsv [--budget N] [--no-research] | --resume state.json"); process.exit(1); }
-  const roster = readFileSync(listPath, "utf8").trim().split("\n").map((l) => { const [category, name] = l.split("\t"); return { category, name }; }).filter((r) => r.name);
+  const roster = readFileSync(listPath, "utf8").trim().split("\n").map((l) => { const [category, name, qid] = l.split("\t").map((x) => x?.trim()); return { category, name, qid: qid || null }; }).filter((r) => r.name);
   state = { roster: path.basename(listPath), subjects: [], batchId: null, priorUsd: 0 };
 
   // ── 1. Disambiguate every name (Haiku ranks; databases decide) ──
   console.log(`\n═══ 1. Disambiguating ${roster.length} names ═══`);
-  for (const [i, { category, name }] of roster.entries()) {
+  for (const [i, { category, name, qid }] of roster.entries()) {
     try {
-      const d = await disambiguate(name);
+      const d = await disambiguate(name, { category, qid });
       if (!d.subject) { console.log(`  ✗ ${name}: no match`); state.subjects.push({ category, name, status: "no_match" }); continue; }
       await recordSearch(name, d.subject, d.confidence).catch(() => {});
       const existing = await getStoredMix(d.subject).catch(() => null);
       if (existing?.slots) { console.log(`  ⊘ ${name}: already mapped`); state.subjects.push({ category, name, status: "existing" }); continue; }
       const members = await loadSubjectMembers(d.subject).catch(() => []);
-      state.subjects.push({ id: `s${String(i).padStart(4, "0")}`, category, name, subject: d.subject, members, confidence: d.confidence, status: "pending" });
-      console.log(`  → ${name} = ${d.subject.name}${d.subject.description ? ` (${d.subject.description})` : ""} [${d.confidence}]`);
+      const mismatch = categoryMismatch(category, d.subject);
+      state.subjects.push({ id: `s${String(i).padStart(4, "0")}`, category, name, subject: d.subject, members, confidence: d.confidence, ...(mismatch && { categoryMismatch: true }), status: "pending" });
+      console.log(`  → ${name} = ${d.subject.name}${d.subject.description ? ` (${d.subject.description})` : ""} [${d.confidence}]${mismatch ? ` ⚠ ${d.subject.domain}, not ${category}` : ""}`);
     } catch (err) {
       console.log(`  ✗ ${name}: ${err.message}`);
       state.subjects.push({ category, name, status: "failed", error: err.message });
@@ -80,12 +83,14 @@ if (resumePath) {
 const pending = state.subjects.filter((s) => s.status === "pending");
 
 // Review gate: short or crowded names can resolve to the wrong thing
-// ("Psycho" → a punk band, "Tetris" → the Game Boy edition). Resolve, stop,
+// ("Psycho" → a punk band, "Tetris" → the Game Boy edition; full-text and
+// category-hinted search now catch both, but not every case). Resolve, stop,
 // review the list, delete or fix bad rows in the state file, then --resume.
 if (args.includes("--resolve-only")) {
   console.log(`\n═══ Resolved ${pending.length} subjects — review before spending ═══`);
-  for (const s of pending) console.log(`  ${s.confidence === "certain" ? " " : "?"} ${s.name.padEnd(32)} → ${s.subject.name}${s.subject.description ? ` (${s.subject.description})` : ""} [${s.confidence}]`);
-  console.log(`\n  "?" = not certain. To drop one, set its "status" to "skipped" in ${path.relative(ROOT, statePath)}. Then: node scripts/build-batch.mjs --resume ${path.relative(ROOT, statePath)}`);
+  for (const s of pending) console.log(`  ${s.categoryMismatch ? "⚠" : s.confidence === "certain" ? " " : "?"} ${s.name.padEnd(32)} → ${s.subject.name}${s.subject.description ? ` (${s.subject.description})` : ""} [${s.confidence}]${s.subject.wikidata_qid ? ` ${s.subject.wikidata_qid}` : ""}`);
+  console.log(`\n  "?" = not certain. "⚠" = resolved outside its list's category (check first, whatever the tier).`);
+  console.log(`  To pin the right item, add its Wikidata ID as a third roster column and start over. To drop one, set its "status" to "skipped" in ${path.relative(ROOT, statePath)}. Then: node scripts/build-batch.mjs --resume ${path.relative(ROOT, statePath)}`);
   await getPool()?.end();
   process.exit(0);
 }
