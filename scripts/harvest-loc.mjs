@@ -40,8 +40,8 @@ const flag = (name) => {
   const i = args.indexOf(name);
   return i === -1 ? null : args[i + 1];
 };
-const MODELS = { sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
-const model = MODELS[flag("--model")] || MODELS.sonnet;
+const MODELS = { sol: "openai/gpt-6-sol", sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
+const model = MODELS[flag("--model")] || (process.env.OPENROUTER_API_KEY ? MODELS.sol : MODELS.sonnet);
 const pagesPer = parseInt(flag("--pages"), 10) || 3;
 const subjects = flag("--subject") ? [flag("--subject")]
   : flag("--subjects") ? flag("--subjects").split("|").map((s) => s.trim()).filter(Boolean)

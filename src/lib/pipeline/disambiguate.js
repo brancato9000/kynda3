@@ -36,6 +36,7 @@ const RANK_SYSTEM = `You rank search candidates for a cultural discovery engine.
 
 Rules:
 - You may ONLY select candidates by their index. Never describe an entity that is not in the list.
+- Culture is broad: foods and culinary traditions, crafts, games, practices, and ideas are valid subjects alongside works and artists (Detroit-style pizza is a subject). Never answer "none" just because the best match isn't art.
 - Prefer the most culturally prominent interpretation. A globally famous entity outranks an obscure one.
 - match tiers: "certain" = one clear match, no other candidate is a plausible cultural interpretation. "likely" = one dominant match but 1-3 other candidates are real cultural works someone might mean. "ambiguous" = several candidates have meaningful cultural weight with no obvious frontrunner. "none" = no candidate plausibly matches the query.
 - alternativeIndexes: other candidates a user might have meant (empty for "certain"). Never include the primaryIndex. Skip near-duplicates of the primary (the same entity appearing from both sources).

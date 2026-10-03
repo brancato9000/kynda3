@@ -8,6 +8,7 @@ dist/
 /wave-a.tsv
 /wave-progress.jsonl
 /spend.jsonl
+/build-state-*.json
 
 # personal listening histories — never committed (Tony, 2026-08-16)
 data/listening/

@@ -5,7 +5,7 @@
 // structured-output call, and verify every quote against the very text we
 // hold. Cost per citation collapses because one call feeds many entities.
 
-import { callModel, SONNET } from "../ai/anthropic.js";
+import { callModel, READER } from "../ai/anthropic.js";
 import { fetchPageText, waybackSnapshot } from "../verify/evidence.js";
 import { quoteMatch } from "../verify/quoteMatch.js";
 import { upsertEntity, recordFinding } from "../store.js";
@@ -90,7 +90,7 @@ export function validEntityShape(name) {
  * harvested, then runs the standard harvest. Used by both the corpus batch
  * and harvest-on-search.
  */
-export async function harvestSubjectWikipedia(subject, { model = SONNET, log = () => {} } = {}) {
+export async function harvestSubjectWikipedia(subject, { model = READER(), log = () => {} } = {}) {
   if (!dbConfigured()) return { skipped: "no database" };
   const title = await findArticleTitle({ name: subject.name, qid: subject.wikidata_qid });
   if (!title) return { skipped: "no wikipedia article" };
@@ -108,7 +108,7 @@ export async function harvestSubjectWikipedia(subject, { model = SONNET, log = (
  * Harvest one source URL. Returns a summary; claims and provenance persist
  * via the standard store path (origin agent_research, runId harvest_*).
  */
-export async function harvestSource(url, { model = SONNET, log = console.log } = {}) {
+export async function harvestSource(url, { model = READER(), log = console.log } = {}) {
   const page = await fetchPageText(url);
   if (!page.ok) return { url, error: `fetch failed (${page.status || page.error})` };
   const archivedUrl = await waybackSnapshot(url).catch(() => null);
@@ -123,7 +123,7 @@ export async function harvestSource(url, { model = SONNET, log = console.log } =
  * deterministic metadata beats model-extracted. sourceNote is prepended to
  * the user message for source-class context (e.g. "this is newspaper OCR").
  */
-export async function harvestText({ url, text: rawText, model = SONNET, log = console.log, archivedUrl = null, publication: knownPublication = null, publishedDate: knownDate = null, sourceNote = "", dryRun = false }) {
+export async function harvestText({ url, text: rawText, model = READER(), log = console.log, archivedUrl = null, publication: knownPublication = null, publishedDate: knownDate = null, sourceNote = "", dryRun = false }) {
   const text = rawText.slice(0, 60_000);
 
   // 40-claim prompt cap × ~300 tokens/claim ≈ 12k — 16k gives headroom.

@@ -1,0 +1,10 @@
+{
+  "_note": "Work-subject scoring fixture (V3-62): canon = other works by the subject's creator. Expected violations: 0.",
+  "items": [
+    { "slotType": "essential", "title": "The Godfather Part II", "creator": "Francis Ford Coppola", "confidence": "likely" },
+    { "slotType": "essential", "title": "The Conversation", "creator": "Francis Ford Coppola", "confidence": "likely" },
+    { "slotType": "titan", "title": "On the Waterfront", "creator": "Elia Kazan", "confidence": "likely" },
+    { "slotType": "collaborator", "title": "The Godfather (novel)", "creator": "Mario Puzo", "confidence": "likely" },
+    { "slotType": "legacy", "title": "Goodfellas", "creator": "Martin Scorsese", "confidence": "likely" }
+  ]
+}

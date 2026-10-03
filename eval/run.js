@@ -76,6 +76,8 @@ function validateGolden(subjects) {
     for (const t of g.attribution_traps || []) {
       if (!t.title || !t.creator || !t.actual_creator || !t.origin) problems.push(`attribution_traps entry missing title/creator/actual_creator/origin`);
     }
+    // Work-subjects are scored against their creator (V3-62), so they must name one.
+    if (["work", "film", "tv_show", "book", "release", "recording"].includes(g.kind) && !g.creator) problems.push("work subject missing creator (V3-62 scoring)");
     for (const f of g.influence_facts || []) {
       if (typeof f.human_confirmed !== "boolean") problems.push(`influence_facts entry missing human_confirmed boolean (honesty rule V3-06)`);
     }
@@ -264,6 +266,20 @@ async function testScoring(subjects) {
     "bad fixture flags exactly the 6 expected violations",
     JSON.stringify(types) === JSON.stringify(expected),
     `got: ${types.join(", ")}`
+  );
+
+  // Work-subjects (V3-62): canon is the creator's other works; the creator
+  // anywhere else, or the work carding itself, is the violation.
+  const godfather = subjects.find((g) => g.subject === "The Godfather");
+  const gClean = scoreMixResult(await loadFixture("mix-godfather-clean.json"), godfather);
+  check("work subject: Coppola's own films in From the Canon score 0 violations", gClean.pass, JSON.stringify(gClean.violations));
+  const gBad = scoreMixResult(await loadFixture("mix-godfather-bad.json"), godfather);
+  const gTypes = gBad.violations.map((v) => v.type).sort();
+  const gExpected = ["essential_not_subject", "self_card", "self_reference", "self_reference_title"].sort();
+  check(
+    "work subject: bad fixture flags exactly the 4 expected violations",
+    JSON.stringify(gTypes) === JSON.stringify(gExpected),
+    `got: ${gTypes.join(", ")}`
   );
 }
 

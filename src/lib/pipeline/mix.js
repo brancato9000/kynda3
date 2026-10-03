@@ -119,7 +119,9 @@ export async function loadSubjectMembers(subject) {
 // either way — badge rates ARE the model eval.
 export const MIX_MODEL = process.env.KYNDA_MIX_MODEL || "claude-opus-5";
 
-export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low", notes = [], maxTokens = 16_000 } = {}) {
+// The prompt half of a mix, split out so the batch path (V3-86) sends the
+// exact request the live path does.
+export function buildMixRequest(subject, members = [], { notes = [] } = {}) {
   const parts = [`Create a KyndaMix for: "${subject.name}"`];
   const context = [];
   if (subject.domain && subject.domain !== "unknown") context.push(`Domain: ${subject.domain}`);
@@ -134,22 +136,20 @@ export async function generateMix(subject, members = [], { model = MIX_MODEL, ef
   // training can't know (a release newer than the cutoff, a steer from the
   // subject's own team). Facts only — verification still runs on every card.
   if (notes.length) parts.push(`Curated context — recent facts to incorporate:\n${notes.join("\n")}`);
+  return { system: MIX_SYSTEM, user: parts.join("\n\n"), schema: MIX_SCHEMA };
+}
 
+export async function generateMix(subject, members = [], { model = MIX_MODEL, effort = "low", notes = [], maxTokens = 16_000 } = {}) {
+  const { system, user, schema } = buildMixRequest(subject, members, { notes });
   const mix = model && model !== "claude-fable-5"
-    ? await callModel(model, {
-        system: MIX_SYSTEM,
-        user: parts.join("\n\n"),
-        schema: MIX_SCHEMA,
-        maxTokens,
-        effort,
-        label: `mix_${model}`,
-      })
-    : await callFable({
-        system: MIX_SYSTEM,
-        user: parts.join("\n\n"),
-        schema: MIX_SCHEMA,
-        maxTokens,
-      });
+    ? await callModel(model, { system, user, schema, maxTokens, effort, label: `mix_${model}` })
+    : await callFable({ system, user, schema, maxTokens });
+  return finishMix(mix, subject, members);
+}
+
+// The deterministic half: slot rules, dedupe, grouping. Shared by the live
+// and batch paths so a batched map is held to identical rules.
+export function finishMix(mix, subject, members = []) {
 
   // Deterministic slot-rule enforcement (AD-10) — never trust prompt compliance.
   // Work-subjects (V3-62): a work's "self" is its AUTHOR, not its title —

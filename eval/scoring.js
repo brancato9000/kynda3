@@ -13,12 +13,20 @@ import { norm } from "../src/lib/entities/musicbrainz.js";
  *   self_reference          - subject appears as creator outside the essential slot (AD-10)
  *   self_reference_title    - one of the subject's own works recommended as an external influence
  *   essential_not_subject   - essential slot's creator is not the subject
+ *   self_card               - a work-subject recommends itself (any slot)
+ *
+ * Work-subjects (V3-62, mirroring mix.js): a work's "self" is its AUTHOR —
+ * golden.creator stands in for the subject name, so The Godfather Part II
+ * by Coppola is canon, and Coppola in any other slot is self-reference.
  *   trap_attribution        - a known-wrong attribution (seeded from CORRECTIONS.md)
  *   unearned_verified_badge - confidence "verified" without a provenance record (V3-02)
  */
 export function scoreMixResult(mix, golden) {
   const violations = [];
-  const subject = norm(golden.subject);
+  const WORK_KINDS = new Set(["work", "film", "tv_show", "book", "release", "recording"]);
+  const isWork = WORK_KINDS.has(golden.kind);
+  const title0 = norm(golden.subject);
+  const subject = isWork ? norm(golden.creator) : title0;
   const selfTitles = (golden.self_reference_traps || []).map(norm);
   const traps = golden.attribution_traps || [];
 
@@ -27,6 +35,8 @@ export function scoreMixResult(mix, golden) {
     const title = norm(item.title);
     const creator = norm(item.creator);
     const where = { index: i, slotType: item.slotType, title: item.title, creator: item.creator };
+
+    if (isWork && title === title0) violations.push({ type: "self_card", ...where });
 
     if (item.slotType === "essential") {
       if (creator !== subject) violations.push({ type: "essential_not_subject", ...where });
