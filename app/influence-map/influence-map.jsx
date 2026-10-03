@@ -242,6 +242,7 @@ const CSS = `
 .kmap .curator .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .kmap .curator figure { margin: 0; display: flex; flex-direction: column; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-width: 0; }
 .kmap .curator figure img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; background: var(--bg); }
+.kmap .curator img { object-position: 50% 0%; } /* top crop: heads and titles stay in frame */
 .kmap .curator figcaption { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
 .kmap .curator figcaption b { font-weight: 500; }
 .kmap .curator figcaption span { color: var(--muted); }
