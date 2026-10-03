@@ -5,7 +5,7 @@
 // `harvest.mjs --wikipedia-all`. Checkpointed: subjects with a stored mix
 // are skipped, so reruns resume for free.
 //
-//   node scripts/wave.mjs subjects.tsv     (lines: "Category\tName")
+//   node scripts/wave.mjs subjects.tsv     (lines: "Category\tName[\tQID]")
 
 import { readFileSync, appendFileSync } from "node:fs";
 import path from "node:path";
@@ -19,7 +19,7 @@ try {
   }
 } catch { /* env */ }
 
-const { disambiguate } = await import("../src/lib/pipeline/disambiguate.js");
+const { disambiguate, categoryMismatch } = await import("../src/lib/pipeline/disambiguate.js");
 const { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers } = await import("../src/lib/pipeline/mix.js");
 const { persistMixRun, recordSearch, getStoredMix } = await import("../src/lib/store.js");
 const { usageSummary } = await import("../src/lib/ai/anthropic.js");
@@ -29,7 +29,7 @@ const BUDGET_USD = 15; // hard stop — the wave was approved at ~$11.50
 const listPath = process.argv[2];
 if (!listPath) { console.error("usage: wave.mjs subjects.tsv"); process.exit(1); }
 const roster = readFileSync(listPath, "utf8").trim().split("\n")
-  .map((l) => { const [category, name] = l.split("\t"); return { category, name }; })
+  .map((l) => { const [category, name, qid] = l.split("\t").map((x) => x?.trim()); return { category, name, qid: qid || null }; })
   .filter((r) => r.name);
 
 async function withRetry(label, fn, attempts = 3) {
@@ -49,15 +49,15 @@ async function withRetry(label, fn, attempts = 3) {
 const perCategory = {}; // category → {subjects, candidates, verified, not_found, documented}
 const rows = [];
 
-for (const { category, name } of roster) {
+for (const { category, name, qid } of roster) {
   if (usageSummary().totalUsd >= BUDGET_USD) { console.log(`\n■ BUDGET STOP at $${usageSummary().totalUsd.toFixed(2)}`); break; }
   console.log(`\n▸ [${category}] ${name}`);
   const t0 = Date.now();
   try {
-    const d = await withRetry("disambiguate", () => disambiguate(name));
+    const d = await withRetry("disambiguate", () => disambiguate(name, { category, qid }));
     const subject = d.subject;
     if (!subject) { console.log("    ✗ no match"); rows.push({ category, name, status: "no_match" }); continue; }
-    console.log(`    → ${subject.name}${subject.description ? ` (${subject.description})` : ""} [${d.confidence}]`);
+    console.log(`    → ${subject.name}${subject.description ? ` (${subject.description})` : ""} [${d.confidence}]${categoryMismatch(category, subject) ? ` ⚠ ${subject.domain}, not ${category}` : ""}`);
     await recordSearch(name, subject, d.confidence).catch(() => {});
 
     const existing = await getStoredMix(subject).catch(() => null);
@@ -90,7 +90,7 @@ for (const { category, name } of roster) {
     const agg = (perCategory[category] ||= { subjects: 0, candidates: 0, verified: 0, not_found: 0, documented: 0 });
     agg.subjects += 1;
     for (const k of ["candidates", "verified", "not_found", "documented"]) agg[k] += c[k];
-    rows.push({ category, name, resolved: subject.name, status: "seeded", ...c });
+    rows.push({ category, name, resolved: subject.name, qid: subject.wikidata_qid, mbid: subject.mbid, description: subject.description, status: "seeded", ...c });
     console.log(`    ✓ seeded: ${c.candidates} candidates | ✓${c.verified} ✕${c.not_found} ◆${c.documented} | ${Math.round((Date.now() - t0) / 1000)}s | running $${usageSummary().totalUsd.toFixed(2)}`);
   } catch (err) {
     console.log(`    ✗ FAILED: ${err.message}`);

@@ -210,3 +210,59 @@ export async function searchEntity(query, limit = 6) {
     }));
   });
 }
+
+/**
+ * Full-text search (CirrusSearch). Ranks by relevance across labels,
+ * aliases and descriptions with a popularity boost, so short crowded names
+ * surface the famous item that label search buries ("Psycho" → the 1960
+ * film, not a journal and a fly family). `statement` narrows to items with
+ * a Wikidata statement, e.g. "P31=Q11424" (instance of: film) — how a
+ * roster category becomes a search hint.
+ */
+export async function searchFullText(query, { limit = 6, statement = null } = {}) {
+  return rateLimited(async () => {
+    const url = new URL("https://www.wikidata.org/w/api.php");
+    url.searchParams.set("action", "query");
+    url.searchParams.set("list", "search");
+    url.searchParams.set("srsearch", statement ? `${query} haswbstatement:${statement}` : query);
+    url.searchParams.set("srlimit", String(limit));
+    url.searchParams.set("format", "json");
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
+    if (!res.ok) throw new Error(`Wikidata ${res.status}`);
+    const data = await res.json();
+    return (data.query?.search || []).map((e) => e.title).filter((t) => /^Q\d+$/.test(t));
+  });
+}
+
+/**
+ * Label, description and Wikipedia-edition count for up to 50 QIDs. The
+ * edition count is the prominence signal the ranker sees (the Psycho film
+ * has 78, a 1980s Boston punk band has none). Falls back to the English
+ * Wikipedia title when an item has no English label (the Tetris series).
+ */
+export async function getEntitySummaries(qids) {
+  if (!qids.length) return new Map();
+  return rateLimited(async () => {
+    const url = new URL("https://www.wikidata.org/w/api.php");
+    url.searchParams.set("action", "wbgetentities");
+    url.searchParams.set("ids", qids.slice(0, 50).join("|"));
+    url.searchParams.set("props", "labels|descriptions|sitelinks");
+    url.searchParams.set("languages", "en");
+    url.searchParams.set("format", "json");
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } });
+    if (!res.ok) throw new Error(`Wikidata ${res.status}`);
+    const entities = (await res.json()).entities || {};
+    const out = new Map();
+    for (const [qid, e] of Object.entries(entities)) {
+      if (e.missing !== undefined) continue;
+      const sitelinks = e.sitelinks || {};
+      out.set(qid, {
+        qid,
+        label: e.labels?.en?.value || sitelinks.enwiki?.title || null,
+        description: e.descriptions?.en?.value || null,
+        wikipedias: Object.keys(sitelinks).filter((k) => k.endsWith("wiki") && k !== "commonswiki" && k !== "specieswiki").length,
+      });
+    }
+    return out;
+  });
+}
