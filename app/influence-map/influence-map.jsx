@@ -18,10 +18,12 @@ async function fetchGraph(name) {
   return res.json();
 }
 
-export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, status, waiting = true, sealed = false }) {
+export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, onCenter = null, controlRef = null, status, waiting = true, sealed = false }) {
   const rootRef = useRef(null);
   const openRef = useRef(onOpenSubject);
   openRef.current = onOpenSubject;
+  const centerRef = useRef(onCenter);
+  centerRef.current = onCenter;
 
   useEffect(() => {
     if (!rootRef.current || !graph) return;
@@ -36,8 +38,10 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
       initialGraph: graph,
       fetchGraph: sealed ? null : fetchGraph,
       onOpenSubject: onOpenSubject && !sealed ? (name) => openRef.current?.(name) : null,
+      onCenter: onCenter && !sealed ? (name, g, opts) => centerRef.current?.(name, g, opts) : null,
     });
-    return () => map.destroy();
+    if (controlRef) controlRef.current = map;
+    return () => { if (controlRef?.current === map) controlRef.current = null; map.destroy(); };
     // A new subject is a new map; the same subject's graph object refreshing is not.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectName, !!graph]);

@@ -20,6 +20,8 @@ export async function POST(req) {
     const graph = await getGraphForSubject(subject);
     if (!graph) return Response.json({ error: "no graph yet — the map grows as this subject is explored" }, { status: 404 });
     const stored = await getStoredMix(subject).catch(() => null);
+    // Whether this center has a saved mix: the page shows it, or (unmapped) a note — never a fresh generation.
+    graph.hasMix = !!stored;
     graph.mix = mixCardsForMap(stored);
     return Response.json(graph);
   } catch (err) {
