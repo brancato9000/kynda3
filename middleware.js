@@ -37,5 +37,7 @@ export const config = {
   // Everything except the demo share pages, the public OG share cards
   // (crawlers fetch og:image with assorted UAs — it must never 401; it
   // carries only name + counts + a licensed portrait), and Next's assets.
-  matcher: ["/((?!demo/|api/og/|_next/|favicon.ico|icon.svg).*)"],
+  // The privacy policy and terms are public always (2026-10-03): demo visitors and
+  // anyone the site links to must be able to read them without the password.
+  matcher: ["/((?!demo/|api/og/|privacy|terms|_next/|favicon.ico|icon.svg).*)"],
 };

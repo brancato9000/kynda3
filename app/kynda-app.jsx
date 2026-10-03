@@ -267,6 +267,18 @@ function CitationBlock({ citations, subjectName, item }) {
 // Contribution row (V3-26): flag a problem on any card; add a source to
 // synthesis-labeled connections. Both hit the same deterministic gate the
 // research agents use — nobody has to trust the contributor.
+// Contributions follow Wikipedia's model (Terms §5, Tony 2026-10-03): the
+// license line sits on every form, right above its submit button.
+function LicenseNote() {
+  return (
+    <div style={{ margin: "0 0 8px", fontFamily: FONTS.mono, fontSize: "9.5px", color: "rgba(148,163,184,0.55)", lineHeight: 1.5 }}>
+      By submitting, you agree to release your contribution under{" "}
+      <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer license" style={{ color: "inherit" }}>CC BY-SA 4.0</a>
+      {" "}and to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "inherit" }}>Terms of Use</a>.
+    </div>
+  );
+}
+
 function ContributeRow({ subject, item, hasCitations }) {
   const [mode, setMode] = useState(null); // null | "flag" | "evidence" | "sending"
   const [result, setResult] = useState(null);
@@ -325,7 +337,7 @@ function ContributeRow({ subject, item, hasCitations }) {
           <textarea placeholder="What's wrong with this card? (e.g. 'Gordon Williams did not work on Nirvana Unplugged')" rows={2}
             value={fields.comment} onChange={(e) => setFields({ ...fields, comment: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
           <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
-          <div style={{ display: "flex", gap: "12px" }}>
+          <LicenseNote />          <div style={{ display: "flex", gap: "12px" }}>
             <button style={{ ...linkStyle, color: "rgba(248,113,113,0.8)" }} onClick={() => submit("flag")}>submit flag</button>
             <button style={linkStyle} onClick={() => setMode(null)}>cancel</button>
           </div>
@@ -337,7 +349,7 @@ function ContributeRow({ subject, item, hasCitations }) {
           <textarea placeholder="Exact quote from that page, copied verbatim (machine-checked) — or leave EMPTY if the URL is the creator's own official page for this work (attribution evidence, no quote needed)" rows={3}
             value={fields.quote} onChange={(e) => setFields({ ...fields, quote: e.target.value })} style={{ ...inputStyle, resize: "vertical" }} />
           <input placeholder="Your name (optional)" value={fields.contributor} onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
-          <div style={{ display: "flex", gap: "12px" }}>
+          <LicenseNote />          <div style={{ display: "flex", gap: "12px" }}>
             <button
               style={{ ...linkStyle, color: fields.url && (fields.quote.trim().length === 0 || fields.quote.trim().length >= 20) ? "rgba(52,211,153,0.8)" : "rgba(148,163,184,0.35)" }}
               disabled={!fields.url || (fields.quote.trim().length > 0 && fields.quote.trim().length < 20)}
@@ -739,7 +751,7 @@ function AddConnectionCard({ subject }) {
             onChange={(e) => setFields({ ...fields, url: e.target.value })} style={inputStyle} />
           <input placeholder="Your name (optional)" value={fields.contributor}
             onChange={(e) => setFields({ ...fields, contributor: e.target.value })} style={inputStyle} />
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <LicenseNote />          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <button style={{ ...linkStyle, color: "rgba(52,211,153,0.8)" }} onClick={submit}>verify & build</button>
             <button style={linkStyle} onClick={() => setOpen(false)}>cancel</button>
           </div>
@@ -1671,17 +1683,19 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
           {tab === "mix" && done && !noMix && subject && <ProposedSection subject={subject} />}
           {tab === "mix" && done && !noMix && subject && <AddConnectionCard subject={subject} />}
 
-          {tab === "mix" && done && (
-            <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
-              © 2026 The O&amp;O LLC
-            </div>
-          )}
+
         </>
       )}
 
       {/* The page as text (server-rendered, BACKLOG #32): shown while the
           center is the page's own subject, hidden once the map travels on. */}
       {ledger && (!subject || subject.name === initialSubject?.name) && ledger}
+
+      <footer style={{ marginTop: "48px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7, display: "flex", gap: "16px", flexWrap: "wrap" }}>
+        <span>© 2026 The O&amp;O LLC</span>
+        <a href="/privacy" style={{ color: "rgba(148,163,184,0.7)", textDecoration: "none" }}>Privacy</a>
+        <a href="/terms" style={{ color: "rgba(148,163,184,0.7)", textDecoration: "none" }}>Terms</a>
+      </footer>
     </main>
   );
 }

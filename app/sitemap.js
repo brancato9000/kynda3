@@ -18,5 +18,10 @@ export default async function sitemap() {
     seen.add(slug);
     pages.push({ url: `${SITE_URL}/s/${slug}`, lastModified: s.mapped_at || undefined, changeFrequency: "weekly", priority: 0.8 });
   }
-  return [{ url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 }, ...pages];
+  return [
+    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
+    ...pages,
+    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.2 },
+  ];
 }
