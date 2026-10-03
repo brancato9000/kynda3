@@ -1098,15 +1098,18 @@ function SubjectBar({ subject, tabs, tab, onTab, composing, query, setQuery, onS
 // ─── App (V3-28: reusable — home renders it bare; /s/[slug] subject
 // pages render it with an initialSubject that boots the mix) ──────────
 export default function KyndaApp({ initialSubject = null, indexedSubjects = [], initialCut = null, ledger = null }) {
-  const [query, setQuery] = useState("");
-  const [phase, setPhase] = useState("idle"); // idle | searching | choosing | mixing
+  // A subject page renders as the subject view from the very first (server)
+  // frame — map panel, then bio, then the text ledger — so the ledger's mix
+  // picks never flash at the top before the app takes over.
+  const [query, setQuery] = useState(initialSubject?.name || "");
+  const [phase, setPhase] = useState(initialSubject ? "mixing" : "idle"); // idle | searching | choosing | mixing
   const [error, setError] = useState(null);
-  const [subject, setSubject] = useState(null);
+  const [subject, setSubject] = useState(initialSubject);
   // The page follows the map's center (Tony, 2026-10-02): `subject` is
   // whoever is at the center now (header, bio, Mix, Covers, address);
   // `rootSubject` is where this map started — the map itself is built once
   // from it and keeps its trail as you travel.
-  const [rootSubject, setRootSubject] = useState(null);
+  const [rootSubject, setRootSubject] = useState(initialSubject);
   const [centerGraph, setCenterGraph] = useState(null);
   const [noMix, setNoMix] = useState(false); // a stop with no saved mix: a note, never a generation
   const [requested, setRequested] = useState("idle"); // "Ask Kynda to map this": idle | sending | sent | error
@@ -1183,6 +1186,13 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
       setSlots(DEMO.slots);
       setPhase("mixing"); setDone(true); loadGraph(DEMO.subject);
     }
+  }, []);
+
+  // ?q= runs a search on arrival — the /discover home hands off searches
+  // for anything not already in the graph.
+  useEffect(() => {
+    const text = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("q");
+    if (text && !initialSubject) { setQuery(text); runSearch(text); }
   }, []);
 
   // Subject pages boot straight into the mix (served from the DB → instant).

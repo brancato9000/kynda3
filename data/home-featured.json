@@ -1,0 +1,119 @@
+{
+  "generated": "2026-10-03",
+  "perCategory": 8,
+  "features": {
+    "architecture": [
+      "Le Corbusier",
+      "Norma Merrick Sklarek",
+      "Walter Gropius",
+      "Frank Gehry",
+      "Frank Lloyd Wright",
+      "Ludwig Mies van der Rohe",
+      "Louis Kahn",
+      "Julia Morgan"
+    ],
+    "art": [
+      "Pablo Picasso",
+      "Frida Kahlo",
+      "Andy Warhol",
+      "Salvador Dalí",
+      "Henri Matisse",
+      "Joan Miró",
+      "Diego Rivera",
+      "Georgia O'Keeffe"
+    ],
+    "comedy": [
+      "Joan Rivers",
+      "Steve Martin",
+      "Chris Rock",
+      "Lenny Bruce",
+      "Bob Hope",
+      "Dave Chappelle",
+      "Eddie Murphy",
+      "Phyllis Diller"
+    ],
+    "dance": [
+      "Martha Graham",
+      "Katherine Dunham",
+      "Merce Cunningham",
+      "George Balanchine",
+      "Anna Pavlova",
+      "Isadora Duncan",
+      "Jerome Robbins",
+      "Fred Astaire"
+    ],
+    "design": [
+      "Syd Mead",
+      "Bauhaus",
+      "Isamu Noguchi",
+      "Chanel No. 5"
+    ],
+    "fashion": [
+      "Halston",
+      "Coco Chanel",
+      "Vivienne Westwood",
+      "Elsa Schiaparelli",
+      "Paul Poiret",
+      "Marc Jacobs",
+      "Virgil Abloh",
+      "Issey Miyake"
+    ],
+    "film": [
+      "Suzy Parker",
+      "Quentin Tarantino",
+      "Alfred Hitchcock",
+      "D. W. Griffith",
+      "Vera Miles",
+      "Sergei Eisenstein",
+      "Jean Cocteau",
+      "Bette Davis"
+    ],
+    "literature": [
+      "William Faulkner",
+      "Ursula K. Le Guin",
+      "William Shakespeare",
+      "Ernest Hemingway",
+      "Marcel Proust",
+      "Gertrude Stein",
+      "Zora Neale Hurston",
+      "Toni Morrison"
+    ],
+    "music": [
+      "Beyoncé",
+      "David Bowie",
+      "Frank Sinatra",
+      "Duke Ellington",
+      "John Mayer",
+      "Tony Bennett",
+      "Björk",
+      "Phoebe Bridgers"
+    ],
+    "other": [
+      "Zsa Zsa Gabor",
+      "Katharine Cornell",
+      "Celia Cruz",
+      "Sarah Silverman",
+      "Lucille Ball",
+      "Hannah Arendt",
+      "Thomas Aquinas",
+      "Plato"
+    ],
+    "television": [
+      "Greg Daniels",
+      "Mindy Kaling",
+      "The Sopranos",
+      "The Simpsons",
+      "Ricky Gervais",
+      "Matt Groening",
+      "Trey Parker",
+      "Julie Plec"
+    ],
+    "theater": [
+      "Sarah Bernhardt",
+      "Leonard Bernstein",
+      "Stephen Sondheim",
+      "Tennessee Williams",
+      "Dragan Živadinov"
+    ]
+  }
+}

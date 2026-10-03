@@ -895,12 +895,33 @@ export async function getPathBetween(fromName, toName) {
 export async function listSubjects() {
   if (!dbConfigured()) return [];
   const r = await q(
-    `SELECT DISTINCT ON (e.id) e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid,
+    `SELECT DISTINCT ON (e.id) e.id, e.name, e.kind, COALESCE(e.domain_override, e.domain) AS domain, e.mbid, e.wikidata_qid,
             e.year_start, e.year_end,
             e.metadata->>'creator' AS creator, e.metadata->>'synthesis_bio' AS synthesis_bio,
             m.payload->>'intro' AS intro, m.created_at AS mapped_at
      FROM entities e JOIN mixes m ON m.subject_entity_id = e.id
      ORDER BY e.id, m.created_at DESC`
+  );
+  return r.rows;
+}
+
+/**
+ * Home cards (/discover, 2026-10-03): every mapped subject with its
+ * rights-cleared picture and the shape of its graph — how many distinct
+ * influences, peers and successors it has.
+ */
+export async function listHomeCards() {
+  if (!dbConfigured()) return [];
+  const r = await q(
+    `SELECT e.id, e.name, e.kind, COALESCE(e.domain_override, e.domain) AS domain, e.year_start, e.year_end,
+            e.metadata->>'creator' AS creator,
+            e.metadata->>'image_url' AS image_url, e.metadata->>'image_page' AS image_page,
+            e.metadata->>'image_credit' AS image_credit, e.metadata->>'image_license' AS image_license,
+            (SELECT count(DISTINCT c.object_id) FROM claims c WHERE c.subject_id = e.id AND c.claim_type = ANY($1))::int AS preds,
+            (SELECT count(DISTINCT c.subject_id) FROM claims c WHERE c.object_id = e.id AND c.claim_type = ANY($1))::int AS succs,
+            (SELECT count(*) FROM claims c WHERE (c.subject_id = e.id OR c.object_id = e.id) AND NOT c.claim_type = ANY($1))::int AS peers
+     FROM entities e WHERE EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id)`,
+    [PREDECESSOR_TYPES]
   );
   return r.rows;
 }
@@ -914,7 +935,7 @@ export async function findEntityBySlug(slug) {
   if (!dbConfigured() || !slug) return null;
   const pattern = slug.split("-").filter(Boolean).join("%");
   const r = await q(
-    `SELECT e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid, e.metadata->>'synthesis_bio' AS synthesis_bio,
+    `SELECT e.id, e.name, e.kind, COALESCE(e.domain_override, e.domain) AS domain, e.mbid, e.wikidata_qid, e.metadata->>'synthesis_bio' AS synthesis_bio,
             EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) AS mapped,
             (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id)::int AS degree
      FROM entities e WHERE e.name ILIKE $1
