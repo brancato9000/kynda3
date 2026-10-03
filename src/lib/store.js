@@ -301,7 +301,7 @@ export async function getClaimTargets(subjectEntityId, limit = 12) {
     `SELECT c.id AS claim_id, c.claim_type,
             o.name AS title, o.metadata->>'creator' AS creator
      FROM claims c JOIN entities o ON o.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
-     WHERE c.subject_id = $1 OR c.object_id = $1
+     WHERE (c.subject_id = $1 OR c.object_id = $1) AND NOT EXISTS (SELECT 1 FROM reviews rv WHERE rv.claim_id = c.id AND rv.status = 'rejected')
      ORDER BY c.created_at DESC LIMIT $2`,
     [subjectEntityId, limit]
   );
@@ -313,7 +313,20 @@ export async function getClaimTargets(subjectEntityId, limit = 12) {
  * + T2 provenance. Unverified evidence is stored too (audit trail) but as
  * 'unverifiable'/'dead_link' — it earns nothing.
  */
+const INFLUENCE_TYPES = new Set(["influenced_by", "cited_as_influence", "cross_medium_influence", "studied_under"]);
+const normName = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** True when a claim would make a subject's own work its influence (Tony's axiom: no self-influence edges). */
+export function isOwnWorkInfluence(subjectName, targetCreator, claimType) {
+  return INFLUENCE_TYPES.has(claimType) && !!normName(targetCreator) && normName(targetCreator) === normName(subjectName);
+}
+
 export async function recordFinding({ subjectEntityId, finding, verification, runId }) {
+  // Backstop for every write path (harvest gates it first, research doesn't).
+  if (INFLUENCE_TYPES.has(finding.claimType) && finding.targetCreator) {
+    const s = await q("SELECT name FROM entities WHERE id = $1", [subjectEntityId]);
+    if (isOwnWorkInfluence(s.rows[0]?.name, finding.targetCreator, finding.claimType)) return null;
+  }
   // targetKind-aware (V3-33): artist/movement targets are creator-shaped
   // entities, not works — hardcoding "work" spawned duplicates of every
   // person the harvester mentioned.
@@ -806,7 +819,8 @@ export async function getPathBetween(fromName, toName) {
        SELECT verification_status, quote, speaker, publication, source_url FROM provenance
        WHERE claim_id = c.id AND verification_status IN ('quote_confirmed', 'db_relationship')
        ORDER BY (verification_status = 'quote_confirmed') DESC, created_at DESC LIMIT 1
-     ) p ON true`
+     ) p ON true
+     WHERE NOT EXISTS (SELECT 1 FROM reviews rv WHERE rv.claim_id = c.id AND rv.status = 'rejected')`
   );
   const edges = er.rows.map((r) => ({
     subjectId: r.subject_id, objectId: r.object_id, claimType: r.claim_type,
@@ -978,11 +992,25 @@ export async function getGraphForSubject(subject) {
     entity = r.rows[0] || null;
   }
   if (!entity) {
-    const r = await q("SELECT id, name, domain, metadata FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [subject.name]);
+    // Same-name entities (Tony, 2026-10-02): travelling the map resolves by
+    // name, and "oldest first" landed on sparse duplicates — the older
+    // Miseducation work entity, the wrong Paul Taylor. The mapped subject
+    // wins, then the best-connected entity, then the oldest.
+    const r = await q(
+      `SELECT e.id, e.name, e.domain, e.metadata FROM entities e
+       WHERE lower(e.name) = lower($1)
+       ORDER BY EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) DESC,
+                (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) DESC,
+                e.created_at
+       LIMIT 1`,
+      [subject.name]
+    );
     entity = r.rows[0] || null;
   }
   if (!entity) return null;
 
+  // A rejected review suppresses a claim (claim_state, 001) — the map must
+  // honor it too, or a correction never leaves the page.
   const r = await q(
     `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS outbound,
             e.id AS entity_id, e.metadata AS meta,
@@ -997,7 +1025,8 @@ export async function getGraphForSubject(subject) {
                 AND p.verification_status IN ('quote_confirmed', 'db_relationship')), '[]') AS evidence
      FROM claims c
      JOIN entities e ON e.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
-     WHERE c.subject_id = $1 OR c.object_id = $1`,
+     WHERE (c.subject_id = $1 OR c.object_id = $1)
+       AND NOT EXISTS (SELECT 1 FROM reviews rv WHERE rv.claim_id = c.id AND rv.status = 'rejected')`,
     [entity.id]
   );
 
