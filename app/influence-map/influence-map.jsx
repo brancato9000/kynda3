@@ -350,7 +350,7 @@ html:has(.kmap) { overflow-x: clip; }
 }
 @media (max-width: 640px) {
   .kmap { height: max(380px, calc(100svh - 48px)); height: max(380px, calc(100dvh - 48px)); }
-  .kmap .keybtn { display: inline-flex; }
+  .kmap .keybtn { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
   .kmap .legend { display: none; flex-direction: column; gap: 8px; left: 16px; bottom: 56px; font-size: 0.62rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; z-index: 2; pointer-events: auto; }
   .kmap .legend.open { display: flex; }
   .kmap .legend .mixkey { flex-direction: column; gap: 8px; }
