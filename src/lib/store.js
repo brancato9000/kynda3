@@ -1143,8 +1143,12 @@ export async function getGraphForSubject(subject) {
 
   // A rejected review suppresses a claim (claim_state, 001) — the map must
   // honor it too, or a correction never leaves the page.
-  const r = await q(
-    `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS outbound,
+  // Claims touching any of `ids`, read from their side (outbound = the id is
+  // the claim's subject). `via` names the id's entity — used when a maker's
+  // map rolls up the claims on their works.
+  const claimRows = (ids) => q(
+    `SELECT c.claim_type, c.summary, (c.subject_id = ANY($1)) AS outbound,
+            w.name AS via, w.id AS via_id,
             e.id AS entity_id, e.metadata AS meta,
             e.name, e.kind, e.domain, e.year_start, e.metadata->>'creator' AS creator,
             EXISTS (SELECT 1 FROM entities me JOIN mixes m ON m.subject_entity_id = me.id
@@ -1158,11 +1162,13 @@ export async function getGraphForSubject(subject) {
               FROM provenance p WHERE p.claim_id = c.id
                 AND p.verification_status IN ('quote_confirmed', 'db_relationship')), '[]') AS evidence
      FROM claims c
-     JOIN entities e ON e.id = CASE WHEN c.subject_id = $1 THEN c.object_id ELSE c.subject_id END
-     WHERE (c.subject_id = $1 OR c.object_id = $1)
+     JOIN entities w ON w.id = CASE WHEN c.subject_id = ANY($1) THEN c.subject_id ELSE c.object_id END
+     JOIN entities e ON e.id = CASE WHEN c.subject_id = ANY($1) THEN c.object_id ELSE c.subject_id END
+     WHERE (c.subject_id = ANY($1) OR c.object_id = ANY($1))
        AND NOT EXISTS (SELECT 1 FROM reviews rv WHERE rv.claim_id = c.id AND rv.status = 'rejected')`,
-    [entity.id]
+    [ids]
   );
+  const r = await claimRows([entity.id]);
 
   // Same-WORK rows merge their evidence (duplicate entities from earlier
   // pipeline runs must pool their citations, not shadow each other) — but
@@ -1185,12 +1191,12 @@ export async function getGraphForSubject(subject) {
     return row.creator.split(/\s*(?:,|&|\/|\band\b|\bfeat\.?|\bfeaturing\b|\bwith\b|\bx\b)\s*/i).some((c) => normName(c) === selfNorm);
   };
 
-  for (const row of r.rows) {
-    if (ownWork(row)) continue;
+  const addRow = (row, via = null) => {
+    if (ownWork(row)) return;
     let role = null;
     if (PREDECESSOR_TYPES.includes(row.claim_type)) role = row.outbound ? "predecessors" : "successors";
     else if (PEER_TYPES.includes(row.claim_type)) role = "peers";
-    if (!role) continue;
+    if (!role) return;
 
     const evidence = typeof row.evidence === "string" ? JSON.parse(row.evidence) : row.evidence;
     let key = `${norm(row.name)}|${norm(row.creator || "")}`;
@@ -1209,6 +1215,7 @@ export async function getGraphForSubject(subject) {
       existing.creator = existing.creator || row.creator || null;
       existing.year = existing.year || (row.year_start ? String(row.year_start) : null);
       existing.mapped = existing.mapped || !!row.mapped;
+      if (via) (existing.via ||= new Set()).add(via); else existing.direct = true;
     } else {
       byName.set(key, {
         id: row.entity_id,
@@ -1225,19 +1232,65 @@ export async function getGraphForSubject(subject) {
         summary: row.summary,
         role,
         evidence,
+        ...(via ? { via: new Set([via]) } : { direct: true }),
       });
+    }
+  };
+  for (const row of r.rows) addRow(row);
+
+  // Works roll up to their maker (Tony, 2026-10-03, option 1, counted fully):
+  // Stevie Wonder cites "I Have a Dream", and that connection used to stay
+  // filed on the speech — tapping it reached a King map without Stevie.
+  // A creator's map now also reads the claims on their own works, each node
+  // labeled "via <work>". No new claims; the same evidence, read from the
+  // maker's side. Other own works and the maker themself never become nodes.
+  if (!WORK_KINDS.has(entity.kind) && selfNorm) {
+    const like = `%${entity.name.replace(/[\\%_]/g, (c) => "\\" + c)}%`;
+    const works = (await q(
+      `SELECT id, name, kind, metadata->>'creator' AS creator FROM entities
+       WHERE kind = ANY($1) AND metadata->>'creator' ILIKE $2 LIMIT 2000`,
+      [[...WORK_KINDS], like]
+    )).rows.filter((w) => ownWork(w));
+    if (works.length) {
+      const rolled = await claimRows(works.map((w) => w.id));
+      for (const row of rolled.rows) {
+        if (row.entity_id === entity.id || normName(row.name) === selfNorm) continue;
+        addRow(row, row.via);
+      }
+    }
+  }
+
+  // The same pooling on the citing side: on Radiohead's map, the Talking
+  // Heads bubble also counts the evidence on "Radio Head", True Stories and
+  // Remain in Light. The works keep their own bubbles too.
+  const makers = new Map();
+  for (const node of byName.values()) if (!WORK_KINDS.has(node.kind)) makers.set(normName(node.name), node);
+  for (const node of byName.values()) {
+    if (!WORK_KINDS.has(node.kind) || !node.creator) continue;
+    const names = node.creator.split(/\s*(?:,|&|\/|\band\b|\bfeat\.?|\bfeaturing\b|\bwith\b|\bx\b)\s*/i);
+    for (const n of new Set([node.creator, ...names].map(normName))) {
+      const maker = makers.get(n);
+      if (!maker || maker === node) continue;
+      (maker.pooled ||= []).push(...node.evidence);
+      (maker.via ||= new Set()).add(node.name);
     }
   }
 
   const groups = { predecessors: [], peers: [], successors: [] };
   for (const node of byName.values()) {
-    const cited = node.evidence.filter((p) => p.method === "primary_source_quote_match" && p.status === "quote_confirmed").length;
-    const documented = node.evidence.length - cited;
+    // Rolled-up evidence counts fully toward size (Tony, 2026-10-03).
+    const all = node.pooled ? [...node.evidence, ...node.pooled] : node.evidence;
+    const cited = all.filter((p) => p.method === "primary_source_quote_match" && p.status === "quote_confirmed").length;
+    const documented = all.length - cited;
     node.weight = Math.min(10, 1 + cited * 3 + documented * 1.5);
     node.tier = cited ? "cited" : documented ? "documented" : "claimed";
     node.evidence = node.evidence
       .sort((a, b) => (b.method === "primary_source_quote_match") - (a.method === "primary_source_quote_match"))
       .slice(0, 3);
+    // via: the works this connection runs through; viaOnly when it has no direct claim of its own.
+    node.via = node.via ? [...node.via] : undefined;
+    node.viaOnly = !!node.via && !node.direct;
+    delete node.direct; delete node.pooled;
     groups[node.role].push(node);
     delete node.role;
   }

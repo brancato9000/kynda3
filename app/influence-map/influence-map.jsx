@@ -237,6 +237,8 @@ const CSS = `
 .kmap .loading .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: kmapPulse 1.4s ease-in-out infinite; }
 @keyframes kmapPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .kmap .loading .pulse { animation: none; } }
+.kmap .card .via { margin-top: 8px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.03em; color: var(--muted); line-height: 1.5; }
+.kmap .card .via i { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: 0; font-size: 0.78rem; }
 .kmap .card .credit { margin-top: 10px; font-family: var(--mono); font-size: 0.6rem; color: var(--faint); line-height: 1.5; }
 .kmap .card .credit a { color: var(--faint); text-decoration: none; }
 .kmap .card .credit a:hover { color: var(--muted); }

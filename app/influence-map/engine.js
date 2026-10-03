@@ -673,6 +673,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       <h2>${esc(d.name)}</h2>
       ${d.creator || d.year ? `<div class="meta">${esc(d.creator || "")}${d.creator && d.year ? " · " : ""}${d.year ? fmtYear(d.year) : ""}</div>` : ""}
       ${d.mix?.reason ? `<p class="summary">${esc(d.mix.reason)}</p>` : d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ""}
+      ${d.via?.length ? `<div class="via">${d.viaOnly ? "Via" : "Also via"} ${d.via.slice(0, 3).map((w) => `<i>${esc(w)}</i>`).join(", ")}${d.via.length > 3 ? ` and ${d.via.length - 3} more` : ""}</div>` : ""}
       ${quotes.map((x) => `<blockquote>“${esc(x.quote.replace(/^["“]|["”]$/g, ""))}”<cite>${x.speaker ? esc(x.speaker) + " · " : ""}${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.publication || host(x.url))}</a>` : esc(x.publication || "")}</cite></blockquote>`).join("")}
       ${!quotes.length && ev0 ? `<blockquote class="plain">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
       ${creditLine(d)}

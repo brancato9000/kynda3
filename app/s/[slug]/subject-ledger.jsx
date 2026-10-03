@@ -48,6 +48,7 @@ function Group({ title, nodes, subjectName, mappedSlugs }) {
             {n.creator && n.creator !== subjectName && <> by <Name name={n.creator} mappedSlugs={mappedSlugs} /></>}
             {n.year && <span style={{ color: muted }}> ({n.year})</span>}
             {n.summary && <>. {n.summary}</>}
+            {n.via?.length > 0 && <span style={{ color: muted }}> ({n.viaOnly ? "via" : "also via"} {n.via.slice(0, 3).join(", ")})</span>}
             {" "}<Receipt evidence={n.evidence} />
           </li>
         ))}
