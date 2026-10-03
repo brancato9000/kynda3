@@ -117,11 +117,14 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
   // A work node travels to the artist who made it (Tony, 2026-10-02): influence
   // claims usually name a record, and a record's own graph is two or three
-  // links, so tapping "What's Going On" should land on Marvin Gaye. Never
+  // links, so tapping "What's Going On" should land on Marvin Gaye. A work
+  // that is itself a mapped subject keeps its own map (Metropolis on Bowie's
+  // map opens Metropolis, not Fritz Lang's five links). Never
   // re-enter the center (a subject's own work leads nowhere new); the work's
   // own graph stays the fallback when its maker isn't mapped.
   const WORK_KINDS = new Set(["work", "film", "tv_show", "book", "release", "recording"]);
   function destOf(d) {
+    if (d.mapped) return d.name; // a mapped work (Metropolis) opens its own map
     const maker = d.creator && (WORK_KINDS.has(d.kind) || !d.kind) ? d.creator : null;
     return maker && normT(maker) !== normT(center) && normT(maker) !== normT(d.name) ? maker : d.name;
   }
