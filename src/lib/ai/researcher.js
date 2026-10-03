@@ -40,7 +40,7 @@ export const FINDINGS_SCHEMA = {
   },
 };
 
-const RESEARCH_SYSTEM = `You are Kynda's research agent. Given a cultural subject and its candidate connections, find PRIMARY SOURCES documenting those connections: interviews, autobiographies, memoirs, podcast transcripts, documentaries, contemporaneous reviews, liner notes, artist statements.
+export const RESEARCH_SYSTEM = `You are Kynda's research agent. Given a cultural subject and its candidate connections, find PRIMARY SOURCES documenting those connections: interviews, autobiographies, memoirs, podcast transcripts, documentaries, contemporaneous reviews, liner notes, artist statements.
 
 Method:
 - Use web search to locate sources, then FETCH the page and read it. Only cite pages you actually fetched in this session.
@@ -132,8 +132,7 @@ async function runLoop(client, tools, user, useFormat, model) {
  * @param {Array} targets - [{ title, creator, claimType, slotType? }] known connections to source
  * @returns {{findings: Array}}
  */
-export async function researchSubject(subject, targets = [], { model = FABLE } = {}) {
-  const client = anthropicClient();
+export function buildResearchPrompt(subject, targets = []) {
   const lines = [
     `Subject: "${subject.name}"${subject.domain ? ` (${subject.domain})` : ""}`,
     subject.description ? `Identified as: ${subject.description}` : null,
@@ -145,7 +144,12 @@ export async function researchSubject(subject, targets = [], { model = FABLE } =
           .join("\n")}`
       : "No specific targets — find the best-documented influence connections for this subject.",
   ].filter((l) => l !== null);
-  const user = lines.join("\n");
+  return lines.join("\n");
+}
+
+export async function researchSubject(subject, targets = [], { model = FABLE } = {}) {
+  const client = anthropicClient();
+  const user = buildResearchPrompt(subject, targets);
 
   // Degrade twice if needed: current web tools → basic variants; with
   // structured output → without (JSON extracted from text).

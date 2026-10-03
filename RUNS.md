@@ -94,3 +94,23 @@ First run of the spec-driven builder (`scripts/experiments/demo-build.mjs` + `sp
 ## 2026-09-22 — Adaptation-stamp repair (V3-83 refinement 2)
 
 Tony caught the *Going All the Way* film poster on Vonnegut's novel card. Class-and-filename sweep found 36 adaptation stamps across 27 subjects: 30 stripped, 6 relabeled. Medium-aware re-run: 221 cards examined, 56 stamped (38 class-rule, 18 licensed/public-domain), 7 queued, 158 correctly empty. Zero model calls; Wikipedia API only.
+
+## 2026-09-16/17 — Open-model experiment: Kimi K3 and GLM 5.2 vs Sonnet 5 (harvest + research)
+
+Tony-approved (<$10) after the Mozilla open-model report (Ars Technica 2026-09-15). `scripts/experiments/open-model-compare.mjs`, dry run, nothing persisted; open models via OpenRouter with charged-USD receipts. **Harvest, 3 golden Wikipedia pages, two runs:** Sonnet $0.007–0.008/confirmed citation; Kimi K3 $0.002–0.003 (98–100% wall pass); GLM 5.2 $0.002 (73–91%). Golden traps: Sonnet and Kimi both self-ref'd Godfather II/III once; GLM clean. **Research, Radiohead:** Sonnet 4 T2 / $1.33 / 8 min; Kimi 6 T2 / $0.11 / 71s; GLM 3 T2 / $0.09 / 57s (client-side DDG+fetch harness, not Anthropic's). Hand-read caveat: every model, Sonnet included, emits real quotes with wrong claimTypes; GLM collapses labels to cited_as_influence. **$4.25 total.** Full tables and read-out: `reports/open-model-compare-2026-09-17.md`; per-claim rows: `reports/open-model-compare-rows-2026-09-17.json`. No decision taken; Tony's call.
+
+## 2026-09-17 — Open-model research follow-up, 5 subjects
+
+Tony-approved (cap $4.25; spent $3.44). The Godfather, Breaking Bad, Björk, Miles Davis, Talking Heads, targets from the graph. Kimi K3: 36 confirmed citations for $1.08, no empty runs. GLM 5.2: 20 for $0.62, one malformed-output failure (Björk). Sonnet 5 on Breaking Bad: 0 findings for $0.90 in 16 min, retry timed out (~$0.84) — the V3-20 quit-early behaviour again. Combined with the first round, Kimi is 42 citations / $1.19 vs Sonnet 4 / $3.07. Tables in `reports/open-model-compare-2026-09-17.md`. No default changed; Tony's call.
+
+## 2026-09-22 — Opus 5.5 mix-generation check (3 golden subjects, $0.28)
+
+`model-compare.mjs --model claude-opus-5-5` at the pipeline's effort "low", unchanged prompt, dry. Radiohead 23 candidates / 74% verified / 65% documented but 1 self-reference violation; The Godfather 23 / 100% verified / 26% documented with 4 violations (3 essential-slot cards not by the subject, 1 self-reference); **Kendrick Lamar returned a single candidate** (stored Opus 5 mix: 24). Opus 5 passed all three with zero violations in July (V3-44). Not a drop-in at low effort with the current prompt; untested at medium (Opus 5.5's default). Also today: kynda3 PRICES table corrected (Sonnet 5 $2/$10, not $3/$15 — every Sonnet figure in this log before today is 1.5× high) and Opus 5.5 / Fable 5.1 added.
+
+## 2026-09-22 — GPT-6 comparison (Sol, Luna, Astra) via OpenRouter, $2.76
+
+Tony-approved (cap $3.50). Same harness as the open-model runs; first attempt spent $0 (OpenAI rejects `temperature`; fixed in openrouter.js). **Harvest, 3 golden pages:** Sol 108 confirmed / 0 rejected for $0.27 (Sonnet ~$0.37 corrected, 74–85% pass); Luna 67/29 for $0.015; Astra 40/0 on Radiohead for $0.49. **Research, 3 subjects:** Sol 28/28 confirmed for $0.51; Luna 15/16 for $0.03; Astra 8/8 on Radiohead for $0.76; Kimi's same-subject numbers were 24 for $0.67. **Mix, effort low:** Sol 86–95% verified, $0.04/mix; Luna 86–95%, $0.002/mix; Astra 95%/68% documented on Radiohead, $0.19. Golden PASS on Radiohead and Kendrick for all three. **Finding:** every new model (Opus 5.5 included) fails The Godfather golden identically because `eval/scoring.js` predates V3-62's work-subject canon rule — scorer bug, not model; Godfather rows unscored until fixed. Full tables: `reports/open-model-compare-2026-09-22.md`. No default changed.
+
+## 2026-09-22 — Luna vs Sol, 20 graph subjects, reading + hunting ($5.00)
+
+Tony-approved (cap $6) to test whether Luna's lower recall is filler. 18 paired subjects per job across 11 domains. Reading: Sol 586 confirmed / 0 rejected vs Luna 345 / 87 rejected; Luna missed 393 of Sol's pairs, added 152. Hunting: Sol 162 confirmed citations covering 129 targets vs Luna 87 covering 68; Luna missed 81 targets. Per subject: Sol $0.26, Luna $0.014. Verdict: Luna alone ≈ half the graph; misses are spread across every subject so a Luna-first/Sol-gaps scheme saves nothing. Luna as a *second* reader adds ~26% confirmed page claims for ~$0.005/page. Tables in `reports/open-model-compare-2026-09-22.md`; rows in the `-rows-` and `-research-` JSON files. No default changed.

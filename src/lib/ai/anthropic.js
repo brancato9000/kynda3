@@ -40,11 +40,19 @@ export function anthropicClient() {
 // Per-call usage capture so sprint economics are measured, not guessed.
 
 const PRICES = {
-  // USD per million tokens: [input, output] (sticker prices)
+  // USD per million tokens: [input, output] (sticker prices, checked against
+  // platform.claude.com/docs/en/about-claude/pricing on 2026-09-22).
+  // Sonnet 5 was listed here at $3/$15 from July to 2026-09-22; its real
+  // price has been $2/$10 since launch (the planned Sept 1 increase was
+  // cancelled), so every Sonnet figure in spend.jsonl before that date is
+  // overstated by 1.5×. The Anthropic console is the only true receipt.
+  "claude-fable-5-1": [10, 50],
   "claude-fable-5": [10, 50],
+  "claude-opus-5-5": [4, 20],
   "claude-opus-5": [5, 25],
   "claude-opus-4-8": [5, 25],
-  "claude-sonnet-5": [3, 15],
+  "claude-sonnet-5-5": [2, 10],
+  "claude-sonnet-5": [2, 10],
   "claude-haiku-4-5": [1, 5],
 };
 const WEB_SEARCH_PER_CALL = 0.01; // $10 per 1,000 searches
@@ -62,9 +70,11 @@ export function usageSummary() {
   for (const { label, model, usage } of usageEvents) {
     const key = Object.keys(PRICES).find((k) => model?.startsWith(k.replace(/-\d+$/, ""))) || model;
     const [inP, outP] = PRICES[model] || PRICES[key] || [10, 50];
-    const c =
+    // OpenRouter responses carry the charged USD (a receipt); sticker math
+    // is the fallback for Anthropic calls.
+    const c = typeof usage.cost === "number" ? usage.cost :
       ((usage.input_tokens || 0) / 1e6) * inP +
-      ((usage.cache_read_input_tokens || 0) / 1e6) * inP * 0.1 +
+      ((usage.cache_read_input_tokens || 0) / 1e6) * inP * (model?.startsWith("claude-fable-5-1") ? 0.025 : model?.startsWith("claude-opus-5-5") ? 0.05 : 0.1) +
       ((usage.cache_creation_input_tokens || 0) / 1e6) * inP * 1.25 +
       ((usage.output_tokens || 0) / 1e6) * outP +
       (usage.server_tool_use?.web_search_requests || 0) * WEB_SEARCH_PER_CALL;
@@ -145,6 +155,12 @@ export const SONNET = "claude-sonnet-5";
  * the harvest workhorse (V3-29): one call per source, many claims out.
  */
 export async function callModel(model, { system, user, schema, maxTokens = 8000, effort, label = "model" }) {
+  // Open-weight models (moonshotai/kimi-k3, z-ai/glm-5.2, …) live behind
+  // OpenRouter; the "/" in the id is the routing signal.
+  if (model.includes("/")) {
+    const { callOpenRouter } = await import("./openrouter.js");
+    return callOpenRouter(model, { system, user, schema, maxTokens, effort, label });
+  }
   // Streamed (then reassembled) because the SDK rejects non-streaming
   // requests that could run >10 min — which a 32k-token harvest retry can.
   const response = await client().messages.stream({
