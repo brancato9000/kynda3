@@ -1462,7 +1462,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   const openTab = (id) => (id === "map" ? (setTab("map"), loadGraph(rootSubject || subject)) : id === "covers" ? openCoversTab(subject) : setTab("mix"));
 
   return (
-    <main style={{ maxWidth: "880px", margin: "0 auto", padding: subjectView ? "0 24px 120px" : "56px 24px 120px" }}>
+    // Map tab (Tony, 2026-10-03): the map and nothing under it — no bio card, page text or footer to scroll into.
+    <main style={{ maxWidth: "880px", margin: "0 auto", padding: subjectView ? (tab === "map" ? "0 24px 0" : "0 24px 120px") : "56px 24px 120px" }}>
       <style>{`
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
         @keyframes kyndaSpin { to { transform: rotate(360deg) } }
@@ -1596,8 +1597,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
               arrives — so the bio never shows in its place and then gets shoved down. Kept mounted on
               other tabs once loaded so the map keeps its trail and position. */}
           {(tab === "map" || graph.status === "ready") && (
-            <div style={{ display: tab === "map" ? "block" : "none", marginBottom: "36px" }}>
+            <div style={{ display: tab === "map" ? "block" : "none", marginBottom: tab === "map" ? 0 : "36px" }}>
               <InfluenceMap subjectName={(rootSubject || subject).name} subjectBio={(rootSubject || subject).bio}
+                alternatives={tier === "likely" ? alternatives.map((c) => ({ name: c.name, description: c.description || null })) : []}
+                onPickAlternative={(i) => alternatives[i] && selectSubject(alternatives[i])}
                 graph={graph.status === "ready" ? graph.data : null} onOpenSubject={openFromMap}
                 onCenter={followCenter} controlRef={mapCtl}
                 status={graph.status === "error" && done ? graph.error
@@ -1610,11 +1613,14 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
               travelling the map keeps the note on the Mix tab, so the map isn't interrupted. */}
           {tab === "map" && noMix && !centerGraph && <div style={{ marginBottom: "28px" }}>{noMixNote}</div>}
 
-          {/* The bio sits under the map: the map is the first thing a subject page shows. */}
-          <div style={{ marginTop: tab === "map" ? 0 : "28px" }}>
-            <SubjectCard key={subject.name} subject={subject} onBioDone={() => setBioDone(true)} />
-          </div>
-          {tier === "likely" && alternatives.length > 0 && (
+          {/* The bio card (with Share and PDF) lives on the Mix and Covers tabs; on the Map tab the About
+              panel carries the bio, the ☰ menu has Share and PDF, and the panel offers "Not this one?". */}
+          {tab !== "map" && (
+            <div style={{ marginTop: "28px" }}>
+              <SubjectCard key={subject.name} subject={subject} onBioDone={() => setBioDone(true)} />
+            </div>
+          )}
+          {tab !== "map" && tier === "likely" && alternatives.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
               <span style={{ fontFamily: FONTS.mono, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(148,163,184,0.6)" }}>
                 Not this one?
@@ -1689,13 +1695,17 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
 
       {/* The page as text (server-rendered, BACKLOG #32): shown while the
           center is the page's own subject, hidden once the map travels on. */}
-      {ledger && (!subject || subject.name === initialSubject?.name) && ledger}
+      {/* On the Mix tab now (it is the mix in words). It stays in the page's HTML on every tab — hidden,
+          not removed — so search engines still read it, the standard pattern for tabbed content. */}
+      {ledger && (!subject || subject.name === initialSubject?.name) && (
+        <div style={{ display: subjectView && tab === "map" ? "none" : "block" }}>{ledger}</div>
+      )}
 
-      <footer style={{ marginTop: "48px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7, display: "flex", gap: "16px", flexWrap: "wrap" }}>
+      {!(subjectView && tab === "map") && <footer style={{ marginTop: "48px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7, display: "flex", gap: "16px", flexWrap: "wrap" }}>
         <span>© 2026 The O&amp;O LLC</span>
         <a href="/privacy" style={{ color: "rgba(148,163,184,0.7)", textDecoration: "none" }}>Privacy</a>
         <a href="/terms" style={{ color: "rgba(148,163,184,0.7)", textDecoration: "none" }}>Terms</a>
-      </footer>
+      </footer>}
     </main>
   );
 }

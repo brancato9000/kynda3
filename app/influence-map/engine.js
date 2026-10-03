@@ -9,6 +9,7 @@
 //   - an endless background web with one slow swell rolling through it
 
 import * as d3 from "d3";
+import { slugify } from "../../src/lib/slug.js";
 
 const COLORS = { predecessor: "#a8c8d8", peer: "#e04040", successor: "#8844cc" };
 const TEXT_COLORS = { predecessor: "#a8c8d8", peer: "#f07070", successor: "#b48ae6" };
@@ -65,7 +66,7 @@ function smallImage(url) {
   return url;
 }
 
-export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph = null, onOpenSubject, onCenter = null, adminToken = null }) {
+export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph = null, onOpenSubject, onCenter = null, adminToken = null, getAlternatives = () => [], onAlternative = null }) {
   // No fetchGraph = a sealed map (the public demo pages): clicking a bubble opens its card, nothing travels.
   const canTravel = !!fetchGraph;
   const q = (k) => root.querySelector(`[data-k="${k}"]`);
@@ -722,6 +723,15 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     };
   }
 
+  // "Not this one?" — when the search behind this page was ambiguous, the other matches sit in the
+  // About panel (they used to sit under the map).
+  function altsBlock(d) {
+    const alts = d.name === subjectName && onAlternative ? (getAlternatives() || []) : [];
+    if (!alts.length) return "";
+    return `<div class="alts"><div class="kind">Not this one?</div>${alts.map((a, i) =>
+      `<button data-alt="${i}"><b>${esc(a.name)}</b>${a.description ? `<span>${esc(a.description)}</span>` : ""}</button>`).join("")}</div>`;
+  }
+
   async function showBioCard(d, touch) {
     cardFor = d;
     const bio = await loadBio(d.name);
@@ -739,8 +749,10 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${creditLine(d)}
       ${unmapped ? requestBlock(d.name, `Kynda hasn't mapped ${esc(d.name)} yet${links <= 3 ? ", so this is as far as the map goes from here" : "; these are the connections other maps found"}. Ask, and it joins the queue for the next build.`) : ""}
       ${bio?.url || (d.name !== subjectName && onOpenSubject) || curating(d) ? `<div class="foot"><span>${bio?.url ? `<a href="${esc(bio.url)}" target="_blank" rel="noopener">${esc(bio.articleTitle ? `Wikipedia: ${bio.articleTitle}` : "Wikipedia")} ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener license">text CC BY-SA 4.0</a>` : ""}</span>
-        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}`;
+        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${d.name !== subjectName && onOpenSubject ? `<button class="open">Open page</button>` : ""}</span></div>` : ""}
+      ${altsBlock(d)}`;
     placeCard(d, touch);
+    card.querySelectorAll("[data-alt]").forEach((b) => { b.onclick = () => onAlternative?.(+b.dataset.alt); });
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
     const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
     if (unmapped) wireRequest(d, { wikidata_qid: cg.subjectQid || null, mbid: cg.subjectMbid || null, domain: (cg.domain || "").toLowerCase() || null }, () => showBioCard(d, touch));
@@ -963,6 +975,15 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     try { localStorage.setItem(VIEW_KEY, viewPref); } catch { /* storage blocked */ }
     go(center, { push: false, fresh: true });
   });
+  // Share and print the subject now at the center (the page address follows the map's center).
+  q("share").onclick = async () => {
+    setMenu(false);
+    const url = `${location.origin}${location.pathname}`;
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch { toast(url); }
+  };
+  const pdfLink = q("pdf");
+  if (!canTravel) pdfLink.hidden = true; // the printable page sits behind the site password; demo pages are public
+  pdfLink.addEventListener("click", () => { pdfLink.href = `/s/${slugify(center)}/print`; setMenu(false); });
   q("copy").onclick = async () => {
     const text = trail.slice(0, trailPos + 1).join(" → ");
     setMenu(false);
@@ -1098,6 +1119,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   { const c = live.get(subjectName); if (c) showCard(c, false); }
 
   return {
+    // Alternatives arrived (an ambiguous search resolves after the map mounts): redraw the About card if it's showing.
+    refreshAbout() { if (cardFor && cardFor.type === "center" && panelOpen) showCard(cardFor, false); },
     // Browser Back/Forward: step along the trail if the stop is on it, else travel there.
     // quiet (default) = Back/Forward, no new history entry; quiet:false = an "Open page" travel.
     async show(name, { quiet = true } = {}) {

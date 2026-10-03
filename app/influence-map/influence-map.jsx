@@ -18,12 +18,15 @@ async function fetchGraph(name) {
   return res.json();
 }
 
-export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, onCenter = null, controlRef = null, status, waiting = true, sealed = false }) {
+export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, onCenter = null, controlRef = null, status, waiting = true, sealed = false, alternatives = [], onPickAlternative = null }) {
   const rootRef = useRef(null);
   const openRef = useRef(onOpenSubject);
   openRef.current = onOpenSubject;
   const centerRef = useRef(onCenter);
   centerRef.current = onCenter;
+  const altRef = useRef({ list: alternatives, pick: onPickAlternative });
+  altRef.current = { list: alternatives, pick: onPickAlternative };
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (!rootRef.current || !graph) return;
@@ -39,12 +42,18 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
       fetchGraph: sealed ? null : fetchGraph,
       onOpenSubject: onOpenSubject && !sealed ? (name) => openRef.current?.(name) : null,
       onCenter: onCenter && !sealed ? (name, g, opts) => centerRef.current?.(name, g, opts) : null,
+      getAlternatives: () => altRef.current.list,
+      onAlternative: sealed ? null : (i) => altRef.current.pick?.(i),
     });
+    mapRef.current = map;
     if (controlRef) controlRef.current = map;
     return () => { if (controlRef?.current === map) controlRef.current = null; map.destroy(); };
     // A new subject is a new map; the same subject's graph object refreshing is not.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectName, !!graph]);
+  // An ambiguous search's other matches can arrive after the map is up.
+  const altKey = alternatives.map((a) => a.name).join("|");
+  useEffect(() => { mapRef.current?.refreshAbout?.(); }, [altKey]);
 
   return (
     <div className="kmap" ref={rootRef}>
@@ -82,10 +91,19 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 8a5 5 0 1 0 1.5-3.5" /><path d="M3 2.5V5h2.5" /></svg>
               <span>Replay the build</span>
             </button>
+            <button data-k="share">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 10V2.5M5 5l3-3 3 3" /><path d="M3.5 8.5v5h9v-5" /></svg>
+              <span>Share link</span>
+            </button>
+            <a data-k="pdf" href="#" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 2.5h5.5L12 5v8.5H4z" /><path d="M6 8.5h4M6 11h4" /></svg>
+              <span>Printable PDF</span>
+            </a>
             <button data-k="copy">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5" /><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" /></svg>
               <span>Copy path</span>
             </button>
+            <div className="legal"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></div>
           </div>
         </div>
         <button className="keybtn" data-k="keybtn" aria-expanded="false">Key</button>
@@ -121,7 +139,7 @@ const CSS = `
   --fg: #e2e8f0; --muted: rgba(148,163,184,0.7); --faint: rgba(148,163,184,0.42); --gold: #facc15;
   --pred: #a8c8d8; --peer: #e04040; --succ: #8844cc;
   --display: 'Instrument Serif', Georgia, serif; --body: 'DM Sans', system-ui, sans-serif; --mono: 'DM Mono', ui-monospace, Menlo, monospace;
-  position: relative; width: 100vw; margin-left: calc(50% - 50vw);
+  position: relative; box-sizing: border-box; width: 100vw; margin-left: calc(50% - 50vw); /* border inside the height: no 1px scroll */
   /* Everything under the 48px subject bar: the map is the page. */
   /* dvh: the screen's current visible height. svh (the smallest it gets) left the page below peeking
      in under the map on phones, reading as the bio card overlapping the panel. svh is the fallback. */
@@ -153,7 +171,17 @@ const CSS = `
 .kmap .menupanel { position: absolute; top: 42px; right: 0; min-width: 190px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 14px 40px rgba(0,0,0,.5); padding: 6px; display: flex; flex-direction: column; }
 .kmap .menupanel[hidden] { display: none; }
 .kmap .menupanel button { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-radius: 6px; padding: 9px 10px; color: var(--fg); font-family: var(--body); font-size: 0.84rem; text-align: left; cursor: pointer; }
-.kmap .menupanel button:hover { background: var(--surface-2); }
+.kmap .menupanel button:hover, .kmap .menupanel > a:hover { background: var(--surface-2); }
+.kmap .menupanel > a { display: flex; align-items: center; gap: 10px; border-radius: 6px; padding: 9px 10px; color: var(--fg); font-family: var(--body); font-size: 0.84rem; text-decoration: none; }
+.kmap .menupanel > a[hidden] { display: none; }
+.kmap .menupanel .legal { margin-top: 4px; padding: 8px 10px 4px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 0.64rem; color: var(--faint); }
+.kmap .menupanel .legal a { color: var(--muted); text-decoration: none; }
+.kmap .menupanel .legal a:hover { color: var(--fg); }
+.kmap .card .alts { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.kmap .card .alts .kind { color: var(--muted); }
+.kmap .card .alts button { text-align: left; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; color: var(--fg); cursor: pointer; font-family: var(--body); font-size: 0.84rem; display: grid; gap: 2px; }
+.kmap .card .alts button span { color: var(--muted); font-size: 0.76rem; }
+.kmap .card .alts button:hover { border-color: var(--gold); }
 .kmap .menupanel svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
 .kmap .menupanel .check { margin-left: auto; font-style: normal; color: var(--gold); visibility: hidden; }
 .kmap .menupanel [aria-pressed="true"] .check { visibility: visible; }
