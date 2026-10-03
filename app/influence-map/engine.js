@@ -93,7 +93,22 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   const gHits = world.append("g");
   const gNodes = world.append("g");
   let webView = d3.zoomIdentity;
-  const zoom = d3.zoom().scaleExtent([0.25, 4]).on("zoom", (e) => { world.attr("transform", e.transform); webView = e.transform; });
+  const zoom = d3.zoom().scaleExtent([0.25, 4]).on("zoom", (e) => { world.attr("transform", e.transform); webView = e.transform; sizeLabels(); });
+
+  // Names never shrink below a readable size on screen (Tony, 2026-10-03 — "too small to read on
+  // a phone"). Zooming in still enlarges them; zooming out stops shrinking them at the floor.
+  const LABEL = { center: [19, 15, 14], mix: [12.5, 12, 11], other: [11, 10.5, 9.5] }; // [map units, phone min px, desktop min px]
+  function sizeLabels() {
+    const k = webView.k || 1, phone = size().w < 640;
+    gNodes.selectAll("g.node").each(function (d) {
+      const [base, minPhone, minDesk] = LABEL[d.type === "center" ? "center" : d.mix ? "mix" : "other"];
+      d.labelFs = Math.max(base, (phone ? minPhone : minDesk) / k);
+      // A bubble too small on screen to carry a name keeps it hidden until you zoom in (mix picks always show theirs).
+      d.labelHidden = d.type !== "center" && !d.mix && (d.r || d.ccr || 0) * 2 * k < 18;
+      d3.select(this).select(".label").style("font-size", `${d.labelFs}px`).style("stroke-width", `${d.labelFs * 0.36}px`);
+    });
+    if (!anim && !wobble) draw();
+  }
   svg.call(zoom).on("dblclick.zoom", null);
 
   const live = new Map(); // name -> node on screen (incl. exiting)
@@ -160,8 +175,36 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
   function size() { const r = svg.node().getBoundingClientRect(); return { w: r.width, h: r.height }; }
 
+  // ── Mix view (Tony, 2026-10-03): a phone can't read 40–500 bubbles. "Mix" shows only the
+  // KyndaMix picks (~20, the curated story) — plus the way back along the trail; "Full" shows
+  // everything. Default: Mix on narrow screens and on any map over 60 connections, Full otherwise;
+  // an explicit choice is remembered in this browser. Maps with too few mix picks are always Full.
+  const VIEW_KEY = "kynda_map_view", MIN_MIX = 6;
+  let viewPref = null;
+  try { viewPref = localStorage.getItem(VIEW_KEY); } catch { /* storage blocked */ }
+  let lastCounts = { all: 0, mix: 0 };
+  function viewFor(counts) {
+    if (counts.mix < MIN_MIX) return "full";
+    if (viewPref === "mix" || viewPref === "full") return viewPref;
+    return size().w < 700 || counts.all > 60 ? "mix" : "full";
+  }
+  function shownNeighbors(name) {
+    const all = neighbors(name);
+    lastCounts = { all: all.length, mix: all.filter((n) => n.mix).length };
+    if (viewFor(lastCounts) === "full") return all;
+    const back = trail[trailPos - 1];
+    return all.filter((n) => n.mix || n.name === back);
+  }
+  function updateViewToggle() {
+    const box = q("viewtoggle"), view = viewFor(lastCounts);
+    box.hidden = lastCounts.mix < MIN_MIX;
+    box.querySelector('[data-view="mix"]').innerHTML = `Mix <span>${lastCounts.mix}</span>`;
+    box.querySelector('[data-view="full"]').innerHTML = `Full map <span>${lastCounts.all}</span>`;
+    for (const b of box.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+  }
+
   // Settle a static layout for one subject, seeded from where things are now so persisting nodes barely move.
-  function layout(name) {
+  function layout(name, fresh = false) {
     const { w, h } = size();
     const narrow = w < 640;
     // Phones are tall and narrow: stack influences above and successors below, and keep the columns slim.
@@ -171,11 +214,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const g = graphs.get(name) || {};
     const nodes = [{ name, type: "center", r: CENTER_R, fx: 0, fy: 0, id: g.subjectId || null, image: g.subjectImage || null }];
     let peerI = 0;
-    for (const n of neighbors(name)) {
+    for (const n of shownNeighbors(name)) {
       const prev = live.get(n.name);
       const t = n.type === "predecessor" ? -1 : n.type === "successor" ? 1 : 0;
       const node = { ...n, r: radius(n), t, side: n.type === "peer" ? (peerI++ % 2 ? 1 : -1) : 0 };
-      const ox = old && prev ? prev.x - old.x : null, oy = old && prev ? prev.y - old.y : null;
+      // Seed from where things sit (travel keeps the picture steady) — unless the view changed, when Mix must pull in tight.
+      const ox = !fresh && old && prev ? prev.x - old.x : null, oy = !fresh && old && prev ? prev.y - old.y : null;
       if (narrow) { node.x = ox ?? (rand() - 0.5) * 260; node.y = oy ?? t * span + (rand() - 0.5) * 140; }
       else { node.x = ox ?? t * span + (rand() - 0.5) * 160; node.y = oy ?? (rand() - 0.5) * 360; }
       nodes.push(node);
@@ -209,7 +253,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   // Move to a subject: lay it out, then one animation that exits, moves and builds nodes.
   let waitingForSize = false;
   let pendingGo = null; // a move asked for while hidden; the resize observer replays it
-  function go(name, { push = true, quiet = false } = {}) {
+  function go(name, { push = true, quiet = false, fresh = false } = {}) {
     if (!alive) return;
     if (size().w === 0) { waitingForSize = true; pendingGo = { name, push, quiet }; return; } // hidden tab; the resize observer resumes us
     waitingForSize = false;
@@ -224,7 +268,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     // The page follows the center (Tony, 2026-10-02): header, tabs, address.
     // quiet = the move came from the browser's Back/Forward, so no new history entry.
     if (onCenter && name !== prevCenter) onCenter(name, graphs.get(name) || null, { quiet });
-    const target = layout(name);
+    const target = layout(name, fresh);
     const keep = new Set(target.map((n) => n.name));
     const anchor = live.get(name) || { x: 0, y: 0 };
     const shift = { x: anchor.x || 0, y: anchor.y || 0 };
@@ -256,6 +300,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     anim = d3.timer(() => frame(now));
     updateTrail();
     updateLegend(target);
+    updateViewToggle();
     loadBio(name);
   }
 
@@ -313,10 +358,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     root.classList.toggle("panel-open", panelOpen);
     panel.classList.toggle("open", panelOpen);
   }
+  // The part of the stage the map can use: beside/above the panel, below the top controls (Mix/Full toggle).
   function visibleRect() {
     const { w, h } = size();
-    if (!panelOpen) return { x: 0, y: 0, w, h };
-    return panelSide() === "right" ? { x: 0, y: 0, w: Math.max(200, w - panelW), h } : { x: 0, y: 0, w, h: Math.max(160, h - panelH) };
+    const top = q("viewtoggle") && !q("viewtoggle").hidden ? 40 : 0;
+    if (!panelOpen) return { x: 0, y: top, w, h: h - top };
+    return panelSide() === "right" ? { x: 0, y: top, w: Math.max(200, w - panelW), h: h - top } : { x: 0, y: top, w, h: Math.max(160, h - panelH - top) };
   }
   // Opening, closing or resizing the panel never moves the map (Tony, 2026-10-03): the camera
   // moves only when you drag or zoom, press ◎, or travel. ◎ frames whatever space is visible.
@@ -403,7 +450,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       .attr("stroke-dasharray", (d) => (d.type !== "center" && isDead(d) ? "3 3" : null));
     updatePics();
     all.select(".initials").text((d) => (d.type === "center" ? "" : initials(d.name)));
-    all.select(".label").text((d) => (d.type === "center" ? d.name : short(d.name, d.mix ? 28 : 24)));
+    const phone = size().w < 640;
+    all.select(".label").text((d) => (d.type === "center" ? d.name : short(d.name, phone ? (d.mix ? 20 : 16) : d.mix ? 28 : 24)));
+    sizeLabels();
 
     // Edges: center to each live node. Exiting nodes keep a fading edge to whoever was center.
     const centerNode = live.get(center);
@@ -416,10 +465,25 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       .on("click", (ev, e) => onClick(ev, e.b));
   }
 
+  // Wide pictures (wordmarks, TV title cards: wider than 1.6:1) are shown whole, inset in the
+  // circle on a dark backing, instead of cropped to a fragment. Shape is measured as each loads.
+  const shapeOf = new Map();
+  function measure(url) {
+    if (!url || shapeOf.has(url)) return shapeOf.get(url) ?? null;
+    shapeOf.set(url, null);
+    const im = new Image();
+    im.onload = () => { shapeOf.set(url, im.naturalWidth / (im.naturalHeight || 1)); if (alive) updatePics(); };
+    im.src = url;
+    return null;
+  }
   function updatePics() {
     const all = gNodes.selectAll("g.node");
-    all.classed("has-pic", (d) => !!picOf(d));
-    all.select(".pic").attr("href", (d) => picOf(d)).style("display", (d) => (picOf(d) ? null : "none"));
+    all.each((d) => { d.picWide = (measure(picOf(d)) ?? 0) > 1.6; });
+    all.classed("has-pic", (d) => !!picOf(d)).classed("wide", (d) => !!picOf(d) && d.picWide);
+    all.select(".pic").attr("href", (d) => picOf(d)).style("display", (d) => (picOf(d) ? null : "none"))
+      .attr("preserveAspectRatio", (d) => (d.picWide ? "xMidYMid meet" : "xMidYMin slice"))
+      .attr("clip-path", (d) => (d.picWide ? null : `url(#${clipId})`)); // inset wide pictures already clear the circle
+    if (!anim && !wobble) draw();
   }
 
   const ease = d3.easeCubicOut, easeBack = d3.easeBackOut.overshoot(1.4);
@@ -454,9 +518,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       g.select(".disc").attr("r", r);
       g.select(".ring").attr("r", r);
       g.select(".halo").attr("r", d.mix ? r + 4.5 : 0);
-      g.select(".pic").attr("x", -r).attr("y", -r).attr("width", r * 2).attr("height", r * 2);
+      // A wide picture sits in an inner square (0.75r out from center) so the whole of it clears the circle.
+      const pr = d.picWide ? r * 0.75 : r;
+      g.select(".pic").attr("x", -pr).attr("y", -pr).attr("width", pr * 2).attr("height", pr * 2);
       g.select(".initials").style("font-size", `${Math.max(8, r * 0.55)}px`);
-      g.select(".label").attr("y", d.type === "center" ? r + 26 : r + 14).style("opacity", d.labelP);
+      const fs = d.labelFs || (d.type === "center" ? 19 : 11);
+      g.select(".label").attr("y", r + fs * (d.type === "center" ? 1.35 : 1.25)).style("opacity", d.labelHidden ? 0 : d.labelP);
     });
     const back = trail[trailPos - 1];
     gEdges.selectAll("path.edge").each(function (e) {
@@ -818,7 +885,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function updateLegend(target) {
     const slots = [...new Map(target.filter((n) => n.mix).map((n) => [n.mix.slot, n.mix])).values()];
     q("mixkey").innerHTML = slots.length ? `<b>KyndaMix</b>` + slots.map((m) => `<span><i class="ringdot" style="border-color:${m.color}"></i>${esc(m.label)}</span>`).join("") : "";
-    q("count").textContent = `${target.length - 1} connections${slots.length ? ` · ${target.filter((n) => n.mix).length} in the KyndaMix` : ""}`;
+    q("count").textContent = viewFor(lastCounts) === "mix"
+      ? `${lastCounts.mix} KyndaMix picks · ${lastCounts.all} connections in all`
+      : `${target.length - 1} connections${slots.length ? ` · ${target.filter((n) => n.mix).length} in the KyndaMix` : ""}`;
   }
 
   let toastT;
@@ -854,6 +923,14 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   };
   // ◎ Center: back to the resting view, wherever the map has been dragged, thrown or panned.
   q("recenter").onclick = () => { setMenu(false); frameDefault("glide"); };
+  // Mix ⇄ Full: the extra bubbles grow in (or shrink away) through the usual build animation.
+  q("viewtoggle").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-view]");
+    if (!b || b.getAttribute("aria-pressed") === "true") return;
+    viewPref = b.dataset.view;
+    try { localStorage.setItem(VIEW_KEY, viewPref); } catch { /* storage blocked */ }
+    go(center, { push: false, fresh: true });
+  });
   q("copy").onclick = async () => {
     const text = trail.slice(0, trailPos + 1).join(" → ");
     setMenu(false);

@@ -52,6 +52,11 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
       <div className="stage" data-k="stage">
         <canvas className="web" data-k="web" aria-hidden="true" />
         <svg className="map" data-k="map" role="img" aria-label={`Influence map for ${subjectName}`} />
+        {/* Mix (the curated picks) or the full map; hidden when a map has too few mix picks. */}
+        <div className="viewtoggle" data-k="viewtoggle" role="group" aria-label="What the map shows" hidden>
+          <button data-view="mix" aria-pressed="false" title="Only the KyndaMix picks — the curated story">Mix</button>
+          <button data-view="full" aria-pressed="false" title="Every documented connection">Full map</button>
+        </div>
         {/* The trail only appears once you've travelled — before that it would just repeat the page title. */}
         <div className="trailbox" data-k="trailbox" hidden>
           <nav className="trail" data-k="trail" aria-label="Your path" />
@@ -122,7 +127,15 @@ const CSS = `
   background: var(--bg); color: var(--fg); font-family: var(--body);
   border-bottom: 1px solid var(--line);
 }
-.kmap .trailbox { position: absolute; top: 10px; left: max(16px, calc(50vw - 600px)); right: 116px; z-index: 3; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kmap .viewtoggle { position: absolute; top: 10px; left: max(16px, calc(50vw - 600px)); z-index: 3; display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 17px; background: rgba(22,24,33,0.85); }
+.kmap .viewtoggle[hidden] { display: none; }
+.kmap .viewtoggle button { height: 26px; padding: 0 12px; border: 0; border-radius: 13px; background: none; color: var(--muted); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+.kmap .viewtoggle button span { opacity: 0.7; margin-left: 4px; }
+.kmap .viewtoggle button:hover { color: var(--fg); }
+.kmap .viewtoggle button[aria-pressed="true"] { background: var(--gold); color: var(--bg); }
+.kmap .viewtoggle button[aria-pressed="true"] span { opacity: 0.75; }
+.kmap .viewtoggle button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kmap .trailbox { position: absolute; top: 50px; left: max(16px, calc(50vw - 600px)); right: 116px; z-index: 3; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .kmap .trailbox[hidden] { display: none; }
 .kmap .trail { min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.72rem; background: rgba(15,16,22,0.82); border: 1px solid var(--line); border-radius: 14px; padding: 2px 6px; }
 .kmap .trail::-webkit-scrollbar { display: none; }
@@ -175,6 +188,7 @@ const CSS = `
 .kmap .node.center .pic { opacity: 1; }
 .kmap .node.center.has-pic .ring { stroke-width: 2px; stroke-opacity: 0.9; }
 .kmap .pics-on .node.has-pic .ring { stroke-width: 2.5px; stroke-opacity: 1; }
+.kmap .pics-on .node.wide .disc, .kmap .node.center.wide .disc { fill: #1c1f2b; fill-opacity: 1; } /* dark backing for wide pictures */
 .kmap .node .initials { font-family: var(--mono); font-size: 10px; fill: var(--bg); text-anchor: middle; dominant-baseline: central; pointer-events: none; transition: opacity .3s; }
 .kmap .node.center .initials { display: none; }
 .kmap .pics-on .node.has-pic .initials { opacity: 0; }
