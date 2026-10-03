@@ -194,6 +194,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     waitingForSize = false;
     hideCard(true);
     closeCurator();
+    if (glide) { glide.stop(); glide = null; }
     if (wobble) { wobble.stop(); wobble = null; grabbed = null; for (const n of live.values()) { n.fx = n.fy = null; n.vx = n.vy = 0; } }
     const prevCenter = center;
     if (push && name !== center) { trail = trail.slice(0, trailPos + 1); trail.push(name); trailPos = trail.length - 1; }
@@ -372,12 +373,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
           // The whole map follows the center; far bubbles hang on looser springs, so they trail and swing.
           const d = Math.hypot(n.hx - grabbed.hx, n.hy - grabbed.hy);
           w = 0.96;
-          n.k = 0.007 + 0.03 * Math.exp(-(d * d) / (2 * 170 * 170));
+          n.k = 0.005 + 0.018 * Math.exp(-(d * d) / (2 * 170 * 170));
         } else if (grabbed && n !== grabbed) {
           const d2 = (n.hx - grabbed.hx) ** 2 + (n.hy - grabbed.hy) ** 2;
           w = n.type === "center" ? 0.32 : 0.6 * Math.exp(-d2 / (2 * 190 * 190));
         }
-        const k = n === grabbed ? 0.022 : n.k || 0.03;
+        const k = n === grabbed ? 0.02 : n.k || 0.018;
         n.vx += (n.hx + ox * w - n.x) * k;
         n.vy += (n.hy + oy * w - n.y) * k;
       }
@@ -390,15 +391,53 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     for (const n of nodes) { n.x = n.cx; n.y = n.cy; n.hx = n.x1; n.hy = n.y1; n.vx = n.vx || 0; n.vy = n.vy || 0; }
     if (wobble) wobble.stop();
     wobble = d3.forceSimulation(nodes)
-      .alphaDecay(0.022).velocityDecay(0.07)
+      // Softer springs with more friction (Tony, 2026-10-02: "too springy"): neighbors drift after
+      // the center and settle with at most a slight overshoot; the farthest float in without one.
+      .alphaDecay(0.022).velocityDecay(0.17)
       .force("springs", springs())
       .force("bump", d3.forceCollide((n) => n.ccr + 6).strength(0.5))
       .on("tick", () => { for (const n of nodes) { n.cx = n.x; n.cy = n.y; } draw(); })
       .on("end", () => { for (const n of nodes) { n.cx = n.x = n.hx; n.cy = n.y = n.hy; n.vx = n.vy = 0; n.k = null; } draw(); wobble = null; });
   }
+  // Momentum (Tony, 2026-10-02): a thrown center keeps going and eases to a stop instead of
+  // halting on release. Velocity comes from the last ~100ms of the drag; it decays
+  // exponentially (time constant GLIDE_TAU), and the map trails it on the same springs.
+  const GLIDE_TAU = 325, MAX_SCREEN_V = 1.6; // ms; screen pixels per ms (so a flick looks the same at any zoom)
+  let glide = null, samples = [];
+  function settleCenter(d) {
+    // The center's resting place becomes the map's new home; the others swing in around it.
+    const ox = d.x - d.hx, oy = d.y - d.hy;
+    for (const n of live.values()) { n.hx += ox; n.hy += oy; n.x1 += ox; n.y1 += oy; }
+    d.fx = d.fy = null;
+    grabbed = null;
+    if (wobble) wobble.alphaTarget(0).alpha(1).restart();
+  }
+  function stopGlide(d) { if (!glide) return; glide.stop(); glide = null; if (d) settleCenter(d); }
+  function startGlide(d) {
+    const now = performance.now();
+    const recent = samples.filter((p) => now - p.t < 100);
+    samples = [];
+    if (REDUCED || recent.length < 2) { settleCenter(d); return; }
+    const a = recent[0], b = recent[recent.length - 1], span = Math.max(b.t - a.t, 16);
+    let vx = (b.x - a.x) / span, vy = (b.y - a.y) / span;
+    const speed = Math.hypot(vx, vy);
+    if (speed < 0.05) { settleCenter(d); return; }
+    const maxV = MAX_SCREEN_V / (webView.k || 1);
+    if (speed > maxV) { vx *= maxV / speed; vy *= maxV / speed; }
+    let last = 0;
+    glide = d3.timer((elapsed) => {
+      const dt = Math.min(elapsed - last, 50); last = elapsed;
+      const decay = Math.exp(-dt / GLIDE_TAU);
+      vx *= decay; vy *= decay;
+      d.fx += vx * dt; d.fy += vy * dt;
+      if (Math.hypot(vx, vy) < 0.01) stopGlide(d);
+    });
+  }
+
   const drag = d3.drag()
     .clickDistance(5)
     .subject((ev, d) => ({ x: d.cx, y: d.cy }))
+    .on("start", (ev, d) => { if (glide && d.type === "center") stopGlide(d); }) // a touch catches it
     .on("drag", (ev, d) => {
       if (anim || d.exiting) return;
       if (!dragging) {
@@ -410,7 +449,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
         wobble.alphaTarget(0.35).restart();
       }
       if (!wobble) return;
-      if (d.type === "center") { d.fx = ev.x; d.fy = ev.y; return; } // the center goes wherever you take it
+      if (d.type === "center") { // the center goes wherever you take it
+        d.fx = ev.x; d.fy = ev.y;
+        samples.push({ t: performance.now(), x: ev.x, y: ev.y });
+        if (samples.length > 12) samples.shift();
+        return;
+      }
       const dx = ev.x - d.hx, dy = ev.y - d.hy, dist = Math.hypot(dx, dy) || 1;
       const k = (STRETCH * Math.tanh(dist / STRETCH)) / dist;
       d.fx = d.hx + dx * k; d.fy = d.hy + dy * k;
@@ -419,11 +463,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       if (!dragging) return;
       dragging = false;
       if (!wobble) return;
-      if (d.type === "center") {
-        // Dropping the center moves the whole map's home; the others swing in and settle around it.
-        const ox = d.x - d.hx, oy = d.y - d.hy;
-        for (const n of live.values()) { n.hx += ox; n.hy += oy; n.x1 += ox; n.y1 += oy; }
-      }
+      if (d.type === "center") { startGlide(d); return; } // coasts, then settles
       d.fx = d.fy = null;
       grabbed = null;
       wobble.alphaTarget(0).alpha(1).restart();
@@ -835,6 +875,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ro.disconnect();
       if (anim) anim.stop();
       if (wobble) wobble.stop();
+      if (glide) glide.stop();
       svg.interrupt();
       clearTimeout(hoverT); clearTimeout(hideT); clearTimeout(holdT); clearTimeout(rz); clearTimeout(toastT);
       card.removeEventListener("pointerenter", onCardEnter);
