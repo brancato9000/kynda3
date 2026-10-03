@@ -329,9 +329,22 @@ export function isOwnWorkInfluence(subjectName, targetCreator, claimType) {
 
 export async function recordFinding({ subjectEntityId, finding, verification, runId }) {
   // Backstop for every write path (harvest gates it first, research doesn't).
-  if (INFLUENCE_TYPES.has(finding.claimType) && finding.targetCreator) {
-    const s = await q("SELECT name FROM entities WHERE id = $1", [subjectEntityId]);
-    if (isOwnWorkInfluence(s.rows[0]?.name, finding.targetCreator, finding.claimType)) return null;
+  if (INFLUENCE_TYPES.has(finding.claimType)) {
+    const s = (await q("SELECT name, wikidata_qid, mbid FROM entities WHERE id = $1", [subjectEntityId])).rows[0] || {};
+    if (finding.targetCreator && isOwnWorkInfluence(s.name, finding.targetCreator, finding.claimType)) return null;
+    // An artistless work can't be compared by name (Bowie → Let's Dance,
+    // 2026-10-02): ask Wikidata for the subject's own works, and fall back to
+    // the subject's own canon when it has no Wikidata ID.
+    const isWork = !finding.targetKind || finding.targetKind === "work";
+    if (!finding.targetCreator && isWork) {
+      const { isOwnWorkByWikidata, normWorkTitle } = await import("./entities/own-works.js");
+      if (await isOwnWorkByWikidata({ qid: s.wikidata_qid, mbid: s.mbid }, finding.targetTitle)) return null;
+      const canon = await q(
+        `SELECT payload FROM mixes WHERE subject_entity_id = $1 ORDER BY created_at DESC LIMIT 1`, [subjectEntityId]);
+      const own = (canon.rows[0]?.payload?.slots || []).filter((sl) => sl.slotType === "essential")
+        .flatMap((sl) => (sl.candidates || []).map((c) => normWorkTitle((c.item || c).title)));
+      if (own.includes(normWorkTitle(finding.targetTitle))) return null;
+    }
   }
   // targetKind-aware (V3-33): artist/movement targets are creator-shaped
   // entities, not works — hardcoding "work" spawned duplicates of every
