@@ -176,10 +176,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     return nodes;
   }
 
+  // Edges run between where the bubbles are drawn — physics position plus the swell's lift.
   function edgePath(a, b) {
-    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const ax = a.cx ?? a.x, ay = (a.cy ?? a.y) + (a.sw || 0), bx = b.cx ?? b.x, by = (b.cy ?? b.y) + (b.sw || 0);
+    const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
     const ux = dx / len, uy = dy / len;
-    const sx = a.x + ux * a.cr, sy = a.y + uy * a.cr, tx = b.x - ux * b.cr, ty = b.y - uy * b.cr;
+    const sx = ax + ux * a.cr, sy = ay + uy * a.cr, tx = bx - ux * b.cr, ty = by - uy * b.cr;
     const bend = Math.min(40, len * 0.12);
     return `M${sx},${sy}Q${(sx + tx) / 2 - uy * bend},${(sy + ty) / 2 + ux * bend} ${tx},${ty}`;
   }
@@ -336,7 +338,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     gNodes.selectAll("g.node").each(function (d) {
       const g = d3.select(this);
       const r = d.ccr;
-      g.attr("transform", `translate(${d.cx},${d.cy}) scale(${Math.max(0, d.cs)})`).style("opacity", d.exiting ? Math.max(0, d.cs) : null);
+      g.attr("transform", `translate(${d.cx},${d.cy + (d.sw || 0)}) scale(${Math.max(0, d.cs)})`).style("opacity", d.exiting ? Math.max(0, d.cs) : null);
       g.select(".disc").attr("r", r);
       g.select(".ring").attr("r", r);
       g.select(".halo").attr("r", d.mix ? r + 4.5 : 0);
@@ -732,8 +734,31 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     dpr = Math.min(2, devicePixelRatio || 1);
     const r = cv.getBoundingClientRect(); cw = r.width; chh = r.height;
     cv.width = Math.round(cw * dpr); cv.height = Math.round(chh * dpr);
-    webFrame(performance.now());
+    webFrame(motionOn ? performance.now() : frozenAt);
   }
+  // The surface both planes ride: two slow travelling waves (z) and one broad swell (band),
+  // in screen coordinates. The swell enters and leaves off-screen, so the loop never pops.
+  function swellFront(t) {
+    const span = cw * 0.8 + chh * 0.6, period = 14000;
+    return -700 + ((t % period) / period) * (span + 1400);
+  }
+  function surface(x, y, t, front) {
+    const z = Math.sin(x * 0.0042 + t * 0.00021) * Math.cos(y * 0.0051 - t * 0.00016) + 0.6 * Math.sin((x + y) * 0.0023 + t * 0.00013);
+    const along = x * 0.8 + y * 0.6 - front;
+    return { z, band: Math.exp(-(along * along) / (2 * 230 * 230)) };
+  }
+  // The map floats on a plane above the web: each bubble takes the surface's lift at its spot on
+  // screen, about half a second behind the web. Drawing only — physics and layout never see it.
+  const SWAY_LAG = 550;
+  function sway(t) {
+    const tt = t - SWAY_LAG, front = swellFront(tt), k = webView.k || 1;
+    for (const n of live.values()) {
+      const sx = webView.x + (n.cx ?? 0) * k, sy = webView.y + (n.cy ?? 0) * k;
+      const { z, band } = surface(sx, sy, tt, front);
+      n.sw = (z * 8 - band * 14) / k; // screen pixels → map units
+    }
+  }
+
   function webFrame(t) {
     if (!cw || !chh) return;
     const k = 1 + (webView.k - 1) * PARALLAX, gap = GAP * k;
@@ -741,14 +766,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const i0 = Math.floor(-ox / gap) - 1, j0 = Math.floor(-oy / gap) - 1;
     const cols = Math.ceil(cw / gap) + 3, rows = Math.ceil(chh / gap) + 3;
     const P = new Array(cols * rows);
-    const span = cw * 0.8 + chh * 0.6, period = 14000;
-    const front = -700 + ((t % period) / period) * (span + 1400); // enters and leaves off-screen, so the loop never pops
+    const front = swellFront(t);
     for (let a = 0; a < cols; a++) for (let b = 0; b < rows; b++) {
       const i = i0 + a, j = j0 + b;
       const x = ox + (i + (hash(i, j, 1) - 0.5) * 0.8) * gap;
       let y = oy + (j + (hash(i, j, 2) - 0.5) * 0.8) * gap;
-      const z = Math.sin(x * 0.0042 + t * 0.00021) * Math.cos(y * 0.0051 - t * 0.00016) + 0.6 * Math.sin((x + y) * 0.0023 + t * 0.00013);
-      const along = x * 0.8 + y * 0.6 - front, band = Math.exp(-(along * along) / (2 * 230 * 230));
+      const { z, band } = surface(x, y, t, front);
       y += z * 8 - band * 14;
       P[a * rows + b] = [x, y, ((z + 1.6) / 3.2) * 0.8 + band * 0.6];
     }
@@ -769,16 +792,37 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ctx.beginPath(); ctx.arc(p[0], p[1], big ? 1.5 : 0.8, 0, 6.283); ctx.fill();
     }
   }
-  let raf = 0, lastWeb = 0;
-  if (REDUCED) zoom.on("zoom.web", () => webFrame(0));
-  else {
-    const loop = (t) => {
-      if (!alive) return;
-      if (!document.hidden && cw && t - lastWeb > 33) { lastWeb = t; webFrame(t); }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+  // Ambient motion (the swell under the web and the map) can be turned off from the menu;
+  // the choice is remembered in this browser. Reduced-motion users start with it off.
+  let raf = 0, lastWeb = 0, frozenAt = 0;
+  let motionOn = !REDUCED;
+  try { const pref = localStorage.getItem("kynda_map_motion"); if (pref) motionOn = pref === "on"; } catch { /* storage blocked */ }
+  const motionBtn = q("motion");
+  function setMotion(on, remember) {
+    motionOn = on;
+    motionBtn.setAttribute("aria-pressed", String(on));
+    if (remember) { try { localStorage.setItem("kynda_map_motion", on ? "on" : "off"); } catch { /* storage blocked */ } }
+    if (!on) {
+      // Freeze where things are: the web holds its last frame, the map settles onto its plane.
+      frozenAt = lastWeb || 0;
+      for (const n of live.values()) n.sw = 0;
+      if (!anim && !wobble) draw();
+      webFrame(frozenAt);
+    }
   }
+  motionBtn.onclick = () => { setMotion(!motionOn, true); setMenu(false); };
+  setMotion(motionOn, false);
+  zoom.on("zoom.web", () => { if (!motionOn) webFrame(frozenAt); }); // a still web still follows pan and zoom
+  const loop = (t) => {
+    if (!alive) return;
+    if (motionOn && !document.hidden && cw && t - lastWeb > 33) {
+      lastWeb = t; webFrame(t);
+      sway(t);
+      if (!anim && !wobble) draw(); // otherwise the running animation draws with these offsets
+    }
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
   resizeWeb();
 
   go(subjectName, { push: false });

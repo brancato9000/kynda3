@@ -61,6 +61,10 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5" /><circle cx="6" cy="7" r="1.3" /><path d="M3 12l3.5-3.5 2.5 2.5 2-2 2.5 2.5" /></svg>
               <span>Pictures</span><i className="check" aria-hidden="true">✓</i>
             </button>
+            <button data-k="motion" aria-pressed="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1.5 9c2-3 3.5-3 5.5 0s3.5 3 5.5 0 2.5-1.5 2.5-1.5" /><path d="M1.5 5.5c2-2 3.5-2 5.5 0" opacity=".5" /></svg>
+              <span>Motion</span><i className="check" aria-hidden="true">✓</i>
+            </button>
             <button data-k="replay">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 8a5 5 0 1 0 1.5-3.5" /><path d="M3 2.5V5h2.5" /></svg>
               <span>Replay the build</span>
