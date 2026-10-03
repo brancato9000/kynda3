@@ -7,8 +7,8 @@
 // prefers-reduced-motion gets a plain crossfade.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { FONTS, BASE } from "../../src/design/tokens.js";
-import Wordmark from "../../src/design/wordmark.jsx";
+import { FONTS, BASE } from "../src/design/tokens.js";
+import Wordmark from "../src/design/wordmark.jsx";
 
 // ?pace=1.5 slows everything by half again (a dial for tuning by eye).
 const PACE = typeof window !== "undefined" ? Number(new URLSearchParams(window.location.search).get("pace")) || 1 : 1;
@@ -288,7 +288,7 @@ export default function DiscoverHome({ categories, total }) {
     const text = q.trim();
     if (!text) return;
     const exact = everyone.find((s) => s.name.toLowerCase() === text.toLowerCase());
-    window.location.href = exact ? `/s/${exact.slug}` : `/?q=${encodeURIComponent(text)}`;
+    window.location.href = exact ? `/s/${exact.slug}` : `/search?q=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -340,6 +340,13 @@ export default function DiscoverHome({ categories, total }) {
           <button type="submit">Trace</button>
         </div>
       </form>
+
+      <footer className="kyn-foot">
+        <span>© 2026 The O&amp;O LLC</span>
+        <a href="/search">Search everything</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </footer>
     </main>
   );
 }
@@ -402,4 +409,6 @@ const CSS = `
 .kyn-thread { margin-top: 44px; padding: 24px; border-radius: 20px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); }
 .kyn-thread input { flex: 1 1 160px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 11px 16px; font-size: 14px; color: #e2e8f0; outline: none; font-family: ${FONTS.body}; }
 .kyn-thread button { padding: 11px 22px; }
+.kyn-foot { margin-top: 48px; padding: 0 4px; font-family: ${FONTS.mono}; font-size: 11px; color: rgba(148,163,184,0.55); line-height: 1.7; display: flex; gap: 16px; flex-wrap: wrap; }
+.kyn-foot a { color: rgba(148,163,184,0.7); text-decoration: none; }
 `;

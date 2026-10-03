@@ -1200,8 +1200,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     }
   }, []);
 
-  // ?q= runs a search on arrival — the /discover home hands off searches
-  // for anything not already in the graph.
+  // ?q= runs a search on arrival — the home (/) hands /search anything
+  // not already in the graph.
   useEffect(() => {
     const text = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("q");
     if (text && !initialSubject) { setQuery(text); runSearch(text); }

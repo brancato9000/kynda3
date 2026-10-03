@@ -906,7 +906,7 @@ export async function listSubjects() {
 }
 
 /**
- * Home cards (/discover, 2026-10-03): every mapped subject with its
+ * Home cards (the home page, 2026-10-03): every mapped subject with its
  * rights-cleared picture and the shape of its graph — how many distinct
  * influences, peers and successors it has.
  */
