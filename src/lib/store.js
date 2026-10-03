@@ -518,11 +518,12 @@ export async function applySuggestedMedia(contribution) {
   if (commonsFile) {
     const fileTitle = `File:${decodeURIComponent(commonsFile).replace(/_/g, " ")}`;
     try {
-      const api = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=960&format=json`;
+      const api = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=960&format=json`;
       const d = await (await fetch(api, { headers: { "User-Agent": "Kynda/3.0 (brancato@gmail.com)" } })).json();
       const ii = Object.values(d.query?.pages || {})[0]?.imageinfo?.[0];
       const license = ii?.extmetadata?.LicenseShortName?.value || "";
-      if (ii && /^(public domain|pd|cc0|cc[ -]by(-sa)?([ -]\d(\.\d)?)?)/i.test(license)) {
+      const { unfitImage } = await import("./pipeline/media.js");
+      if (ii && /^(public domain|pd|cc0|cc[ -]by(-sa)?([ -]\d(\.\d)?)?)/i.test(license) && !unfitImage(ii)) {
         item.imageUrl = ii.thumburl || ii.url;
         item.imagePage = ii.descriptionurl;
         item.imageLicense = license;
@@ -986,7 +987,7 @@ export async function getGraphForSubject(subject) {
   let entity = null;
   if (subject.mbid || subject.wikidata_qid) {
     const r = await q(
-      "SELECT id, name, domain, metadata FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
+      "SELECT id, name, kind, domain, metadata FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
       [subject.mbid || null, subject.wikidata_qid || null]
     );
     entity = r.rows[0] || null;
@@ -997,7 +998,7 @@ export async function getGraphForSubject(subject) {
     // Miseducation work entity, the wrong Paul Taylor. The mapped subject
     // wins, then the best-connected entity, then the oldest.
     const r = await q(
-      `SELECT e.id, e.name, e.domain, e.metadata FROM entities e
+      `SELECT e.id, e.name, e.kind, e.domain, e.metadata FROM entities e
        WHERE lower(e.name) = lower($1)
        ORDER BY EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) DESC,
                 (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) DESC,
@@ -1037,7 +1038,22 @@ export async function getGraphForSubject(subject) {
   // node). Creator-less rows fold into a same-named node only when that
   // resolution is unambiguous.
   const byName = new Map();
+  // Own works stay off the map (Tony, 2026-10-02, option 1): the same artist
+  // appears only in From the Canon, never as a peer or influence (V3-63) —
+  // Kendrick's map carried good kid, m.A.A.d city, Section.80 and his joint
+  // singles as dead-end peers. Joint credits count as his own; his
+  // collaborators reach the map as their own nodes. A work subject's
+  // "self" is its creator (V3-62).
+  const WORK_KINDS = new Set(["work", "film", "tv_show", "book", "release", "recording"]);
+  const selfNorm = normName(WORK_KINDS.has(entity.kind) ? entity.metadata?.creator : entity.name);
+  const ownWork = (row) => {
+    if (!selfNorm || !row.creator || !WORK_KINDS.has(row.kind)) return false;
+    if (normName(row.creator) === selfNorm) return true;
+    return row.creator.split(/\s*(?:,|&|\/|\band\b|\bfeat\.?|\bfeaturing\b|\bwith\b|\bx\b)\s*/i).some((c) => normName(c) === selfNorm);
+  };
+
   for (const row of r.rows) {
+    if (ownWork(row)) continue;
     let role = null;
     if (PREDECESSOR_TYPES.includes(row.claim_type)) role = row.outbound ? "predecessors" : "successors";
     else if (PEER_TYPES.includes(row.claim_type)) role = "peers";
