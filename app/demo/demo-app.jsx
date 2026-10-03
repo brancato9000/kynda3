@@ -5,7 +5,7 @@ import { FONTS, BASE, MIX_SLOT_TYPES, SLOT_COLORS, CONFIDENCE_COLORS, REVEAL_TIM
 import { experienceLinks, STREAM_SERVICES } from "../../src/lib/experience.js";
 import { parseEmbed, InlineMedia, CardImage, PreviewAudio, TimestampReport } from "../../src/design/inline-media.jsx";
 import ArchiveLedger from "../../src/design/archive-ledger.jsx";
-import GraphView from "../graph-view.jsx";
+import InfluenceMap from "../influence-map/influence-map.jsx";
 import { slugify } from "../../src/lib/slug.js";
 import Wordmark from "../../src/design/wordmark.jsx";
 
@@ -829,31 +829,60 @@ const DEMO = {
 export default function DemoApp({ subject, bio, intro, slots, graph }) {
   const [bioDone, setBioDone] = useState(false);
   const [introDone, setIntroDone] = useState(false);
+  // Map first, mix second (2026-10-02), as on the live site. The demo map is sealed: it shows
+  // and explains, but never travels, searches or calls the private API.
+  const [tab, setTab] = useState(graph ? "map" : "mix");
   const subj = { ...subject, bio };
+  const tabs = [...(graph ? [["map", "Map"]] : []), ["mix", "Mix"]];
 
   return (
-    <main style={{ maxWidth: "880px", margin: "0 auto", padding: "56px 24px 120px" }}>
+    <main style={{ maxWidth: "880px", margin: "0 auto", padding: "0 24px 120px" }}>
       <style>{`
         @keyframes kyndaPulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
         @keyframes kyndaSpin { to { transform: rotate(360deg) } }
         input::placeholder, textarea::placeholder { color: rgba(148,163,184,0.4) }
         @keyframes kyndaRise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+        .dbar { position: sticky; top: 0; z-index: 20; width: 100vw; margin-left: calc(50% - 50vw); height: 48px; box-sizing: border-box;
+          display: flex; align-items: center; gap: 18px; padding: 0 max(16px, calc(50vw - 600px));
+          background: rgba(15,16,22,0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .dbar .who { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+        .dbar .mark { font-family: ${FONTS.display}; font-size: 22px; color: #e2e8f0; line-height: 1; flex: none; }
+        .dbar .name { font-family: ${FONTS.display}; font-size: 19px; color: ${BASE.gold}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .dbar .dot { color: rgba(148,163,184,0.4); flex: none; }
+        .dbar .tabs { display: flex; height: 100%; flex: none; margin-left: auto; }
+        .dbar .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; height: 100%; padding: 0 12px;
+          font-family: ${FONTS.mono}; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(148,163,184,0.6); }
+        .dbar .tabs button[aria-selected="true"] { color: ${BASE.gold}; border-bottom-color: ${BASE.gold}; }
+        .dbar .tabs button:hover { color: #e2e8f0; }
+        .dbar .tabs button:focus-visible { outline: 2px solid ${BASE.gold}; outline-offset: -2px; }
+        @media (max-width: 640px) { .dbar { gap: 8px; } .dbar .mark { font-size: 19px; } .dbar .name { font-size: 16px; } .dbar .tabs button { padding: 0 8px; font-size: 10.5px; } }
       `}</style>
 
-      <header style={{ marginBottom: "36px" }}>
-        {/* Plain text, deliberately: nothing on this page links anywhere. */}
-        <h1 style={{ fontFamily: FONTS.display, fontSize: "52px", fontWeight: 400, margin: 0, lineHeight: 1 }}><Wordmark /></h1>
-        <div style={{ fontFamily: FONTS.display, fontStyle: "italic", color: BASE.gold, fontSize: "15px", margin: "6px 0 10px" }}>
-          (KIN-duh): Old Norse for “to light up”
+      {/* Plain text, deliberately: nothing on this page links anywhere. */}
+      <div className="dbar">
+        <div className="who">
+          <span className="mark"><Wordmark /></span>
+          <span className="dot" aria-hidden="true">·</span>
+          <span className="name" title={subject.name}>{subject.name}</span>
         </div>
-        <p style={{ fontSize: "14px", color: "rgba(148,163,184,0.8)", margin: 0, lineHeight: 1.6 }}>
-          Discover the connections between your favorite works of culture, and the creators behind them.
-        </p>
-      </header>
+        <div className="tabs" role="tablist">
+          {tabs.map(([id, label]) => (
+            <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>
+          ))}
+        </div>
+      </div>
 
-      <SubjectCard subject={subj} onBioDone={() => setBioDone(true)} />
+      {graph && (
+        <div style={{ display: tab === "map" ? "block" : "none", marginBottom: "36px" }}>
+          <InfluenceMap sealed subjectName={subject.name} subjectBio={bio} graph={graph} />
+        </div>
+      )}
 
-      {intro && (
+      <div style={{ marginTop: tab === "map" ? 0 : "28px" }}>
+        <SubjectCard subject={subj} onBioDone={() => setBioDone(true)} />
+      </div>
+
+      {tab === "mix" && intro && (
         <div style={{ marginBottom: "28px" }}>
           <div style={{ fontFamily: FONTS.mono, fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(148,163,184,0.55)", marginBottom: "8px", opacity: bioDone ? 1 : 0, transition: "opacity 0.5s" }}>
             About this mix
@@ -867,22 +896,15 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gap: "16px" }}>
-        {slots.map((slot, i) => slot?.candidates?.length > 0 && (
-          <SlotCard key={i} slot={slot} index={i} subject={subj} />
-        ))}
-      </div>
-
-      <ArchiveLedger slots={slots} graph={graph} />
-
-      {graph && (
-        <section style={{ marginTop: "44px" }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: BASE.gold, marginBottom: "14px" }}>
-            The influence graph
-          </div>
-          <GraphView data={graph} subjectName={subject.name} onNavigate={() => {}} />
-        </section>
+      {tab === "mix" && (
+        <div style={{ display: "grid", gap: "16px" }}>
+          {slots.map((slot, i) => slot?.candidates?.length > 0 && (
+            <SlotCard key={i} slot={slot} index={i} subject={subj} />
+          ))}
+        </div>
       )}
+
+      {tab === "mix" && <ArchiveLedger slots={slots} graph={graph} />}
 
       <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7, display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <span>Copyright 2026 Kynda LLC</span>

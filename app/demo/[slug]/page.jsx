@@ -9,7 +9,7 @@ import { headers } from "next/headers";
 import { createHash } from "node:crypto";
 import DemoApp from "../demo-app.jsx";
 import { q } from "../../../src/lib/db.js";
-import { listSubjects, getStoredMix, getGraphForSubject, getCitationsForItem, getCardMedia } from "../../../src/lib/store.js";
+import { listSubjects, getStoredMix, getGraphForSubject, getCitationsForItem, getCardMedia, mixCardsForMap } from "../../../src/lib/store.js";
 import { slugify } from "../../../src/lib/slug.js";
 import { getIntroExtract } from "../../../src/lib/entities/wikipedia.js";
 
@@ -138,7 +138,8 @@ export default async function DemoPage({ params, searchParams }) {
         : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null}
       intro={mix.intro || subject.intro || ""}
       slots={hydrated}
-      graph={graph}
+      // The map headlines the mix's picks, with the same hydrated card art the Mix tab shows.
+      graph={graph ? { ...graph, mix: mixCardsForMap({ slots: hydrated }) } : null}
     />
   );
 }

@@ -18,7 +18,7 @@ async function fetchGraph(name) {
   return res.json();
 }
 
-export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, status, waiting = true }) {
+export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSubject, status, waiting = true, sealed = false }) {
   const rootRef = useRef(null);
   const openRef = useRef(onOpenSubject);
   openRef.current = onOpenSubject;
@@ -26,15 +26,16 @@ export default function InfluenceMap({ subjectName, subjectBio, graph, onOpenSub
   useEffect(() => {
     if (!rootRef.current || !graph) return;
     // Admin mode: signed in at /admin in this browser → curate pictures right on the map.
+    // Sealed maps (public demo pages) never travel and never show admin controls.
     let adminToken = null;
-    try { adminToken = localStorage.getItem("kynda_admin_token"); } catch { /* storage blocked */ }
+    if (!sealed) { try { adminToken = localStorage.getItem("kynda_admin_token"); } catch { /* storage blocked */ } }
     const map = createInfluenceMap(rootRef.current, {
       adminToken,
       subjectName,
       subjectBio,
       initialGraph: graph,
-      fetchGraph,
-      onOpenSubject: (name) => openRef.current?.(name),
+      fetchGraph: sealed ? null : fetchGraph,
+      onOpenSubject: onOpenSubject && !sealed ? (name) => openRef.current?.(name) : null,
     });
     return () => map.destroy();
     // A new subject is a new map; the same subject's graph object refreshing is not.
