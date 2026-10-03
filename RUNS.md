@@ -126,3 +126,19 @@ Audit of all 236 maps found five on the wrong subject. Removed: Psycho punk band
 ## 2026-10-02 — Map-image backfill, full graph (V3-84)
 
 `scripts/map-images.mjs` over every entity on the influence map, zero model calls, three shards in parallel (~3 h). Earlier the same day: Vonnegut's map (23 applied / 11 queued / 3 nothing) and the 300 busiest entities (193 / 90 / 17). **Full run, 9,638 entities:** 1,635 applied automatically, 6,356 queued for the curator, 1,647 with nothing in any free source, 0 errors. Automatic picks by identity route: 857 works through the V3-83 gates, 647 people/institutions by role match, 110 by a connected-name mention, 21 by Wikidata ID. Spot-checks: one wrong pick found and removed in the 300-run (a music entity named "Psycho" took the 1960 film poster via a self-mention; self-mentions no longer count). Sampled role and mention picks in the full run were right, including two that looked wrong at a glance (Morse's *The House of Representatives* painting; the Ziegfeld Follies revue). The queue is triaged through the "By category" bulk tab in /admin/images; "Unclear" (photo-search-only candidates) is the long tail.
+
+## 2026-10-03 — Steve Reich and Ornette Coleman maps (~$1.50)
+
+Two of the fifteen remaining music pivots, built by Wikidata ID (Q262791, Q208797) through `scripts/build-batch.mjs`. Steve Reich 24 cards (12 verified, 17 documented); Ornette Coleman 23 cards (17 verified, 14 documented). Cost: $1.52 recorded at the last checkpoint of `build-state-2026-10-03T14-25-40-752Z.json`. Thirteen pivots remain.
+
+## 2026-10-03 — The 750 build: Part A + two samples per Part B/C category ($81.27)
+
+Tony-approved, cap raised to $90. Opus 5 maps by batch (48k ceiling after the first 21 truncations), GPT-6 Sol reading and interviews via OpenRouter (V3-86/87). State: `build-state-2026-10-03T06-02-54-666Z.json`.
+
+**Outcome:** 226 of 227 subjects mapped. The 12 names written with parentheses ("Nirvana (band)", "Risk (game)") found no match and were re-entered by plain name or Wikidata ID (Richard Wright Q319820, Maria Lani Q17199018, Risk Q12541); all twelve mapped. James Brown, Marvin Gaye and Joni Mitchell were already mapped (pivot pilot). **Keith Haring's map failed** (truncated twice) — rebuild on its own. **Five maps saved with research cut short** by malformed model output: Bob Dylan, Patti Smith and Amy Winehouse (Wikipedia reading), Malcolm X and Arcade Fire (interviews) — their maps are live; a research top-up would add citations.
+
+**Cost:** $81.27 for the whole build, ≈ $0.36/subject — roughly $53 OpenRouter (reading + interviews) and $28 Anthropic (maps, incl. full-price live retries of the truncated ones), from the per-subject split measured mid-build. The OpenRouter Kynda key showed $55 lifetime on 2026-10-03.
+
+**Fields:** `fix-build-fields.mjs --apply` pinned 28 more fields and fixed 15 kinds after the run (80 + 28 fields, 28 + 15 kinds in all); the build now pins fields itself.
+
+**Representation** (people only, Wikidata sex or gender; 190 people of 226 subjects, the rest bands, works and ideas; John Ford not resolved): **41% women overall.** Music 28/70 (40%), film 11/31 (35%), art 7/20 (35%), literature 7/19 (37%), theater 4/9, comedy 4/9, television 3/7, fashion 2/6 (33%), dance 4/6, architecture 3/5, design 1/3 (33%). Below the 32% floor: cars 0/1, a single-person sample — the full Part B/C runs must hold the floor per field.
