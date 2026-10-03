@@ -2,36 +2,41 @@
 
 The single ranked list. Status marks: **open**, **waiting** (on Tony or a third party), **parked** (deliberately shelved), **done** (kept one cycle for the record, then removed). Decisions go in DECISIONS.md, run records in RUNS.md, card fixes in CORRECTIONS.md.
 
-Last full review: 2026-09-16.
+Last full review: 2026-10-03.
 
 ## Now — Brown follow-through
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 1 | Eric Gershman intro | waiting | Sydney's first step after the Sept 14 call. Tony's outbound. |
-| 2 | Brown → Anthropic proposal | open | Sydney's thread: the influence graph on the open curriculum. Needs a one-page shape; pilot-shapes doc v1 is the starting material. |
-| 3 | Data-ownership position | open | Who owns claims a Brown scholar curates. Contributor-attributed CC-BY on Kynda infrastructure is the defensible default; Tony to confirm. |
-| 4 | Berg consent | waiting | His page and the named-cut experiment stay private until he says yes. Tony's outbound. |
+| 1 | Eric Gershman intro | scheduled | Tony and Meagan speak with and demo for Gershman on Monday 2026-10-05. The demo journeys verified 2026-10-02 (Miguel → Prince → James Brown → Fela Kuti → Talking Heads → Radiohead; Bowie → *Metropolis* → Kraftwerk → Björk → Mitski → Jeff Buckley → Radiohead) are in RUNS.md / DECISIONS V3-85. |
+| 2 | Brown → Anthropic proposal | waiting | Depends on the Brown conversation moving forward (Gershman first). Sydney's thread: the influence graph on the open curriculum; pilot-shapes doc v1 is the starting material. |
+| 3 | Data-ownership position | waiting | Depends on the Brown conversation. Who owns claims a Brown scholar curates; contributor-attributed CC-BY on Kynda infrastructure is the defensible default. |
+| 4 | Berg consent | waiting | Berg is out of the country; resumes on his return. His page and the named-cut experiment stay private until he says yes. Tony's outbound. |
 
 ## Next — correctness and cost
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 5 | Full image re-verification sweep under V3-83 gates | open | Zero model cost, ~30 min of Wikipedia API. The Sept 14 sweep only caught the album-class version of the Method Man collision. |
-| 6 | Curator queue: 257 pending | open | Triage session or an auto-expiry rule for the low-confidence tail. |
+| 29 | Finish the 750 | open | Part A (206) + two samples per Part B/C category built 2026-10-03 (RUNS). Remaining: full Part B and Part C runs, then a second mining pass that holds the 32% women floor. New fields (food, cars, games, perfume, cocktails, businesses) currently file under "ideas"; they need their own field labels before they can be browse rows. Measured cost ~$0.45/subject (maps ran long). |
+| 30 | Works with no maker recorded | open | 2026-10-03 evidence-anchored Wikidata sweep (`scripts/experiments/stamp-work-creators.mjs`): 39 makers stamped, 10 ambiguous and 4 held back for review, 348 unmatched of 401. Unmatched ones still leave map dead ends; many are artists misfiled as works (next item). |
+| 31 | Field labels and misfiled kinds | open | ~7,550 entities have no field; ~5,300 are kind "other"; artists are filed as works (Chaplin, Picasso, AC/DC). Only ~470 of the no-field ones carry a Wikidata ID, which the existing classifier needs. Skews bridge rankings, own-work checks and travel. **Done 2026-10-03 for the new build:** 80 subjects pinned to their build-list field, 28 kinds fixed; the build now pins fields itself. **Blocker found:** `classify-entities.mjs` overwrites curated fields of people (would have moved Warhol to film, Copland to dance) — fix it before running it on the rest. |
+| 5 | Full image re-verification sweep under V3-83 gates | open | Zero model cost, ~30 min of Wikipedia API. Partly done 2026-10-02: a *shape* sweep of all 2,082 stored pictures stripped 33 wordmarks/banners (CORRECTIONS). The identity sweep is still open. |
+| 6 | Reader-contribution queue: 258 pending | open | Triage session or an auto-expiry rule for the low-confidence tail. |
+| 6b | Map-picture queue: 6,469 subjects with candidates | open | From the map-image backfill (V3-84). Curate in place (admin overlay) or via `/admin/images`; consider auto-expiry for low-score tails. |
 | 7 | Soft-floor / blended architecture entry | open | Ratified by the Beyoncé experiment (graph as floor, model may refuse weak pool tails) — never written into DECISIONS. |
 | 8 | Song-level verification (MusicBrainz recordings) | open | The album-shaped bias, quantified twice. Biggest single accuracy upgrade on the board. |
 | 9 | `anti_influence`, `sample`, `toured_with` claim types | open | Taxonomy gaps exposed by the Beyoncé import. Schema work, cheap. |
-| 10 | Wave script passes its category to disambiguation | open | The two Paul Taylors are the case (V3-82). |
-| 11 | Batch API for corpus builds | open | 50% off for non-interactive work: top-ups, gap pages, harvests. Takes the Opus corpus from ~$210 to ~$105. |
-| 12 | Prompt caching in `generateMix` | open | System prompt is rebuilt per request. Free win on any model; pennies at current volume. |
-| 13 | Fable 5.1 golden-set eval | open | Three subjects, ~$1. Same price as Fable 5; only a quality gain would justify it over Opus 5. |
+| 10 | Wave script passes its category to disambiguation | done | Wrong-subject repair (V3-89, merged to main 2026-10-03): full-text and category-hinted search; rosters may carry a Wikidata ID column. |
+| 11 | Batch API for corpus builds | done | `scripts/build-batch.mjs` (V3-87). Map output ceiling raised 32k → 48k (batch and live retry) on 2026-10-03: 21 of 227 maps were cut off and redone at full price. |
+| 12 | Prompt caching in `generateMix` | parked | ~93% of a map's cost is output (V3-87), so caching moves almost nothing. |
+| 13 | Fable 5.1 golden-set eval | parked | Superseded: Tony chose Opus 5 for maps after the blind side-by-side (V3-87). |
 | 14 | Rebuild `listening-map-build.mjs` | open | Lost with the session scratchpad. Walk v3, Rising, household subtraction, polyglot noise filter — spec in RUNS.md 2026-08-19. |
 
 ## Later — product
 
 | # | Item | Status | Notes |
 |---|---|---|---|
+| 28 | Influence map: card overlays move to a side panel | done | **Tony, 2026-10-03, designed in another thread and merged the same day (branch `claude/side-panel`): cards dock right on desktop, bottom on narrow screens, resizable.** The evidence and bio cards currently float over the graph and cover what you're exploring; they should live in a side panel beside the map instead. |
 | 15 | Listening-map productization | open | "Upload your Spotify export" as a real lane. Family test proved the value; post-Brown. |
 | 16 | Layer-2 Beyoncé classifier sweep | open | $50–75, golden set ready. |
 | 17 | Reader-testimony curator lane | open | Eyewitness accounts as a labeled lane distinct from citations (the Clayden comments idea). |
