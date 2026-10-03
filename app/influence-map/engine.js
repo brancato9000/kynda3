@@ -266,7 +266,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const enter = sel.enter().append("g").attr("class", "node").attr("tabindex", 0);
     enter.append("circle").attr("class", "halo");
     enter.append("circle").attr("class", "disc");
-    enter.append("image").attr("class", "pic").attr("clip-path", `url(#${clipId})`).attr("preserveAspectRatio", "xMidYMid slice");
+    // Cropped from the top: a tall picture keeps what matters most — a portrait's head, a jacket's or poster's title.
+    enter.append("image").attr("class", "pic").attr("clip-path", `url(#${clipId})`).attr("preserveAspectRatio", "xMidYMin slice");
     enter.append("text").attr("class", "initials");
     enter.append("circle").attr("class", "ring");
     enter.append("text").attr("class", "label");

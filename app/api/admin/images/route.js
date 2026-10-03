@@ -3,12 +3,16 @@
 // in-page admin overlay on the influence map.
 //   GET  ?entity_id=…         one entity: current picture, pending candidates, context
 //   GET  ?view=queue|auto     entities awaiting review | recent automatic picks to spot-check
+//   GET  ?view=categories     queue counts by category (from each entity's best candidate)
+//   GET  ?view=bulk&category= one category, best candidate per entity, strong matches first
+//   POST { action: approve_many, items: [{ entity_id, candidate_id }] } | { action: none_many, entity_ids }
 //   POST { action: find | approve | use_url | none | remove, entity_id, candidate_id?, url?, query? }
 
 import { q } from "../../../../src/lib/db.js";
 import { rateLimit, clientIp } from "../../../../src/lib/guard.js";
 import {
   findEntityImage, applyEntityImage, clearEntityImage, saveCandidates, candidateFromCommonsUrl, entityContext,
+  rankForBulk, BULK_CATEGORIES,
 } from "../../../../src/lib/pipeline/map-images.js";
 
 export const maxDuration = 60;
@@ -24,6 +28,27 @@ const current = (m) => (m?.image_url ? {
   url: m.image_url, page: m.image_page, license: m.image_license, credit: m.image_credit,
   source: m.image_source, identity: m.image_identity, status: m.image_status,
 } : null);
+
+// Every entity still awaiting a picture, with its best candidate and category (bulk review).
+async function pendingRanked() {
+  const rows = (await q(
+    `SELECT ic.id, ic.entity_id, ic.source, ic.url, ic.page, ic.license, ic.credit, ic.title, ic.description, ic.fair_use, ic.score,
+            e.name, e.kind, e.domain, e.metadata->>'creator' AS creator
+     FROM image_candidates ic JOIN entities e ON e.id = ic.entity_id
+     WHERE ic.status = 'pending' AND e.metadata->>'image_url' IS NULL
+       AND COALESCE(e.metadata->>'image_status', '') NOT IN ('none', 'approved')`)).rows;
+  const byEntity = new Map();
+  for (const r of rows) {
+    if (!byEntity.has(r.entity_id)) byEntity.set(r.entity_id, { entity: { id: r.entity_id, name: r.name, kind: r.kind, domain: r.domain, creator: r.creator }, cands: [] });
+    byEntity.get(r.entity_id).cands.push(r);
+  }
+  const out = [];
+  for (const { entity, cands } of byEntity.values()) {
+    const ranked = rankForBulk(entity, cands);
+    if (ranked) out.push({ entity, ...ranked });
+  }
+  return out;
+}
 
 async function entityView(id) {
   const e = (await q(`SELECT id, name, kind, domain, metadata FROM entities WHERE id = $1`, [id])).rows[0];
@@ -50,6 +75,19 @@ export async function GET(req) {
       return view ? Response.json(view) : Response.json({ error: "entity not found" }, { status: 404 });
     }
     const view = url.searchParams.get("view") || "queue";
+    if (view === "categories") {
+      const all = await pendingRanked();
+      const counts = Object.fromEntries(BULK_CATEGORIES.map((c) => [c, { total: 0, strong: 0 }]));
+      for (const it of all) { counts[it.category].total += 1; if (it.strong) counts[it.category].strong += 1; }
+      return Response.json({ categories: BULK_CATEGORIES.map((name) => ({ name, ...counts[name] })).filter((c) => c.total), total: all.length });
+    }
+    if (view === "bulk") {
+      const category = url.searchParams.get("category");
+      const offset = Math.max(0, parseInt(url.searchParams.get("offset") || "0", 10));
+      const items = (await pendingRanked()).filter((it) => it.category === category)
+        .sort((a, b) => (b.strong - a.strong) || a.entity.name.localeCompare(b.entity.name));
+      return Response.json({ category, total: items.length, items: items.slice(offset, offset + 60) });
+    }
     const limit = Math.min(60, parseInt(url.searchParams.get("limit") || "30", 10));
     if (view === "auto") {
       const rows = (await q(
@@ -82,7 +120,28 @@ export async function GET(req) {
 export async function POST(req) {
   if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const { action, entity_id, candidate_id, url, query } = await req.json();
+    const { action, entity_id, candidate_id, url, query, items, entity_ids } = await req.json();
+    // Bulk review: approve a page of checked picks, or mark a page of entities as having no good picture.
+    if (action === "approve_many") {
+      let applied = 0;
+      for (const it of (items || []).slice(0, 100)) {
+        const c = (await q(`SELECT * FROM image_candidates WHERE id = $1 AND entity_id = $2 AND status = 'pending'`, [it.candidate_id, it.entity_id])).rows[0];
+        if (!c) continue;
+        await applyEntityImage(it.entity_id, { ...c, identity: "curator (bulk)" }, "approved");
+        await q(`UPDATE image_candidates SET status = CASE WHEN id = $2 THEN 'approved' ELSE 'rejected' END WHERE entity_id = $1 AND status = 'pending'`, [it.entity_id, c.id]);
+        applied += 1;
+      }
+      return Response.json({ applied });
+    }
+    if (action === "none_many") {
+      let marked = 0;
+      for (const id of (entity_ids || []).slice(0, 100)) {
+        await clearEntityImage(id, { none: true });
+        await q(`UPDATE image_candidates SET status = 'rejected' WHERE entity_id = $1 AND status = 'pending'`, [id]);
+        marked += 1;
+      }
+      return Response.json({ marked });
+    }
     if (!entity_id || !["find", "approve", "use_url", "none", "remove"].includes(action)) {
       return Response.json({ error: "entity_id and action (find|approve|use_url|none|remove) required" }, { status: 400 });
     }

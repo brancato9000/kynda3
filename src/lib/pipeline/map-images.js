@@ -374,3 +374,59 @@ export async function enrichMapImages(subjectName, { deadline, limit = 80, onlyS
   }
   return out;
 }
+
+// ── Bulk review (2026-10-02): the queue grouped by category, best candidate per entity,
+// pre-checked only when it is unmistakably the entity's own picture. ──
+const CATEGORY_RULES = [
+  ["Albums & songs", (d) => /\b(album|EP|single|song|soundtrack|mixtape|score)\b/i.test(d)],
+  ["Films", (d, work) => work && /\b(film|movie|documentary)\b/i.test(d)],
+  ["TV", (d, work) => work && /\b(television|TV series|sitcom|miniseries|talk show|special)\b/i.test(d)],
+  ["Books & plays", (d, work) => work && /\b(novel|novella|book|poem|poetry|play|short story|essay|memoir|comic)\b/i.test(d)],
+  ["Artworks", (d, work) => work && /\b(painting|sculpture|fresco|mural|artwork|print)\b/i.test(d)],
+  ["Bands & groups", (d) => /\b(band|group|duo|trio|quartet|orchestra|ensemble|choir)\b/i.test(d)],
+  ["Writers", (d) => /\b(novelist|writer|author|poet|essayist|journalist|critic|playwright|dramatist|humorist|satirist|columnist)\b/i.test(d)],
+  ["Film & TV people", (d) => /\b(director|filmmaker|actor|actress|screenwriter|producer|comedian|presenter|animator)\b/i.test(d)],
+  ["Musicians", (d) => /\b(musician|singer|songwriter|composer|conductor|pianist|guitarist|drummer|rapper|saxophonist|trumpeter|violinist|dj)\b/i.test(d)],
+  ["Visual artists", (d) => /\b(painter|sculptor|artist|illustrator|cartoonist|photographer|designer|architect)\b/i.test(d)],
+  ["Scholars & thinkers", (d) => /\b(philosopher|historian|anthropologist|sociologist|economist|psychologist|scientist|physicist|theologian|mathematician|scholar|professor|linguist)\b/i.test(d)],
+  ["Universities & schools", (d) => /\b(university|college|school|academy|institute|conservatory|workshop)\b/i.test(d)],
+  ["Companies, labels & publications", (d) => /\b(company|corporation|conglomerate|label|studio|publisher|magazine|newspaper|network|brand)\b/i.test(d)],
+  ["Public figures", (d) => /\b(politician|president|activist|leader|king|queen|emperor|general|lawyer|businessman|businesswoman)\b/i.test(d)],
+  ["Places & buildings", (d) => /\b(city|town|building|museum|theatre|theater|venue|church|cathedral|park|street|neighbourhood|neighborhood|region)\b/i.test(d)],
+];
+const plain = (s) => nrm(s).replace(/\s*\(.*?\)\s*/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+const LISTY = /\b(list of|discography|bibliography|filmography|videography|works of|in popular culture)\b/i;
+const PERSONISH = /(\(\s*(born|died|b\.|d\.|c\.)?\s*\d{3,4}|\b(born|died)\b|\b\d{4}\s*[–-]\s*\d{4}\b)/i;
+const WORKISH = /\b(film|novel|album|song|single|book|painting|play|series|poem|opera|symphony|sculpture|soundtrack|EP|novella|story|show)\b/i;
+const AGENT_RULES = CATEGORY_RULES.slice(5); // the people/organization/place categories
+
+/**
+ * Rank one entity's pending candidates for bulk review. Returns { pick, alts, strong, category }.
+ * strong = an exact-name Wikipedia/Wikidata article whose description fits what the entity is
+ * (a person or organization for agents, a work for works) and isn't a list or a work about them,
+ * or an exact-title album cover.
+ */
+export function rankForBulk(entity, cands) {
+  const work = entity.kind === "work";
+  const name = plain(entity.name);
+  const judged = cands.map((c) => {
+    const desc = `${c.description || ""}`;
+    const exact = plain(c.title) === name;
+    const wiki = c.source === "wikidata" || c.source === "enwiki";
+    const listy = LISTY.test(c.title || "") || LISTY.test(desc);
+    const workAboutThem = !work && /\b\d{4} (film|novel|album|song|book|play)\b/i.test(desc);
+    const fits = work ? WORKISH.test(desc) : (PERSONISH.test(desc) || AGENT_RULES.some(([, test]) => test(desc, false))) && !workAboutThem;
+    const strong = (wiki && exact && !listy && fits) || (c.source === "coverart" && exact);
+    const rank = (strong ? 100 : 0) + (wiki && exact ? 30 : 0) + (c.source === "coverart" ? 20 : 0) + (wiki ? 10 : 0)
+      + (nrm(c.title).includes(name.split(" ").pop() || "") ? 5 : 0) + (listy || workAboutThem ? -40 : 0) + (c.score || 0);
+    return { c, strong, rank };
+  }).sort((a, b) => b.rank - a.rank);
+  const top = judged[0];
+  if (!top) return null;
+  const d = `${top.c.description || ""}`;
+  const describes = top.c.source === "wikidata" || top.c.source === "enwiki" || top.c.source === "coverart";
+  const category = top.c.source === "coverart" ? "Albums & songs"
+    : (describes && (CATEGORY_RULES.find(([, test]) => test(d, work)) || [])[0]) || "Unclear";
+  return { pick: top.c, alts: judged.slice(1, 4).map((j) => j.c), strong: top.strong, category };
+}
+export const BULK_CATEGORIES = [...CATEGORY_RULES.map(([n]) => n), "Unclear"];
