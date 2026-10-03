@@ -123,7 +123,9 @@ const CSS = `
   --display: 'Instrument Serif', Georgia, serif; --body: 'DM Sans', system-ui, sans-serif; --mono: 'DM Mono', ui-monospace, Menlo, monospace;
   position: relative; width: 100vw; margin-left: calc(50% - 50vw);
   /* Everything under the 48px subject bar: the map is the page. */
-  height: max(420px, calc(100svh - 48px)); display: flex; flex-direction: column;
+  /* dvh: the screen's current visible height. svh (the smallest it gets) left the page below peeking
+     in under the map on phones, reading as the bio card overlapping the panel. svh is the fallback. */
+  height: max(420px, calc(100svh - 48px)); height: max(420px, calc(100dvh - 48px)); display: flex; flex-direction: column;
   background: var(--bg); color: var(--fg); font-family: var(--body);
   border-bottom: 1px solid var(--line);
 }
@@ -319,7 +321,7 @@ html:has(.kmap) { overflow-x: clip; }
   .kmap.has-trail .legend { bottom: 56px; }
 }
 @media (max-width: 640px) {
-  .kmap { height: max(380px, calc(100svh - 48px)); }
+  .kmap { height: max(380px, calc(100svh - 48px)); height: max(380px, calc(100dvh - 48px)); }
   .kmap .keybtn { display: inline-flex; }
   .kmap .legend { display: none; flex-direction: column; gap: 8px; left: 16px; bottom: 56px; font-size: 0.62rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; z-index: 2; pointer-events: auto; }
   .kmap .legend.open { display: flex; }
