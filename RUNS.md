@@ -142,3 +142,5 @@ Tony-approved, cap raised to $90. Opus 5 maps by batch (48k ceiling after the fi
 **Fields:** `fix-build-fields.mjs --apply` pinned 28 more fields and fixed 15 kinds after the run (80 + 28 fields, 28 + 15 kinds in all); the build now pins fields itself.
 
 **Representation** (people only, Wikidata sex or gender; 190 people of 226 subjects, the rest bands, works and ideas; John Ford not resolved): **41% women overall.** Music 28/70 (40%), film 11/31 (35%), art 7/20 (35%), literature 7/19 (37%), theater 4/9, comedy 4/9, television 3/7, fashion 2/6 (33%), dance 4/6, architecture 3/5, design 1/3 (33%). Below the 32% floor: cars 0/1, a single-person sample — the full Part B/C runs must hold the floor per field.
+
+**Top-up, same day ($0.87, Tony-approved):** Keith Haring mapped (24 cards, 15 verified, 10 documented); Malcolm X and Arcade Fire research completed. Bob Dylan, Patti Smith and Amy Winehouse failed the Wikipedia-reading step again with the same invalid-output error (BACKLOG #36). Whole build now $82.14, 227 of 227 subjects mapped.
