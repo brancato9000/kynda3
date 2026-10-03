@@ -914,7 +914,7 @@ export default function DemoApp({ subject, bio, intro, slots, graph }) {
       {tab === "mix" && <ArchiveLedger slots={slots} graph={graph} />}
 
       <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7, display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-        <span>Copyright 2026 Kynda LLC</span>
+        <span>© 2026 The O&amp;O LLC</span>
         <a href="/demo/about" style={{ color: "rgba(148,163,184,0.65)", textDecoration: "none" }}>
           the influence graph so far ↗
         </a>

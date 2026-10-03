@@ -1663,7 +1663,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
 
           {tab === "mix" && done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
-              Copyright 2026 Kynda LLC
+              © 2026 The O&amp;O LLC
             </div>
           )}
         </>
