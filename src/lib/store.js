@@ -262,7 +262,7 @@ export async function enqueueTopSearched(limit = 20) {
   return r.rowCount;
 }
 
-export async function enqueueSubjectByName(name) {
+export async function enqueueSubjectByName(name, { by = "manual" } = {}) {
   if (!dbConfigured()) return null;
   // Same resolution as the map (V3-85): mapped first, then best-connected.
   const e = await q(
@@ -272,6 +272,16 @@ export async function enqueueSubjectByName(name) {
     [name]
   );
   if (!e.rows[0]) return null;
+  // A visitor's request (V3-88 button) never overrides Tony's own entry or
+  // re-opens a finished one; it only records that the stop was asked for.
+  if (by === "visitor") {
+    await q(
+      `INSERT INTO research_queue (entity_id, priority, enqueued_by) VALUES ($1, 50, 'visitor')
+       ON CONFLICT (entity_id) DO UPDATE SET updated_at = now()`,
+      [e.rows[0].id]
+    );
+    return e.rows[0].id;
+  }
   await q(
     `INSERT INTO research_queue (entity_id, priority, enqueued_by) VALUES ($1, 100, 'manual')
      ON CONFLICT (entity_id) DO UPDATE SET status = 'queued', priority = 100, updated_at = now()`,

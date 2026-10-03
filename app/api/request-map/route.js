@@ -13,7 +13,7 @@ export async function POST(req) {
     }
     const { name } = await req.json();
     if (!name) return Response.json({ error: "name required" }, { status: 400 });
-    const id = await enqueueSubjectByName(name);
+    const id = await enqueueSubjectByName(name, { by: "visitor" });
     if (!id) return Response.json({ error: "Kynda doesn't know that subject yet." }, { status: 404 });
     return Response.json({ ok: true });
   } catch (err) {

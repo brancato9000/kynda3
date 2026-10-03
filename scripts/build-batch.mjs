@@ -34,6 +34,7 @@ const { buildMixRequest, finishMix, generateMix, verifyAttribution, verifyConnec
 const { persistMixRun, recordSearch, getStoredMix } = await import("../src/lib/store.js");
 const { harvestSubjectWikipedia } = await import("../src/lib/pipeline/harvest.js");
 const { researchOne, interviewsLikely, wikidataYears } = await import("../src/lib/pipeline/research.js");
+const { pinRosterField } = await import("../src/lib/pipeline/roster-field.js");
 const { usageSummary, submitBatch, collectBatch, READER, RESEARCHER } = await import("../src/lib/ai/anthropic.js");
 const { recordSpend } = await import("../src/lib/spend.js");
 const { q, getPool } = await import("../src/lib/db.js");
@@ -99,7 +100,9 @@ if (args.includes("--resolve-only")) {
 if (pending.length && !state.batchId) {
   console.log(`\n═══ 2. Submitting ${pending.length} maps to the batch API (${MIX_MODEL}) ═══`);
   state.batchId = await submitBatch(pending.map((s) => ({
-    id: s.id, model: MIX_MODEL, effort: "low", maxTokens: 32_000, // billed on use; 16k truncated Hokusai
+    // Billed on use. 16k truncated Hokusai; 32k still cut off 21 of 227 in the
+    // 2026-10-03 build, each then redone at full price — 48k lets them finish.
+    id: s.id, model: MIX_MODEL, effort: "low", maxTokens: 48_000,
     ...buildMixRequest(s.subject, s.members),
   })));
   console.log(`  batch ${state.batchId} submitted`);
@@ -123,7 +126,8 @@ for (const s of state.subjects.filter((x) => x.status === "map_failed")) {
   if (spent() >= BUDGET) break;
   try {
     console.log(`  ↻ ${s.name}: generating live`);
-    s.liveMix = await generateMix(s.subject, s.members);
+    // Same ceiling as the batch: the live default (16k) re-truncated maps the batch had cut off at 32k.
+    s.liveMix = await generateMix(s.subject, s.members, { maxTokens: 48_000 });
     s.status = "mapped";
   } catch (err) { s.error = err.message; console.log(`  ✗ ${s.name}: ${err.message}`); }
   save(state);
@@ -155,6 +159,7 @@ for (const s of state.subjects) {
         slots.push({ slotType: slot.slotType, candidates: cands });
       }
       await persistMixRun({ subject: s.subject, rawQuery: s.name, intro: mix.intro, slots });
+      await pinRosterField(s.subject, s.category).catch(() => null); // the build list's field wins over the guess
       Object.assign(s, { status: "saved", cards: c.candidates, verified: c.verified, documented: c.documented });
       delete s.mix; delete s.liveMix;
       save(state);

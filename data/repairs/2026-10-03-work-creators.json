@@ -1,0 +1,384 @@
+[
+ {
+  "id": "02357d56-3fbf-4ea1-a031-f033c98c7c00",
+  "work": "In the Mood for Love",
+  "ambiguous": [
+   "Tony Leung",
+   "Wong Kar-wai"
+  ]
+ },
+ {
+  "id": "0398c162-281a-49a8-aae1-56cdad66ac51",
+  "work": "Raw Power",
+  "maker": "The Stooges",
+  "makerQid": "Q208767",
+  "item": "Q918613"
+ },
+ {
+  "id": "0b014e4b-5f92-4479-bdf9-320e8361b1cf",
+  "work": "Carmen Jones",
+  "maker": "Otto Preminger",
+  "makerQid": "Q52997",
+  "item": "Q1043659"
+ },
+ {
+  "id": "0bb873d3-9b23-4482-9b80-f87cf0ee6def",
+  "work": "The Godfather",
+  "ambiguous": [
+   "Mario Puzo",
+   "Francis Ford Coppola"
+  ]
+ },
+ {
+  "id": "10b81bdf-1a1f-4071-b1db-a94e77067197",
+  "work": "Homeric Hymns",
+  "maker": "Homer",
+  "makerQid": "Q6691",
+  "item": "Q329342"
+ },
+ {
+  "id": "173ef245-a849-49f9-8e2b-60115093483d",
+  "work": "60 Minutes",
+  "maker": "Don Hewitt",
+  "makerQid": "Q561963",
+  "item": "Q247869"
+ },
+ {
+  "id": "1acb4f93-b914-4bbc-b7b0-124b8f8aad89",
+  "work": "Breakin'",
+  "maker": "Joel Silberg",
+  "makerQid": "Q7014940",
+  "item": "Q903895"
+ },
+ {
+  "id": "1de80614-06fa-4b1c-90e2-5c77af8c6376",
+  "work": "The Wizard of Oz",
+  "maker": "Victor Fleming",
+  "makerQid": "Q62503",
+  "item": "Q193695"
+ },
+ {
+  "id": "1fad88f5-8d90-4268-bccd-cf636e3617b6",
+  "work": "Jesus of Nazareth",
+  "maker": "Franco Zeffirelli",
+  "makerQid": "Q53040",
+  "item": "Q470572"
+ },
+ {
+  "id": "221d9451-6274-4005-8c43-b18fead1932c",
+  "work": "Stormy Weather",
+  "ambiguous": [
+   "Ethel Waters",
+   "Judy Garland"
+  ]
+ },
+ {
+  "id": "24291f03-bd9f-4726-86e4-4c6049da9fba",
+  "work": "Charlie Brooker's Screenwipe",
+  "maker": "Charlie Brooker",
+  "makerQid": "Q2960837",
+  "item": "Q5084590"
+ },
+ {
+  "id": "27f198cb-be3c-4442-8201-e6f30f0ee2dc",
+  "work": "Blow Out",
+  "maker": "Brian De Palma",
+  "makerQid": "Q189526",
+  "item": "Q885488"
+ },
+ {
+  "id": "2f07f158-7128-4d06-a7ed-ec6ad747fb64",
+  "work": "An American in Paris",
+  "maker": "George Gershwin",
+  "makerQid": "Q123829",
+  "item": "Q21480307"
+ },
+ {
+  "id": "42136287-1186-4494-9ec9-7f68bf9be68d",
+  "work": "The Color of Pomegranates",
+  "maker": "Sergei Parajanov",
+  "makerQid": "Q311311",
+  "item": "Q2235380"
+ },
+ {
+  "id": "4a820430-2fa6-445b-bff2-3502a5e795a7",
+  "work": "True Romance",
+  "maker": "Tony Scott",
+  "makerQid": "Q193648",
+  "item": "Q1127709"
+ },
+ {
+  "id": "4c67c6b3-332d-446d-a84f-33baf4a32c2d",
+  "work": "Total Recall",
+  "maker": "Paul Verhoeven",
+  "makerQid": "Q129079",
+  "item": "Q222018"
+ },
+ {
+  "id": "4d1dd309-6223-49aa-b5dc-19fb32d1351c",
+  "work": "The Twelve Chairs",
+  "ambiguous": [
+   "Ilya Ilf",
+   "Yevgeny Petrov",
+   "Mel Brooks"
+  ]
+ },
+ {
+  "id": "59bda2b6-126a-427d-b771-53018f89ebf5",
+  "work": "Newswipe with Charlie Brooker",
+  "maker": "Charlie Brooker",
+  "makerQid": "Q2960837",
+  "item": "Q7019914"
+ },
+ {
+  "id": "6a20fe90-9cbb-4b71-9e45-37842b36bc32",
+  "work": "Villa Madama",
+  "maker": "Raphael",
+  "makerQid": "Q5597",
+  "item": "Q1267485"
+ },
+ {
+  "id": "6fd9598b-1f46-4a7c-b1e5-b325283f3ad1",
+  "work": "The West Wing",
+  "ambiguous": [
+   "Alex Graves",
+   "Aaron Sorkin"
+  ]
+ },
+ {
+  "id": "78bfc174-bef5-4f04-bfb0-7731c398d07e",
+  "work": "Almost Famous",
+  "maker": "Cameron Crowe",
+  "makerQid": "Q318287",
+  "item": "Q726294"
+ },
+ {
+  "id": "7e82306d-3051-4d48-87ef-4d239e36e6ff",
+  "work": "Gone with the Wind",
+  "maker": "Margaret Mitchell",
+  "makerQid": "Q173540",
+  "item": "Q2870"
+ },
+ {
+  "id": "7fda8c56-b597-4ba8-9ebc-b9ed1e7f0a21",
+  "work": "Truth or Consequences",
+  "maker": "Ralph Edwards",
+  "makerQid": "Q708784",
+  "item": "Q1248138"
+ },
+ {
+  "id": "896e7def-d959-4f1a-84b5-a6678e9d1362",
+  "work": "Wildcat",
+  "maker": "N. Richard Nash",
+  "makerQid": "Q446404",
+  "item": "Q8000992"
+ },
+ {
+  "id": "8c3815ea-044a-469a-bedd-9eb728dc5cba",
+  "work": "Bride of Frankenstein",
+  "maker": "James Whale",
+  "makerQid": "Q381831",
+  "item": "Q875904"
+ },
+ {
+  "id": "9224015c-34f2-474a-b7b6-c2b366f42b25",
+  "work": "The Muppet Show",
+  "maker": "Jim Henson",
+  "makerQid": "Q191037",
+  "item": "Q2120540"
+ },
+ {
+  "id": "9e5f5b49-d1bd-431d-bf8a-60f76e168545",
+  "work": "Hello, Dolly!",
+  "ambiguous": [
+   "Jerry Herman",
+   "Louis Armstrong"
+  ]
+ },
+ {
+  "id": "a02d64cb-0b1c-4d53-acb7-f81c72a66252",
+  "work": "Say Anything...",
+  "maker": "Cameron Crowe",
+  "makerQid": "Q318287",
+  "item": "Q963713"
+ },
+ {
+  "id": "a6092c94-b738-41d9-b33f-125bd1009679",
+  "work": "Bicycle Wheel",
+  "maker": "Marcel Duchamp",
+  "makerQid": "Q5912",
+  "item": "Q164918"
+ },
+ {
+  "id": "a8114af8-28d4-4ca0-b686-18ff30f5066a",
+  "work": "The Diary of Anne Frank",
+  "maker": "Anne Frank",
+  "makerQid": "Q4583",
+  "item": "Q6911"
+ },
+ {
+  "id": "acf2ec99-064e-4498-87d1-90e5b12b73b5",
+  "work": "The Firebird",
+  "maker": "Igor Stravinsky",
+  "makerQid": "Q7314",
+  "item": "Q844790"
+ },
+ {
+  "id": "af7d6849-ece6-44a6-9045-f230ba1d6aaa",
+  "work": "Crystal Palace",
+  "maker": "Joseph Paxton",
+  "makerQid": "Q318372",
+  "item": "Q202902"
+ },
+ {
+  "id": "b1094a16-88ac-4a94-bab8-da2e55f1e258",
+  "work": "Merely Mary Ann",
+  "maker": "Israel Zangwill",
+  "makerQid": "Q113681",
+  "item": "Q101034188"
+ },
+ {
+  "id": "b1846245-691e-4b24-8ff7-3627ca9772aa",
+  "work": "Halloween",
+  "maker": "John Carpenter",
+  "makerQid": "Q95008",
+  "item": "Q221103"
+ },
+ {
+  "id": "b39d8796-102a-4e3f-a41b-f8f42ecf87ea",
+  "work": "The Americans",
+  "maker": "Joe Weisberg",
+  "makerQid": "Q6212937",
+  "item": "Q498438"
+ },
+ {
+  "id": "b557bdec-9abb-4984-804d-a850e3ffba22",
+  "work": "Maple Leaf Rag",
+  "maker": "Scott Joplin",
+  "makerQid": "Q191499",
+  "item": "Q277463"
+ },
+ {
+  "id": "b6c98f07-638e-4359-9fec-b502388dc175",
+  "work": "Short Cuts",
+  "maker": "Robert Altman",
+  "makerQid": "Q55163",
+  "item": "Q605226"
+ },
+ {
+  "id": "b8266f2b-4377-4ca0-a216-044cb55e2ccc",
+  "work": "Concerto in F",
+  "maker": "George Gershwin",
+  "makerQid": "Q123829",
+  "item": "Q1317658"
+ },
+ {
+  "id": "d93c3ffb-569f-406f-ab13-dc411e9a87f4",
+  "work": "The Melting Pot",
+  "maker": "Israel Zangwill",
+  "makerQid": "Q113681",
+  "item": "Q16997553"
+ },
+ {
+  "id": "d965c9e1-3111-4767-a450-81adc69b9b5f",
+  "work": "The Covered Wagon",
+  "maker": "James Cruze",
+  "makerQid": "Q723738",
+  "item": "Q587925"
+ },
+ {
+  "id": "d9c0ac05-83c1-43d3-92ff-789fa1282c55",
+  "work": "American Gangster",
+  "maker": "Ridley Scott",
+  "makerQid": "Q56005",
+  "item": "Q270351"
+ },
+ {
+  "id": "dab4f87c-2c88-42ae-9480-80b585157d06",
+  "work": "The Glass Bead Game",
+  "maker": "Hermann Hesse",
+  "makerQid": "Q25973",
+  "item": "Q836841"
+ },
+ {
+  "id": "e0ef381b-101d-4a34-bf85-a035be4a34aa",
+  "work": "Fiddler on the Roof",
+  "ambiguous": [
+   "Jerry Bock",
+   "Sheldon Harnick"
+  ]
+ },
+ {
+  "id": "e329dbfa-fa38-45fe-b91e-1e4b70cff30d",
+  "work": "I Vitelloni",
+  "maker": "Federico Fellini",
+  "makerQid": "Q7371",
+  "item": "Q18399"
+ },
+ {
+  "id": "e77acfe2-f73f-445e-8e67-9c9097dbc562",
+  "work": "The Good Lord Bird",
+  "maker": "James McBride",
+  "makerQid": "Q2892695",
+  "item": "Q16982299"
+ },
+ {
+  "id": "ed9d5c07-4994-411f-9584-408cf703c35d",
+  "work": "The Day the Earth Stood Still",
+  "maker": "Robert Wise",
+  "makerQid": "Q59821",
+  "item": "Q425992"
+ },
+ {
+  "id": "f25d7cdc-f56e-4933-91f2-ca593643200d",
+  "work": "Dune",
+  "ambiguous": [
+   "Frank Herbert",
+   "Denis Villeneuve"
+  ]
+ },
+ {
+  "id": "f2ac99ea-4749-4598-b2a1-87b9abff564c",
+  "work": "Spellbound",
+  "ambiguous": [
+   "Alfred Hitchcock",
+   "Ten"
+  ]
+ },
+ {
+  "id": "f4e470bb-4358-4680-b477-82320ec719e0",
+  "work": "The Great Dictator",
+  "maker": "Charlie Chaplin",
+  "makerQid": "Q882",
+  "item": "Q109116"
+ },
+ {
+  "id": "f93ce218-f6b3-4af6-ac0a-1fe0c26ff3df",
+  "work": "NYPD Blue",
+  "ambiguous": [
+   "Steven Bochco",
+   "David Milch"
+  ]
+ },
+ {
+  "id": "f9fe28b0-ef82-45a8-8656-6450ae4e0317",
+  "work": "Apocalypse Now",
+  "maker": "Francis Ford Coppola",
+  "makerQid": "Q56094",
+  "item": "Q182692"
+ },
+ {
+  "id": "faf37c36-277d-41e3-b447-04815387f539",
+  "work": "The Fall Guy",
+  "maker": "David Leitch",
+  "makerQid": "Q5236475",
+  "item": "Q113671585"
+ },
+ {
+  "id": "fb727524-81c3-4f33-a71d-a1292ff006df",
+  "work": "Doctor Who",
+  "maker": "Sydney Newman",
+  "makerQid": "Q1280214",
+  "item": "Q34316"
+ }
+]
