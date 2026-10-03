@@ -48,7 +48,7 @@ try {
   const enqueueTop = flag("--enqueue-top");
   const batch = flag("--batch");
   const modelFlag = flag("--model");
-  const model = modelFlag === "sonnet" ? "claude-sonnet-5" : modelFlag === "fable" ? "claude-fable-5" : modelFlag || undefined;
+  const model = modelFlag === "sol" ? "openai/gpt-6-sol" : modelFlag === "sonnet" ? "claude-sonnet-5" : modelFlag === "fable" ? "claude-fable-5" : modelFlag || undefined;
 
   if (enqueueTop) {
     const n = await enqueueTopSearched(parseInt(enqueueTop, 10) || 20);

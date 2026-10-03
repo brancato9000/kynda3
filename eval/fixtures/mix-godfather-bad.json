@@ -1,0 +1,8 @@
+{
+  "_note": "Work-subject scoring fixture (V3-62). Expected violations: 4 — item 0: self_reference + self_reference_title (Coppola's own sequel as an outside influence); item 1: essential_not_subject (canon card by someone else); item 2: self_card (the film recommends itself).",
+  "items": [
+    { "slotType": "titan", "title": "The Godfather Part II", "creator": "Francis Ford Coppola", "confidence": "likely" },
+    { "slotType": "essential", "title": "Mean Streets", "creator": "Martin Scorsese", "confidence": "likely" },
+    { "slotType": "essential", "title": "The Godfather", "creator": "Francis Ford Coppola", "confidence": "likely" }
+  ]
+}

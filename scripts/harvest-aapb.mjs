@@ -41,8 +41,8 @@ const flag = (name) => {
   const i = args.indexOf(name);
   return i === -1 ? null : args[i + 1];
 };
-const MODELS = { sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
-const model = MODELS[flag("--model")] || MODELS.sonnet;
+const MODELS = { sol: "openai/gpt-6-sol", sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
+const model = MODELS[flag("--model")] || (process.env.OPENROUTER_API_KEY ? MODELS.sol : MODELS.sonnet);
 const itemsPer = parseInt(flag("--items"), 10) || 3;
 
 const UA = { "User-Agent": "Mozilla/5.0 (compatible; Kynda/3.0; brancato@gmail.com)" };

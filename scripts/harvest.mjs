@@ -29,8 +29,8 @@ const flag = (name) => {
   const i = args.indexOf(name);
   return i === -1 ? null : args[i + 1];
 };
-const MODELS = { sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
-const model = MODELS[flag("--model")] || MODELS.sonnet;
+const MODELS = { sol: "openai/gpt-6-sol", sonnet: "claude-sonnet-5", fable: "claude-fable-5", haiku: "claude-haiku-4-5" };
+const model = MODELS[flag("--model")] || (process.env.OPENROUTER_API_KEY ? MODELS.sol : MODELS.sonnet);
 
 try {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set");

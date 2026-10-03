@@ -2,6 +2,7 @@
   "subject": "Breaking Bad",
   "domain": "television",
   "kind": "tv_show",
+  "creator": "Vince Gilligan",
   "canonical": { "mbid": null, "wikidata_qid": "Q1079" },
   "decoys": [
     { "name": "Breaking Bad (Better Call Saul S6E11)", "note": "Episode of the spin-off with the same title — real entity", "wikidata_qid": "Q113390660" }

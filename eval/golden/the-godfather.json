@@ -2,6 +2,7 @@
   "subject": "The Godfather",
   "domain": "film",
   "kind": "film",
+  "creator": "Francis Ford Coppola",
   "canonical": { "mbid": null, "wikidata_qid": "Q47703" },
   "decoys": [
     { "name": "The Godfather (2006 video game)", "note": "Open-world action game — same name, real entity", "wikidata_qid": "Q1139696" },

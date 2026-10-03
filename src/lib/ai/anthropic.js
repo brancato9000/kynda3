@@ -78,13 +78,14 @@ export function usageSummary() {
       ((usage.cache_creation_input_tokens || 0) / 1e6) * inP * 1.25 +
       ((usage.output_tokens || 0) / 1e6) * outP +
       (usage.server_tool_use?.web_search_requests || 0) * WEB_SEARCH_PER_CALL;
-    cost += c;
+    const charged = usage.batch ? c * 0.5 : c; // Message Batches bill at 50%
+    cost += charged;
     byLabel[label] = byLabel[label] || { calls: 0, in: 0, out: 0, searches: 0, usd: 0 };
     byLabel[label].calls += 1;
     byLabel[label].in += (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0);
     byLabel[label].out += usage.output_tokens || 0;
     byLabel[label].searches += usage.server_tool_use?.web_search_requests || 0;
-    byLabel[label].usd += c;
+    byLabel[label].usd += charged;
   }
   return { totalUsd: cost, byLabel };
 }
@@ -148,7 +149,64 @@ export async function callHaiku({ system, user, schema, maxTokens = 2000 }) {
   return extractJson(response);
 }
 
+/**
+ * Message Batches (V3-86): the same structured-output request as callModel,
+ * submitted in bulk at half price. Results usually land within the hour
+ * (24h max). requests: [{ id, model, system, user, schema, maxTokens, effort }]
+ * — ids must match ^[A-Za-z0-9_-]{1,64}$.
+ */
+export async function submitBatch(requests) {
+  const batch = await client().messages.batches.create({
+    requests: requests.map((r) => ({
+      custom_id: r.id,
+      params: {
+        model: r.model,
+        max_tokens: r.maxTokens || 16_000,
+        system: r.system,
+        output_config: {
+          ...(r.effort ? { effort: r.effort } : {}),
+          format: { type: "json_schema", schema: r.schema },
+        },
+        messages: [{ role: "user", content: r.user }],
+      },
+    })),
+  });
+  return batch.id;
+}
+
+/** Poll until the batch ends; returns Map(id → { ok, value } | { ok: false, error }). */
+export async function collectBatch(batchId, { label = "batch", pollMs = 60_000, log = console.log } = {}) {
+  for (;;) {
+    const b = await client().messages.batches.retrieve(batchId);
+    if (b.processing_status === "ended") break;
+    const n = b.request_counts;
+    log(`  batch ${batchId}: ${n.processing} processing, ${n.succeeded} done, ${n.errored} errored`);
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+  const out = new Map();
+  for await (const r of await client().messages.batches.results(batchId)) {
+    if (r.result.type !== "succeeded") {
+      out.set(r.custom_id, { ok: false, error: r.result.type === "errored" ? r.result.error?.error?.message || r.result.error?.type || "errored" : r.result.type });
+      continue;
+    }
+    const msg = r.result.message;
+    recordUsage(label, msg.model, { ...msg.usage, batch: true });
+    try { out.set(r.custom_id, { ok: true, value: extractJson(msg) }); }
+    catch (err) { out.set(r.custom_id, { ok: false, error: err.message }); }
+  }
+  return out;
+}
+
 export const SONNET = "claude-sonnet-5";
+// Production readers (V3-85, Tony 2026-10-02): GPT-6 Sol via OpenRouter for
+// Wikipedia/source reading and interview hunting — 100% quote-wall pass and
+// roughly 2–7× the confirmed yield of Sonnet 5/5.5 at the same list price
+// (reports/open-model-compare-2026-09-22.md, -09-29.md). Maps stay on Opus 5.
+// Without an OpenRouter key (e.g. a deploy that lacks it) both fall back to
+// Sonnet 5 rather than failing; read at call time, after env is loaded.
+const SOL = "openai/gpt-6-sol";
+export const READER = () => (process.env.OPENROUTER_API_KEY ? SOL : SONNET);
+export const RESEARCHER = () => (process.env.OPENROUTER_API_KEY ? SOL : SONNET);
 
 /**
  * Single structured-output call on an arbitrary model (no tools, no loops) —
