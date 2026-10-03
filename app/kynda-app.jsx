@@ -1090,7 +1090,7 @@ function SubjectBar({ subject, tabs, tab, onTab, composing, query, setQuery, onS
 
 // ─── App (V3-28: reusable — home renders it bare; /s/[slug] subject
 // pages render it with an initialSubject that boots the mix) ──────────
-export default function KyndaApp({ initialSubject = null, indexedSubjects = [], initialCut = null }) {
+export default function KyndaApp({ initialSubject = null, indexedSubjects = [], initialCut = null, ledger = null }) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState("idle"); // idle | searching | choosing | mixing
   const [error, setError] = useState(null);
@@ -1661,6 +1661,10 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
           )}
         </>
       )}
+
+      {/* The page as text (server-rendered, BACKLOG #32): shown while the
+          center is the page's own subject, hidden once the map travels on. */}
+      {ledger && (!subject || subject.name === initialSubject?.name) && ledger}
     </main>
   );
 }

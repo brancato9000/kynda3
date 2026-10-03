@@ -11,6 +11,7 @@
 import { generateMix, verifyAttribution, verifyConnection, loadSubjectArticle, loadSubjectMembers, getCachedMix, cacheMix, rankCandidates } from "../../../src/lib/pipeline/mix.js";
 import { persistMixRun, getStoredMix, getCitationsForItem, getCardMedia, getMixFingerprint } from "../../../src/lib/store.js";
 import { rateLimit, clientIp, isAdmin, generationCapReached, CAPACITY_MESSAGE, UNAVAILABLE_MESSAGE } from "../../../src/lib/guard.js";
+import { privateSubjectBlocked } from "../../../src/lib/site.js";
 import { harvestSubjectWikipedia } from "../../../src/lib/pipeline/harvest.js";
 import { enrichStoredMixMedia } from "../../../src/lib/pipeline/media.js";
 import { enrichMapImages } from "../../../src/lib/pipeline/map-images.js";
@@ -34,6 +35,10 @@ export async function POST(req) {
   const { subject, cut, cachedOnly } = await req.json().catch(() => ({}));
   if (!subject?.name) {
     return Response.json({ error: "subject required" }, { status: 400 });
+  }
+  // An open site never serves a private subject (src/lib/site.js): it reads as unmapped.
+  if (privateSubjectBlocked(req, subject.name)) {
+    return new Response(JSON.stringify({ type: "none" }) + "\n", { headers: { "Content-Type": "application/x-ndjson" } });
   }
 
   const encoder = new TextEncoder();

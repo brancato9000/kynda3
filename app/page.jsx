@@ -5,8 +5,11 @@
 import KyndaApp from "./kynda-app.jsx";
 import { listSubjects } from "../src/lib/store.js";
 import { slugify } from "../src/lib/slug.js";
+import { siteOpen, isPrivateSubject } from "../src/lib/site.js";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = { alternates: { canonical: "/" } };
 
 export default async function Page() {
   // Modern-canon gate (V3-57, Tony's call): six 18th/19th-century architects
@@ -30,6 +33,7 @@ export default async function Page() {
     const subjects = await listSubjects();
     indexedSubjects = subjects
       .filter(browsable)
+      .filter((s) => !(siteOpen() && isPrivateSubject(s.name)))
       .map((s) => ({
         name: s.name,
         domain: s.domain || "other",

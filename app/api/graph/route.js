@@ -7,6 +7,7 @@
 
 import { getGraphForSubject, getStoredMix, mixCardsForMap } from "../../../src/lib/store.js";
 import { rateLimit, clientIp } from "../../../src/lib/guard.js";
+import { privateSubjectBlocked, isPrivateSubject, siteOpen } from "../../../src/lib/site.js";
 
 export const maxDuration = 30;
 
@@ -17,12 +18,16 @@ export async function POST(req) {
     }
     const { subject } = await req.json();
     if (!subject?.name) return Response.json({ error: "subject required" }, { status: 400 });
+    // An open site never serves a private subject's map (src/lib/site.js).
+    if (privateSubjectBlocked(req, subject.name)) return Response.json({ error: "no graph yet — the map grows as this subject is explored" }, { status: 404 });
     const graph = await getGraphForSubject(subject);
     if (!graph) return Response.json({ error: "no graph yet — the map grows as this subject is explored" }, { status: 404 });
     const stored = await getStoredMix(subject).catch(() => null);
     // Whether this center has a saved mix: the page shows it, or (unmapped) a note — never a fresh generation.
     graph.hasMix = !!stored;
     graph.mix = mixCardsForMap(stored);
+    // A private subject's bubble on someone else's map stays (a public fact), but it doesn't travel as mapped.
+    if (siteOpen()) for (const g of ["predecessors", "peers", "successors"]) for (const n of graph[g] || []) if (n.mapped && isPrivateSubject(n.name)) n.mapped = false;
     return Response.json(graph);
   } catch (err) {
     console.error("graph error:", err);

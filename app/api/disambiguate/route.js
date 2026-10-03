@@ -1,5 +1,6 @@
 import { disambiguate } from "../../../src/lib/pipeline/disambiguate.js";
 import { recordSearch, findMappedSubjectByName } from "../../../src/lib/store.js";
+import { privateSubjectBlocked } from "../../../src/lib/site.js";
 import { getIntroExtract } from "../../../src/lib/entities/wikipedia.js";
 import { rateLimit, clientIp, searchCapReached, CAPACITY_MESSAGE } from "../../../src/lib/guard.js";
 
@@ -18,7 +19,7 @@ export async function POST(req) {
     // Mapped first (Tony, 2026-10-03): a search that names a mapped subject
     // opens it straight from the graph — no model call, no search-cap hit.
     const mapped = await findMappedSubjectByName(query).catch(() => null);
-    if (mapped) {
+    if (mapped && !privateSubjectBlocked(req, mapped.name)) {
       const bio = await getIntroExtract({ name: mapped.name, qid: mapped.wikidata_qid }).catch(() => null);
       const subject = {
         name: mapped.name, kind: mapped.kind, domain: mapped.domain, description: "", yearsActive: null,
