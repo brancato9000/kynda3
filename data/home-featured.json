@@ -13,14 +13,14 @@
       "Julia Morgan"
     ],
     "art": [
-      "Pablo Picasso",
-      "Frida Kahlo",
       "Andy Warhol",
+      "Frida Kahlo",
+      "Pablo Picasso",
       "Salvador Dalí",
       "Henri Matisse",
-      "Joan Miró",
-      "Diego Rivera",
-      "Georgia O'Keeffe"
+      "Keith Haring",
+      "Robert Rauschenberg",
+      "Tatyana Grosman"
     ],
     "comedy": [
       "Joan Rivers",
@@ -30,7 +30,7 @@
       "Bob Hope",
       "Dave Chappelle",
       "Eddie Murphy",
-      "Phyllis Diller"
+      "Sarah Silverman"
     ],
     "dance": [
       "Martha Graham",
@@ -38,42 +38,40 @@
       "Merce Cunningham",
       "George Balanchine",
       "Anna Pavlova",
+      "Sergei Diaghilev",
       "Isadora Duncan",
-      "Jerome Robbins",
-      "Fred Astaire"
+      "Jerome Robbins"
     ],
     "design": [
       "Syd Mead",
-      "Bauhaus",
-      "Isamu Noguchi",
-      "Chanel No. 5"
+      "Isamu Noguchi"
     ],
     "fashion": [
+      "Suzy Parker",
       "Halston",
       "Coco Chanel",
       "Vivienne Westwood",
       "Elsa Schiaparelli",
+      "Alexander McQueen",
       "Paul Poiret",
-      "Marc Jacobs",
-      "Virgil Abloh",
-      "Issey Miyake"
+      "Marc Jacobs"
     ],
     "film": [
-      "Suzy Parker",
       "Quentin Tarantino",
+      "Zsa Zsa Gabor",
       "Alfred Hitchcock",
+      "Sofia Coppola",
       "D. W. Griffith",
+      "Martin Scorsese",
       "Vera Miles",
-      "Sergei Eisenstein",
-      "Jean Cocteau",
-      "Bette Davis"
+      "Jean Cocteau"
     ],
     "literature": [
       "William Faulkner",
       "Ursula K. Le Guin",
       "William Shakespeare",
+      "James Baldwin",
       "Ernest Hemingway",
-      "Marcel Proust",
       "Gertrude Stein",
       "Zora Neale Hurston",
       "Toni Morrison"
@@ -85,30 +83,31 @@
       "Duke Ellington",
       "John Mayer",
       "Tony Bennett",
-      "Björk",
-      "Phoebe Bridgers"
+      "Madonna",
+      "Björk"
     ],
     "other": [
-      "Zsa Zsa Gabor",
-      "Katharine Cornell",
-      "Celia Cruz",
-      "Sarah Silverman",
-      "Lucille Ball",
+      "Bauhaus",
       "Hannah Arendt",
       "Thomas Aquinas",
-      "Plato"
+      "Plato",
+      "Malcolm X",
+      "Ada Lovelace",
+      "Marie Curie",
+      "Voltaire"
     ],
     "television": [
-      "Greg Daniels",
+      "Saturday Night Live",
       "Mindy Kaling",
+      "Greg Daniels",
       "The Sopranos",
       "The Simpsons",
       "Ricky Gervais",
       "Matt Groening",
-      "Trey Parker",
       "Julie Plec"
     ],
     "theater": [
+      "Katharine Cornell",
       "Sarah Bernhardt",
       "Leonard Bernstein",
       "Stephen Sondheim",

@@ -24,7 +24,7 @@ const { q, getPool } = await import("../src/lib/db.js");
 
 const DOMAINS = new Set([
   "music", "film", "television", "literature", "art", "design",
-  "architecture", "theater", "dance", "fashion", "other",
+  "architecture", "theater", "dance", "fashion", "comedy", "other",
 ]);
 
 const args = process.argv.slice(2);
