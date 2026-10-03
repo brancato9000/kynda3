@@ -1016,6 +1016,8 @@ export async function getGraphForSubject(subject) {
     `SELECT c.claim_type, c.summary, (c.subject_id = $1) AS outbound,
             e.id AS entity_id, e.metadata AS meta,
             e.name, e.kind, e.domain, e.year_start, e.metadata->>'creator' AS creator,
+            EXISTS (SELECT 1 FROM entities me JOIN mixes m ON m.subject_entity_id = me.id
+                    WHERE lower(me.name) = lower(e.name)) AS mapped,
             COALESCE((SELECT json_agg(json_build_object(
                 'quote', p.quote, 'url', p.source_url, 'publication', p.publication,
                 'speaker', p.speaker, 'degree', p.source_degree,
@@ -1075,6 +1077,7 @@ export async function getGraphForSubject(subject) {
       existing.image = existing.image || mapImage(row.meta);
       existing.creator = existing.creator || row.creator || null;
       existing.year = existing.year || (row.year_start ? String(row.year_start) : null);
+      existing.mapped = existing.mapped || !!row.mapped;
     } else {
       byName.set(key, {
         id: row.entity_id,
@@ -1084,6 +1087,9 @@ export async function getGraphForSubject(subject) {
         kind: row.kind,
         domain: row.domain,
         year: row.year_start ? String(row.year_start) : null,
+        // A mapped subject in its own right (Metropolis, Blade Runner): the map
+        // travels to the work itself, not hands it off to its maker.
+        mapped: !!row.mapped,
         claimType: row.claim_type,
         summary: row.summary,
         role,

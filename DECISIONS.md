@@ -478,6 +478,8 @@ member_of Paul Taylor"); moved as-is, direction untouched.
 
 **Known gap, guarded not fixed:** short, crowded names can resolve wrong because the search only returns the top few database hits ("Psycho" → a Boston punk band, "Tetris" → the Game Boy edition; both predate this change). The build has `--resolve-only`: match every name, stop, review, drop bad rows, `--resume`. Rosters should carry disambiguating names ("Psycho (1960 film)").
 
+**Second amendment (same day):** a work that is itself a mapped subject opens its own map; only unmapped works hand off to their maker. The first version sent every work to its maker, so tapping *Metropolis* on Bowie's map landed on Fritz Lang's five links instead of the film's 43-node map — and every mapped film, album or show (*Blade Runner*, *Psycho*, *The Godfather*) became unreachable by tapping. The graph read now marks nodes that are mapped subjects (`mapped`, by name, so a sparse duplicate still counts).
+
 ## V3-87 — Wrong-subject repair: full-text and category-hinted search; rosters may name the Wikidata ID (2026-10-02)
 
 **Context:** an audit of all 236 maps found five on the wrong subject: Psycho (Movies) → a Boston punk band; "Lucile" (Fashion) → the actress Lucile Watson, not Lady Duff-Gordon; "Jesus of Nazareth" (Ideas) → Zeffirelli's 1977 miniseries; "Fargo" (Shows) → the 1996 film; a "John meyer" typo search → an obscure Dutch guitarist. Two failure shapes: the famous item never reached the candidate list (Psycho, Lucile, Tetris — Wikidata's label search ranks journals and fly families above Hitchcock), or it was listed but the ranker didn't know which list the name came from (Jesus, Fargo).
