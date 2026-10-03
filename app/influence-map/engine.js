@@ -274,7 +274,6 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   }
   // Re-frame the map as it stands (after the panel opens, closes or is resized).
   const homes = () => [...live.values()].filter((n) => !n.exiting).map((n) => ({ x: n.x1 ?? n.cx, y: n.y1 ?? n.cy, r: n.r || n.ccr || 20 }));
-  function refit() { frameDefault("glide"); }
   // The resting view. Wide screens: the whole map in the visible area. Narrow screens (Tony,
   // 2026-10-03): the whole map is too small to read on a phone, so the map spans the visible
   // width, centered on the subject, and you pan up and down — after the build has played zoomed out.
@@ -317,11 +316,12 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (!panelOpen) return { x: 0, y: 0, w, h };
     return panelSide() === "right" ? { x: 0, y: 0, w: Math.max(200, w - panelW), h } : { x: 0, y: 0, w, h: Math.max(160, h - panelH) };
   }
+  // Opening, closing or resizing the panel never moves the map (Tony, 2026-10-03): the camera
+  // moves only when you drag or zoom, press ◎, or travel. ◎ frames whatever space is visible.
   function setPanel(open) {
     if (open === panelOpen) return;
     panelOpen = open;
     applyPanel();
-    refit();
   }
   // Drag the panel's inner edge to resize it; the size is remembered in this browser.
   const grip = q("grip");
@@ -336,7 +336,6 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const up = () => {
       grip.removeEventListener("pointermove", move); grip.removeEventListener("pointerup", up); grip.removeEventListener("pointercancel", up);
       try { localStorage.setItem(PANEL_KEY, JSON.stringify({ w: panelW, h: panelH })); } catch { /* storage blocked */ }
-      refit();
     };
     grip.addEventListener("pointermove", move); grip.addEventListener("pointerup", up); grip.addEventListener("pointercancel", up);
   });
@@ -347,7 +346,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     if (!d) return;
     e.preventDefault();
     if (right) panelW += d; else panelH += d;
-    applyPanel(); refit();
+    applyPanel();
     try { localStorage.setItem(PANEL_KEY, JSON.stringify({ w: panelW, h: panelH })); } catch { /* storage blocked */ }
   });
   applyPanel();
@@ -609,7 +608,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function onClick(ev, d) {
     ev.stopPropagation();
     if (held) { held = false; return; }
-    if (touchTap || !canTravel) { if (cardFor === d) hideCard(true); else showCard(d, touchTap); return; }
+    if (touchTap || !canTravel) { showCard(d, touchTap); return; } // a tap only changes what the panel shows
     travel(d);
   }
   let travelling = null;
@@ -629,7 +628,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   const menuPanelClosed = () => q("menupanel").hidden; // Esc closes the open menu first
   const onEsc = (e) => { if (e.key === "Escape" && panelOpen && menuPanelClosed()) hideCard(true); };
   document.addEventListener("keydown", onEsc);
-  svg.on("click.bg", () => hideCard(true));
+  // A tap or click on empty map does nothing: the panel closes only with × (or Esc).
 
   async function showBioCard(d, touch) {
     cardFor = d;

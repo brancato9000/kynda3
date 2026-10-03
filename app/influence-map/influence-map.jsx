@@ -178,7 +178,7 @@ const CSS = `
 .kmap .node .initials { font-family: var(--mono); font-size: 10px; fill: var(--bg); text-anchor: middle; dominant-baseline: central; pointer-events: none; transition: opacity .3s; }
 .kmap .node.center .initials { display: none; }
 .kmap .pics-on .node.has-pic .initials { opacity: 0; }
-.kmap .node .label { font-family: var(--body); font-size: 11px; fill: rgba(226,232,240,0.86); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.kmap .node .label { font-family: var(--body); font-size: 11px; fill: rgba(226,232,240,0.86); text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; } /* a bubble's name is part of its tap target */
 .kmap .node.center .label { font-family: var(--display); font-size: 19px; fill: var(--fg); }
 .kmap .node.mix .label { font-size: 12.5px; font-weight: 500; fill: var(--fg); }
 .kmap .node:hover .disc, .kmap .node.hot .disc { fill-opacity: 1; }
