@@ -952,6 +952,19 @@ function mapImage(meta) {
   };
 }
 
+/** A stored mix's cards in the shape the influence map wants (mix picks headline the map).
+ * Used by /api/graph and by the server-rendered demo pages. */
+export function mixCardsForMap(mix) {
+  return (mix?.slots || []).flatMap((slot) => (slot.candidates || []).map((c) => {
+    const it = c.item || c;
+    return {
+      title: it.title, creator: it.creator || null, year: it.year ? Number(it.year) || null : null,
+      slotType: slot.slotType || it.slotType, reason: it.reason || null, imageUrl: it.imageUrl || null,
+      imageCredit: it.imageCredit || null, imageLicense: it.imageLicense || null, imagePage: it.imagePage || null,
+    };
+  }));
+}
+
 export async function getGraphForSubject(subject) {
   if (!dbConfigured()) return null;
 

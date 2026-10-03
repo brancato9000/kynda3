@@ -5,7 +5,7 @@
 // KyndaMix picks can headline the map for every subject travelled to.
 // The limit is generous because travelling the map is a graph read per hop.
 
-import { getGraphForSubject, getStoredMix } from "../../../src/lib/store.js";
+import { getGraphForSubject, getStoredMix, mixCardsForMap } from "../../../src/lib/store.js";
 import { rateLimit, clientIp } from "../../../src/lib/guard.js";
 
 export const maxDuration = 30;
@@ -20,14 +20,7 @@ export async function POST(req) {
     const graph = await getGraphForSubject(subject);
     if (!graph) return Response.json({ error: "no graph yet — the map grows as this subject is explored" }, { status: 404 });
     const stored = await getStoredMix(subject).catch(() => null);
-    graph.mix = (stored?.slots || []).flatMap((slot) => (slot.candidates || []).map((c) => {
-      const it = c.item || c;
-      return {
-        title: it.title, creator: it.creator || null, year: it.year ? Number(it.year) || null : null,
-        slotType: slot.slotType || it.slotType, reason: it.reason || null, imageUrl: it.imageUrl || null,
-        imageCredit: it.imageCredit || null, imageLicense: it.imageLicense || null, imagePage: it.imagePage || null,
-      };
-    }));
+    graph.mix = mixCardsForMap(stored);
     return Response.json(graph);
   } catch (err) {
     console.error("graph error:", err);

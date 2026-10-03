@@ -65,7 +65,9 @@ function smallImage(url) {
   return url;
 }
 
-export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph, onOpenSubject, adminToken = null }) {
+export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph = null, onOpenSubject, adminToken = null }) {
+  // No fetchGraph = a sealed map (the public demo pages): clicking a bubble opens its card, nothing travels.
+  const canTravel = !!fetchGraph;
   const q = (k) => root.querySelector(`[data-k="${k}"]`);
   const stage = q("stage"), card = q("card");
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -101,6 +103,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
   function loadGraph(name) {
     if (graphs.has(name)) return Promise.resolve(graphs.get(name));
+    if (!canTravel) return Promise.resolve(null);
     if (missing.has(name)) return Promise.resolve(null);
     if (!pending.has(name)) {
       pending.set(name, fetchGraph(name).then((g) => {
@@ -492,7 +495,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     holdT = setTimeout(() => {
       held = true; unpress();
       try { navigator.vibrate?.(12); } catch { /* optional */ }
-      if (d.type === "center") showCard(d, true); else travel(d);
+      if (d.type === "center" || !canTravel) showCard(d, true); else travel(d);
     }, 480);
     const cancel = () => { clearTimeout(holdT); unpress(); window.removeEventListener("pointerup", cancel); window.removeEventListener("pointercancel", cancel); };
     window.addEventListener("pointerup", cancel); window.addEventListener("pointercancel", cancel);
@@ -500,7 +503,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   function onClick(ev, d) {
     ev.stopPropagation();
     if (held) { held = false; return; }
-    if (touchTap) { if (cardFor === d) hideCard(true); else showCard(d, true); return; }
+    if (touchTap || !canTravel) { if (cardFor === d) hideCard(true); else showCard(d, touchTap); return; }
     travel(d);
   }
   let travelling = null;
@@ -566,7 +569,7 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
       ${!quotes.length && ev0 ? `<blockquote class="plain">Documented link${ev0.url ? ` · <a href="${esc(ev0.url)}" target="_blank" rel="noopener">${esc(ev0.publication || host(ev0.url))}</a>` : ""}</blockquote>` : ""}
       ${creditLine(d)}
       <div class="foot"><span>${n ? `${n} source${n === 1 ? "" : "s"} · ${esc(d.tier || "")}` : "mix pick"}</span>
-        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${missing.has(d.name) ? "" : `<button class="go">Travel →</button>`}</span></div>`;
+        <span class="acts">${curating(d) ? `<button class="fix">Fix image</button>` : ""}${onOpenSubject ? `<button class="open">Open page</button>` : ""}${!canTravel || missing.has(d.name) ? "" : `<button class="go">Travel →</button>`}</span></div>`;
     const goBtn = card.querySelector(".go"); if (goBtn) goBtn.onclick = () => travel(d);
     const fixBtn = card.querySelector(".fix"); if (fixBtn) fixBtn.onclick = () => openCurator(d);
     const openBtn = card.querySelector(".open"); if (openBtn) openBtn.onclick = () => onOpenSubject(d.name);
@@ -750,7 +753,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     try { await navigator.clipboard.writeText(text); toast("Path copied"); } catch { toast(text); }
   };
   q("openpage").onclick = () => onOpenSubject?.(center);
-  if (matchMedia("(hover: none)").matches) q("hint").textContent = "Tap for the evidence · press and hold to travel · drag to tug";
+  if (!canTravel) q("hint").textContent = matchMedia("(hover: none)").matches
+    ? "Tap a bubble for the evidence · drag to tug" : "Hover or click a bubble for the evidence · drag to tug · scroll to zoom";
+  else if (matchMedia("(hover: none)").matches) q("hint").textContent = "Tap for the evidence · press and hold to travel · drag to tug";
 
   // Re-fit when the panel changes size (window resize, or the tab coming back into view).
   // lastW starts at the current width: the observer's first report on mount is not a resize, and
