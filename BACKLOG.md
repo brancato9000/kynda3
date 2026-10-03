@@ -36,7 +36,7 @@ Last full review: 2026-10-03.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 28 | Influence map: card overlays move to a side panel | open | **Tony, 2026-10-03, to be designed in another thread.** The evidence and bio cards currently float over the graph and cover what you're exploring; they should live in a side panel beside the map instead. |
+| 28 | Influence map: card overlays move to a side panel | done | **Tony, 2026-10-03, designed in another thread and merged the same day (branch `claude/side-panel`): cards dock right on desktop, bottom on narrow screens, resizable.** The evidence and bio cards currently float over the graph and cover what you're exploring; they should live in a side panel beside the map instead. |
 | 15 | Listening-map productization | open | "Upload your Spotify export" as a real lane. Family test proved the value; post-Brown. |
 | 16 | Layer-2 Beyoncé classifier sweep | open | $50–75, golden set ready. |
 | 17 | Reader-testimony curator lane | open | Eyewitness accounts as a labeled lane distinct from citations (the Clayden comments idea). |
