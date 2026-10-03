@@ -30,6 +30,10 @@ const { q, getPool } = await import("../src/lib/db.js");
 const { isPrivateSubject } = await import("../src/lib/site.js");
 
 const PER = Number(process.argv[2]) || 8;
+// Never featured on the home cards (still listed and mapped). Beyoncé (Tony,
+// 2026-10-03): her 600-connection map crushes the visualization, a poor
+// first impression from the home page's lead card.
+const EXCLUDE = new Set(["Beyoncé"]);
 const FLOOR = 0.32;
 
 const rows = (await q(`
@@ -38,7 +42,7 @@ const rows = (await q(`
   FROM entities e
   WHERE EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id)
     AND e.metadata->>'image_url' IS NOT NULL`)).rows
-  .filter((s) => !isPrivateSubject(s.name));
+  .filter((s) => !isPrivateSubject(s.name) && !EXCLUDE.has(s.name));
 
 // Same modern-canon gate as the home index (app/page.jsx, V3-57).
 const isModern = (s) => s.kind === "person" || s.kind === "group"
