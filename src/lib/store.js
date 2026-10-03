@@ -264,7 +264,13 @@ export async function enqueueTopSearched(limit = 20) {
 
 export async function enqueueSubjectByName(name) {
   if (!dbConfigured()) return null;
-  const e = await q("SELECT id FROM entities WHERE lower(name) = lower($1) ORDER BY created_at LIMIT 1", [name]);
+  // Same resolution as the map (V3-85): mapped first, then best-connected.
+  const e = await q(
+    `SELECT e.id FROM entities e WHERE lower(e.name) = lower($1)
+     ORDER BY EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) DESC,
+              (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) DESC, e.created_at LIMIT 1`,
+    [name]
+  );
   if (!e.rows[0]) return null;
   await q(
     `INSERT INTO research_queue (entity_id, priority, enqueued_by) VALUES ($1, 100, 'manual')
@@ -874,6 +880,26 @@ export async function listSubjects() {
   return r.rows;
 }
 
+/**
+ * Any entity a map can center on, by slug (Tony, 2026-10-02): the address
+ * follows the map's center, so /s/<slug> must open unmapped stops too.
+ * Mapped subject first, then the best-connected entity of that name.
+ */
+export async function findEntityBySlug(slug) {
+  if (!dbConfigured() || !slug) return null;
+  const pattern = slug.split("-").filter(Boolean).join("%");
+  const r = await q(
+    `SELECT e.id, e.name, e.kind, e.domain, e.mbid, e.wikidata_qid, e.metadata->>'synthesis_bio' AS synthesis_bio,
+            EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) AS mapped,
+            (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id)::int AS degree
+     FROM entities e WHERE e.name ILIKE $1
+     ORDER BY mapped DESC, degree DESC, e.created_at LIMIT 40`,
+    [`%${pattern}%`]
+  );
+  const { slugify } = await import("./slug.js");
+  return r.rows.find((x) => slugify(x.name) === slug && (x.mapped || x.degree > 0)) || null;
+}
+
 /** Approved reader contributions for a subject (V3-67): the collapsed
  * "proposed" section on mix pages. resolved/confirmed = the approved
  * bucket; pending and rejected stay in the admin queue only. */
@@ -987,7 +1013,7 @@ export async function getGraphForSubject(subject) {
   let entity = null;
   if (subject.mbid || subject.wikidata_qid) {
     const r = await q(
-      "SELECT id, name, kind, domain, metadata FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
+      "SELECT id, name, kind, domain, metadata, wikidata_qid, mbid FROM entities WHERE (mbid = $1 AND $1 IS NOT NULL) OR (wikidata_qid = $2 AND $2 IS NOT NULL) LIMIT 1",
       [subject.mbid || null, subject.wikidata_qid || null]
     );
     entity = r.rows[0] || null;
@@ -998,7 +1024,7 @@ export async function getGraphForSubject(subject) {
     // Miseducation work entity, the wrong Paul Taylor. The mapped subject
     // wins, then the best-connected entity, then the oldest.
     const r = await q(
-      `SELECT e.id, e.name, e.kind, e.domain, e.metadata FROM entities e
+      `SELECT e.id, e.name, e.kind, e.domain, e.metadata, e.wikidata_qid, e.mbid FROM entities e
        WHERE lower(e.name) = lower($1)
        ORDER BY EXISTS (SELECT 1 FROM mixes m WHERE m.subject_entity_id = e.id) DESC,
                 (SELECT count(*) FROM claims c WHERE c.subject_id = e.id OR c.object_id = e.id) DESC,
@@ -1112,7 +1138,13 @@ export async function getGraphForSubject(subject) {
   }
 
   if (!groups.predecessors.length && !groups.peers.length && !groups.successors.length) return null;
-  return { subject: entity.name, subjectId: entity.id, subjectImage: mapImage(entity.metadata), domain: (entity.domain || "").toUpperCase(), ...groups };
+  return {
+    subject: entity.name, subjectId: entity.id, subjectImage: mapImage(entity.metadata), domain: (entity.domain || "").toUpperCase(),
+    // The page follows the map's center (Tony, 2026-10-02): it needs the
+    // center's identity to show its header, saved mix and covers.
+    subjectKind: entity.kind, subjectQid: entity.wikidata_qid || null, subjectMbid: entity.mbid || null,
+    ...groups,
+  };
 }
 
 /** Durable L2 mix cache: most recent stored mix for this subject (6-month TTL). */

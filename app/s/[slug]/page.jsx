@@ -5,7 +5,7 @@
 
 import { notFound } from "next/navigation";
 import KyndaApp from "../../kynda-app.jsx";
-import { listSubjects } from "../../../src/lib/store.js";
+import { listSubjects, findEntityBySlug } from "../../../src/lib/store.js";
 import { slugify } from "../../../src/lib/slug.js";
 import { getIntroExtract } from "../../../src/lib/entities/wikipedia.js";
 
@@ -13,7 +13,12 @@ export const dynamic = "force-dynamic";
 
 async function resolveSlug(slug) {
   const subjects = await listSubjects();
-  return subjects.find((s) => slugify(s.name) === slug) || null;
+  const mapped = subjects.find((s) => slugify(s.name) === slug);
+  if (mapped) return { ...mapped, mapped: true };
+  // The address follows the map's center (Tony, 2026-10-02), so a stop with
+  // no mix of its own must still open: its map, its bio, and a note on Mix.
+  const stop = await findEntityBySlug(slug).catch(() => null);
+  return stop ? { ...stop, mapped: false } : null;
 }
 
 export async function generateMetadata({ params }) {
@@ -59,6 +64,7 @@ export default async function SubjectPage({ params, searchParams }) {
         domain: subject.domain,
         mbid: subject.mbid,
         wikidata_qid: subject.wikidata_qid,
+        mapped: subject.mapped,
         // No true encyclopedia entry -> a labeled Kynda synthesis (V3-65).
         bio: bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" }
           : subject.synthesis_bio ? { text: subject.synthesis_bio, source: "Kynda" } : null,

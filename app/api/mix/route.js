@@ -31,7 +31,7 @@ function normalizePayload(payload) {
 
 export async function POST(req) {
   const t0 = Date.now();
-  const { subject, cut } = await req.json().catch(() => ({}));
+  const { subject, cut, cachedOnly } = await req.json().catch(() => ({}));
   if (!subject?.name) {
     return Response.json({ error: "subject required" }, { status: 400 });
   }
@@ -114,6 +114,13 @@ export async function POST(req) {
             send({ type: "rank", s, order: rankCandidates(verifications) });
           }
           send({ type: "done", cached: true });
+          return;
+        }
+
+        // Travelling the map (Tony, 2026-10-02): the page follows the center
+        // but never generates a mix for a stop that has none — it says so.
+        if (cachedOnly) {
+          send({ type: "none" });
           return;
         }
 

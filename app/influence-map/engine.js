@@ -65,7 +65,7 @@ function smallImage(url) {
   return url;
 }
 
-export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph = null, onOpenSubject, adminToken = null }) {
+export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph, fetchGraph = null, onOpenSubject, onCenter = null, adminToken = null }) {
   // No fetchGraph = a sealed map (the public demo pages): clicking a bubble opens its card, nothing travels.
   const canTravel = !!fetchGraph;
   const q = (k) => root.querySelector(`[data-k="${k}"]`);
@@ -206,9 +206,10 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
 
   // Move to a subject: lay it out, then one animation that exits, moves and builds nodes.
   let waitingForSize = false;
-  function go(name, { push = true } = {}) {
+  let pendingGo = null; // a move asked for while hidden; the resize observer replays it
+  function go(name, { push = true, quiet = false } = {}) {
     if (!alive) return;
-    if (size().w === 0) { waitingForSize = true; return; } // hidden tab; the resize observer resumes us
+    if (size().w === 0) { waitingForSize = true; pendingGo = { name, push, quiet }; return; } // hidden tab; the resize observer resumes us
     waitingForSize = false;
     hideCard(true);
     closeCurator();
@@ -217,6 +218,9 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     const prevCenter = center;
     if (push && name !== center) { trail = trail.slice(0, trailPos + 1); trail.push(name); trailPos = trail.length - 1; }
     center = name;
+    // The page follows the center (Tony, 2026-10-02): header, tabs, address.
+    // quiet = the move came from the browser's Back/Forward, so no new history entry.
+    if (onCenter && name !== prevCenter) onCenter(name, graphs.get(name) || null, { quiet });
     const target = layout(name);
     const keep = new Set(target.map((n) => n.name));
     const anchor = live.get(name) || { x: 0, y: 0 };
@@ -724,7 +728,8 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     el.querySelector('[aria-current="true"]')?.scrollIntoView({ inline: "nearest", block: "nearest" });
     q("trailbox").hidden = trail.length < 2;
     const open = q("openpage");
-    open.hidden = !onOpenSubject || center === subjectName;
+    // With the page following the center, "Open X" would only repeat the header.
+    open.hidden = !onOpenSubject || !!onCenter || center === subjectName;
     open.textContent = `Open ${short(center, 26)} →`;
   }
   function updateLegend(target) {
@@ -782,7 +787,10 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
     resizeWeb();
     const { w } = size();
     if (w === 0) return;
-    if (waitingForSize || Math.abs(w - lastW) > 40) { clearTimeout(rz); rz = setTimeout(() => go(center, { push: false }), waitingForSize ? 0 : 250); }
+    if (waitingForSize || Math.abs(w - lastW) > 40) {
+      clearTimeout(rz);
+      rz = setTimeout(() => { const p = pendingGo; pendingGo = null; p ? go(p.name, { push: p.push, quiet: p.quiet }) : go(center, { push: false }); }, waitingForSize ? 0 : 250);
+    }
     lastW = w;
   });
   ro.observe(stage);
@@ -892,6 +900,15 @@ export function createInfluenceMap(root, { subjectName, subjectBio, initialGraph
   lastW = size().w;
 
   return {
+    // Browser Back/Forward: step along the trail if the stop is on it, else travel there.
+    // quiet (default) = Back/Forward, no new history entry; quiet:false = an "Open page" travel.
+    async show(name, { quiet = true } = {}) {
+      if (!alive || name === center) return;
+      const i = trail.indexOf(name);
+      if (i !== -1) { trailPos = i; go(name, { push: false, quiet }); return; }
+      const g = await loadGraph(name);
+      if (g && alive) go(name, { quiet });
+    },
     destroy() {
       alive = false;
       cancelAnimationFrame(raf);

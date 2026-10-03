@@ -894,6 +894,14 @@ function SlotCard({ slot, index, subject }) {
 // ─── Subject / disambiguation UI ──────────────────────────────
 // Bio is QUOTED from Wikipedia, never generated (V3-15). The metadata line
 // only shows database fields (MusicBrainz life-span, catalog descriptions).
+// Covers only exists for musicians — setlist.fm data is meaningless on a
+// film or concept page. Kind can be missing (DEMO) or "unknown" (wikidata
+// candidates), so exclude non-performer kinds rather than require person/group.
+function musicianOf(subj) {
+  return subj?.domain === "music" &&
+    !["work", "release", "recording", "concept", "place", "book", "film", "tv_show"].includes(subj?.kind);
+}
+
 function SubjectCard({ subject, onBioDone }) {
   const [copied, setCopied] = useState(false);
   // No bio to reveal → the sequence gate opens immediately.
@@ -1087,6 +1095,15 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   const [phase, setPhase] = useState("idle"); // idle | searching | choosing | mixing
   const [error, setError] = useState(null);
   const [subject, setSubject] = useState(null);
+  // The page follows the map's center (Tony, 2026-10-02): `subject` is
+  // whoever is at the center now (header, bio, Mix, Covers, address);
+  // `rootSubject` is where this map started — the map itself is built once
+  // from it and keeps its trail as you travel.
+  const [rootSubject, setRootSubject] = useState(null);
+  const [centerGraph, setCenterGraph] = useState(null);
+  const [noMix, setNoMix] = useState(false); // a stop with no saved mix: a note, never a generation
+  const [requested, setRequested] = useState("idle"); // "Ask Kynda to map this": idle | sending | sent | error
+  const mapCtl = useRef(null);
   const [alternatives, setAlternatives] = useState([]);
   const [tier, setTier] = useState(null);
   const [intro, setIntro] = useState(null);
@@ -1212,12 +1229,12 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     }
   }, []);
 
-  const fireMix = useCallback(async (subj, run) => {
+  const fireMix = useCallback(async (subj, run, { cachedOnly = false } = {}) => {
     try {
       const res = await fetch("/api/mix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subj, cut: initialCut }),
+        body: JSON.stringify({ subject: subj, cut: initialCut, cachedOnly }),
       });
       if (!res.ok || !res.body) throw new Error(`mix request failed (${res.status})`);
       const reader = res.body.getReader();
@@ -1255,7 +1272,8 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
             next[evt.s] = { ...next[evt.s], order: evt.order };
             return next;
           });
-          else if (evt.type === "done") { setDone(true); loadGraph(subj); if (!evt.cached) pollEnrichment(subj, run); }
+          else if (evt.type === "none") { setNoMix(true); setDone(true); }
+          else if (evt.type === "done") { setDone(true); if (!cachedOnly) loadGraph(subj); if (!evt.cached) pollEnrichment(subj, run); }
           else if (evt.type === "error") setError(evt.message);
         }
       }
@@ -1267,13 +1285,17 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   const selectSubject = useCallback((subj) => {
     const run = ++runRef.current;
     setSubject(subj);
+    setRootSubject(subj); setCenterGraph(null); setNoMix(false); setRequested("idle");
+    // The first history entry carries the starting center, so Back can return to it.
+    try { window.history.replaceState({ ...(window.history.state || {}), kyndaCenter: subj.name }, ""); } catch { /* sandboxed */ }
     setAlternatives([]);
     setTier("certain");
     setPhase("mixing");
     setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false); setIntroDone(false);
     setTab("map"); graphReq.current = null; setGraph({ status: "idle", data: null, error: null }); setCovers({ status: "idle", data: null, error: null });
     loadGraph(subj);
-    fireMix(subj, run);
+    // A stop opened by address that has no saved mix (mapped === false) never generates one.
+    fireMix(subj, run, { cachedOnly: subj.mapped === false });
   }, [fireMix, loadGraph]);
 
   async function onSearch(e) {
@@ -1285,6 +1307,64 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
   function navigateTo(name) {
     setQuery(name);
     runSearch(name);
+  }
+
+  // The map moved its center: header, bio, Mix, Covers and address follow.
+  // A saved mix is served (free); a stop without one gets a note — never a
+  // generation. quiet = Back/Forward, which must not add a history entry.
+  function followCenter(name, g, { quiet = false } = {}) {
+    const root = rootSubject;
+    const isRoot = !!root && name === root.name;
+    const subj = isRoot ? root : {
+      name: g?.subject || name, kind: g?.subjectKind || null, domain: (g?.domain || "").toLowerCase() || null,
+      mbid: g?.subjectMbid || null, wikidata_qid: g?.subjectQid || null, bio: null, mapped: !!g?.hasMix,
+    };
+    const run = ++runRef.current;
+    setSubject(subj);
+    setIntro(null); setSlots([]); setDone(false); setError(null); setBioDone(false); setIntroDone(false); setEnriching(false);
+    setNoMix(false); setRequested("idle"); setCenterGraph(isRoot ? null : g);
+    setCovers({ status: "idle", data: null, error: null });
+    setTab((t) => (t === "covers" && !musicianOf(subj) ? "map" : t));
+    if (isRoot || g?.hasMix) fireMix(subj, run, { cachedOnly: true });
+    else { setNoMix(true); setDone(true); }
+    if (!isRoot) {
+      fetch("/api/bio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: subj.name, qid: subj.wikidata_qid }) })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => { if (j?.bio && runRef.current === run) setSubject((cur) => (cur?.name === subj.name ? { ...cur, bio: j.bio } : cur)); })
+        .catch(() => {});
+    }
+    if (!quiet) {
+      try { window.history.pushState({ kyndaCenter: name }, "", `/s/${slugify(name)}`); } catch { /* sandboxed */ }
+    }
+    document.title = `${subj.name} — Kynda`;
+  }
+
+  // A card's "Open page": travel there (recorded in history), then show its Mix.
+  async function openFromMap(name) {
+    if (name === subject?.name) { setTab("mix"); return; }
+    await mapCtl.current?.show(name, { quiet: false });
+    setTab("mix");
+  }
+
+  // Browser Back/Forward retrace the map's trail.
+  useEffect(() => {
+    const onPop = (e) => {
+      const name = e.state?.kyndaCenter;
+      if (!name || !mapCtl.current) return;
+      setTab("map"); // the map must be visible to move
+      requestAnimationFrame(() => mapCtl.current?.show(name));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  async function requestMap() {
+    if (!subject) return;
+    setRequested("sending");
+    try {
+      const r = await fetch("/api/request-map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: subject.name }) });
+      setRequested(r.ok ? "sent" : "error");
+    } catch { setRequested("error"); }
   }
 
   async function runSearch(text) {
@@ -1317,6 +1397,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
         return;
       }
       setSubject(data.subject);
+      setRootSubject(data.subject); setCenterGraph(null); setNoMix(false); setRequested("idle");
       setAlternatives(data.confidence === "likely" ? data.alternatives || [] : []);
       setPhase("mixing");
       fireMix(data.subject, run);
@@ -1325,15 +1406,11 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
     }
   }
 
-  // Covers only exists for musicians — setlist.fm data is meaningless on a
-  // film or concept page. Kind can be missing (DEMO) or "unknown" (wikidata
-  // candidates), so exclude non-performer kinds rather than require person/group.
-  const isMusician = subject?.domain === "music" &&
-    !["work", "release", "recording", "concept", "place", "book", "film", "tv_show"].includes(subject?.kind);
+  const isMusician = musicianOf(subject);
   const subjectView = phase === "mixing" && !!subject;
   // MAP | MIX | COVERS (map and covers are token-free reads)
   const subjectTabs = [["map", "Map"], ["mix", "Mix"], ...(isMusician ? [["covers", "Covers"]] : [])];
-  const openTab = (id) => (id === "map" ? (setTab("map"), loadGraph(subject)) : id === "covers" ? openCoversTab(subject) : setTab("mix"));
+  const openTab = (id) => (id === "map" ? (setTab("map"), loadGraph(rootSubject || subject)) : id === "covers" ? openCoversTab(subject) : setTab("mix"));
 
   return (
     <main style={{ maxWidth: "880px", margin: "0 auto", padding: subjectView ? "0 24px 120px" : "56px 24px 120px" }}>
@@ -1471,8 +1548,9 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
               other tabs once loaded so the map keeps its trail and position. */}
           {(tab === "map" || graph.status === "ready") && (
             <div style={{ display: tab === "map" ? "block" : "none", marginBottom: "36px" }}>
-              <InfluenceMap subjectName={subject.name} subjectBio={subject.bio}
-                graph={graph.status === "ready" ? graph.data : null} onOpenSubject={navigateTo}
+              <InfluenceMap subjectName={(rootSubject || subject).name} subjectBio={(rootSubject || subject).bio}
+                graph={graph.status === "ready" ? graph.data : null} onOpenSubject={openFromMap}
+                onCenter={followCenter} controlRef={mapCtl}
                 status={graph.status === "error" && done ? graph.error
                   : graph.status === "error" ? "The map draws itself once the mix is composed…" : "Drawing the map…"}
                 waiting={!(graph.status === "error" && done)} />
@@ -1481,7 +1559,7 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
 
           {/* The bio sits under the map: the map is the first thing a subject page shows. */}
           <div style={{ marginTop: tab === "map" ? 0 : "28px" }}>
-            <SubjectCard subject={subject} onBioDone={() => setBioDone(true)} />
+            <SubjectCard key={subject.name} subject={subject} onBioDone={() => setBioDone(true)} />
           </div>
           {tier === "likely" && alternatives.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
@@ -1523,7 +1601,22 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
             </div>
           )}
 
-          {tab === "mix" && !intro && !error && (
+          {tab === "mix" && noMix && (
+            <div style={{ padding: "22px 24px", background: BASE.surface, border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", display: "grid", gap: "14px" }}>
+              <div style={{ fontSize: "14px", lineHeight: 1.7, color: "rgba(226,232,240,0.85)" }}>
+                Kynda hasn't made a mix for <b>{subject.name}</b> yet. The map shows what we know so far.
+              </div>
+              <div>
+                <button onClick={requestMap} disabled={requested === "sending" || requested === "sent"}
+                  style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)", color: BASE.gold, borderRadius: "8px", padding: "9px 18px", fontFamily: FONTS.mono, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: requested === "sent" ? "default" : "pointer" }}>
+                  {requested === "sent" ? "Requested ✓ — thanks" : requested === "sending" ? "Sending…" : "Ask Kynda to map this"}
+                </button>
+                {requested === "error" && <span style={{ marginLeft: "12px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(248,113,113,0.85)" }}>Couldn't send that — try again.</span>}
+              </div>
+            </div>
+          )}
+
+          {tab === "mix" && !noMix && !intro && !error && (
             <div style={{ fontFamily: FONTS.mono, fontSize: "12px", color: "rgba(148,163,184,0.6)", display: "flex", alignItems: "center", gap: "8px" }}>
               <Pulse /> composing the mix — Kynda is thinking…
             </div>
@@ -1543,12 +1636,12 @@ export default function KyndaApp({ initialSubject = null, indexedSubjects = [], 
           </div>
           )}
 
-          {tab === "mix" && done && graph.status === "ready" && (
-            <ArchiveLedger slots={slots} graph={graph.data} />
+          {tab === "mix" && done && !noMix && (centerGraph || graph.status === "ready") && (
+            <ArchiveLedger slots={slots} graph={centerGraph || graph.data} />
           )}
-          {tab === "mix" && done && subject && <AskCard subject={subject} />}
-          {tab === "mix" && done && subject && <ProposedSection subject={subject} />}
-          {tab === "mix" && done && subject && <AddConnectionCard subject={subject} />}
+          {tab === "mix" && done && !noMix && subject && <AskCard subject={subject} />}
+          {tab === "mix" && done && !noMix && subject && <ProposedSection subject={subject} />}
+          {tab === "mix" && done && !noMix && subject && <AddConnectionCard subject={subject} />}
 
           {tab === "mix" && done && (
             <div style={{ marginTop: "28px", fontFamily: FONTS.mono, fontSize: "11px", color: "rgba(148,163,184,0.55)", lineHeight: 1.7 }}>
