@@ -11,9 +11,17 @@
 // comes from MusicBrainz life-span data; the descriptor line comes from the
 // database that supplied the candidate. Haiku's only outputs are indices and
 // the ambiguity tier — fields it cannot hallucinate facts into.
+//
+// Short, crowded names (2026-10-02): label search alone buried the famous
+// item — "Psycho" returned a Boston punk band and a fly family, never
+// Hitchcock's film. Wikidata retrieval now unions label search with
+// full-text search (popularity-boosted), adds a category-filtered search
+// when the caller knows the roster category, and shows the ranker how many
+// Wikipedias cover each candidate. A roster that already knows the
+// Wikidata ID skips search entirely.
 
 import { searchArtist } from "../entities/musicbrainz.js";
-import { searchEntity } from "../entities/wikidata.js";
+import { searchEntity, searchFullText, getEntitySummaries } from "../entities/wikidata.js";
 import { getIntroExtract } from "../entities/wikipedia.js";
 import { callHaiku } from "../ai/anthropic.js";
 
@@ -37,11 +45,47 @@ const RANK_SYSTEM = `You rank search candidates for a cultural discovery engine.
 Rules:
 - You may ONLY select candidates by their index. Never describe an entity that is not in the list.
 - Culture is broad: foods and culinary traditions, crafts, games, practices, and ideas are valid subjects alongside works and artists (Detroit-style pizza is a subject). Never answer "none" just because the best match isn't art.
-- Prefer the most culturally prominent interpretation. A globally famous entity outranks an obscure one.
+- Prefer the most culturally prominent interpretation. A globally famous entity outranks an obscure one. "in N Wikipedias" is a prominence signal: a candidate covered by 70 language editions is far more likely meant than one with 2 or none (MusicBrainz candidates carry no count; judge them by their description).
+- When the query comes from a list category ("Movies", "Fashion", "Ideas"), the user means a candidate that fits that category. A category mismatch is strong evidence against a candidate, even an exact-name match: "Psycho" from Movies is the film, not a band; "Jesus of Nazareth" from Ideas is the person, not a miniseries.
 - match tiers: "certain" = one clear match, no other candidate is a plausible cultural interpretation. "likely" = one dominant match but 1-3 other candidates are real cultural works someone might mean. "ambiguous" = several candidates have meaningful cultural weight with no obvious frontrunner. "none" = no candidate plausibly matches the query.
 - alternativeIndexes: other candidates a user might have meant (empty for "certain"). Never include the primaryIndex. Skip near-duplicates of the primary (the same entity appearing from both sources).
 - domain: the primary candidate's cultural domain.
 - If match is "none", set primaryIndex to 0 and alternativeIndexes to [].`;
+
+// Roster category → expected domain (null = too broad to flag) and an
+// optional Wikidata statement that narrows a full-text search. Keys are
+// lowercased and stripped of non-letters ("TV creators" → "tvcreators").
+const CATEGORY_HINTS = {
+  movies: { domain: "film", statement: "P31=Q11424" },
+  films: { domain: "film", statement: "P31=Q11424" },
+  shows: { domain: "television", statement: "P31=Q5398426" },
+  tvshows: { domain: "television", statement: "P31=Q5398426" },
+  film: { domain: "film", statement: "P31=Q5" },
+  directors: { domain: "film", statement: "P31=Q5" },
+  tv: { domain: "television", statement: "P31=Q5" },
+  tvcreators: { domain: "television", statement: "P31=Q5" },
+  television: { domain: "television", statement: null },
+  musicians: { domain: "music", statement: null },
+  fashion: { domain: "fashion", statement: "P106=Q3501317" },
+  architects: { domain: "architecture", statement: "P106=Q42973" },
+  dance: { domain: "dance", statement: "P31=Q5" },
+  comedy: { domain: null, statement: "P31=Q5" },
+  games: { domain: null, statement: "P31=Q7889" },
+  books: { domain: "literature", statement: "P31=Q7725634" },
+};
+
+export function categoryHint(category) {
+  if (!category) return null;
+  return CATEGORY_HINTS[String(category).toLowerCase().replace(/[^a-z]/g, "")] || { domain: null, statement: null };
+}
+
+// A resolved subject whose domain disagrees with its roster category
+// ("Psycho" from Movies → a music group). Review gates flag these whatever
+// the confidence tier says.
+export function categoryMismatch(category, subject) {
+  const hint = categoryHint(category);
+  return Boolean(hint?.domain && subject?.domain && subject.domain !== hint.domain);
+}
 
 function yearsFromLifeSpan(lifeSpan) {
   if (!lifeSpan?.begin) return null;
@@ -50,10 +94,62 @@ function yearsFromLifeSpan(lifeSpan) {
   return `${start}–Present`;
 }
 
-export async function disambiguate(query) {
+async function withBio(subject) {
+  // Bio = the subject's Wikipedia intro, verbatim and attributed. Quoted,
+  // never generated (V3-15). Null when no article exists — honest absence.
+  const bio = await getIntroExtract({ name: subject.name, qid: subject.wikidata_qid }).catch(() => null);
+  return { ...subject, bio: bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" } : null };
+}
+
+// The roster already names the item: no search, no ranking, no guessing.
+async function resolveByQid(qid, hint) {
+  const item = (await getEntitySummaries([qid])).get(qid);
+  if (!item) return { confidence: "none", candidates: [] };
+  const subject = await withBio({
+    name: item.label || qid,
+    kind: "unknown",
+    domain: hint?.domain || "other",
+    description: item.description || "",
+    yearsActive: null,
+    mbid: null,
+    wikidata_qid: qid,
+    source: "wikidata",
+  });
+  return { confidence: "certain", subject, alternatives: [] };
+}
+
+// Wikidata candidates: label search ∪ full-text search ∪ category-filtered
+// full-text search, deduped, each with its Wikipedia-edition count.
+async function wikidataCandidates(query, hint) {
+  const [byLabel, byText, byCategory] = await Promise.all([
+    searchEntity(query, 6).catch(() => []),
+    searchFullText(query, { limit: 6 }).catch(() => []),
+    hint?.statement ? searchFullText(query, { limit: 5, statement: hint.statement }).catch(() => []) : [],
+  ]);
+  const qids = [...new Set([...byLabel.map((e) => e.qid), ...byCategory, ...byText])];
+  const summaries = await getEntitySummaries(qids).catch(() => new Map());
+  const fromLabel = new Map(byLabel.map((e) => [e.qid, e]));
+  return qids
+    .map((qid) => {
+      const s = summaries.get(qid);
+      const l = fromLabel.get(qid);
+      return { qid, label: s?.label || l?.label || null, description: s?.description || l?.description || null, wikipedias: s?.wikipedias ?? null };
+    })
+    .filter((e) => e.label);
+}
+
+/**
+ * @param {string} query
+ * @param {{category?: string, qid?: string}} [opts] roster context: the list
+ *   category steers retrieval and ranking; a known Wikidata ID skips both.
+ */
+export async function disambiguate(query, { category = null, qid = null } = {}) {
+  const hint = categoryHint(category);
+  if (qid && /^Q\d+$/.test(qid)) return resolveByQid(qid, hint);
+
   const [artists, wikidata] = await Promise.all([
     searchArtist(query, 5).catch(() => []),
-    searchEntity(query, 6).catch(() => []),
+    wikidataCandidates(query, hint).catch(() => []),
   ]);
 
   const candidates = [
@@ -74,6 +170,7 @@ export async function disambiguate(query) {
       name: e.label,
       description: e.description || "",
       yearsActive: null,
+      wikipedias: e.wikipedias,
       mbid: null,
       wikidata_qid: e.qid,
     })),
@@ -84,12 +181,12 @@ export async function disambiguate(query) {
   }
 
   const listing = candidates
-    .map((c, i) => `${i}. [${c.source}] ${c.name} — ${c.description || "no description"}${c.yearsActive ? ` (${c.yearsActive})` : ""}`)
+    .map((c, i) => `${i}. [${c.source}] ${c.name} — ${c.description || "no description"}${c.yearsActive ? ` (${c.yearsActive})` : ""}${c.wikipedias != null ? ` · in ${c.wikipedias} Wikipedias` : ""}`)
     .join("\n");
 
   const ranked = await callHaiku({
     system: RANK_SYSTEM,
-    user: `Query: "${query}"\n\nCandidates:\n${listing}`,
+    user: `Query: "${query}"${category ? `\nList category: ${category}` : ""}\n\nCandidates:\n${listing}`,
     schema: RANK_SCHEMA,
   });
 
@@ -115,16 +212,9 @@ export async function disambiguate(query) {
   const primary = toSubject(ranked.primaryIndex);
   if (!primary) return { confidence: "none", candidates };
 
-  // Bio = the subject's Wikipedia intro, verbatim and attributed. Quoted,
-  // never generated (V3-15). Null when no article exists — honest absence.
-  const bio = await getIntroExtract({ name: primary.name, qid: primary.wikidata_qid }).catch(() => null);
-
   return {
     confidence: ranked.match,
-    subject: {
-      ...primary,
-      bio: bio ? { text: bio.text, articleTitle: bio.title, url: bio.url, source: "Wikipedia" } : null,
-    },
+    subject: await withBio(primary),
     alternatives: ranked.alternativeIndexes
       .map(toSubject)
       .filter(Boolean)
